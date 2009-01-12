@@ -9,6 +9,7 @@ import java.io.IOException;
 import junit.framework.TestCase;
 
 import org.openiaml.iacleaner.IACleaner;
+import org.openiaml.iacleaner.IACleaner.CleanerException;
 
 /**
  * Manually test the cleaner. 
@@ -27,7 +28,7 @@ public class ManualTest extends TestCase {
 	
 	public File sourceFile = new File("src/org/openiaml/iacleaner/tests/test.php");
 	
-	public void testManual() throws IOException {
+	public void testManual() throws IOException, CleanerException {
 		IACleaner clean = new IACleaner();
 		String output = clean.cleanScript(sourceFile);
 		
