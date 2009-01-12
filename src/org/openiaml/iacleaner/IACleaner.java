@@ -102,6 +102,10 @@ public class IACleaner {
 			if (script.length() > i + 1) {		// lookahead of 2
 				s2 = script.substring(i, i + 2);
 			}
+			String s5 = null;
+			if (script.length() > i + 4) {		// lookahead of 5
+				s5 = script.substring(i, i + 5);
+			}
 			
 			if (mode == 0) {
 				// starting a new mode?
