@@ -37,9 +37,33 @@ public class IACleaner {
 		public CleanerException(String message) {
 			super(message);
 		}
+		
+		public CleanerException(String message, String context) {
+			super(message + " [context=\"" + context + "\"]");
+		}
 	}
 	
 	public List<String> warnings = new ArrayList<String>();
+	
+	/**
+	 * Get exceptions to the formatting: these strings are always
+	 * explicitly taken out at the start of formatting.
+	 * 
+	 * This is to deal with regular expressions in Javascript mostly,
+	 * e.g. prototype.js:
+	 * 	<code>
+	 *   escapedString.replace(/"/g, '\\"')
+	 *  </code>
+	 */
+	public Map<String,String> getExceptions() {
+		Map<String,String> e = new HashMap<String,String>();
+		
+		// prototype.js exceptions
+		e.put( "/\"/g", "$exception_key_1$" );
+		e.put( "/\"[^\"\\\\\\n\\r]*\"/g", "$exception_key_2$" );
+		
+		return e;
+	}
 	
 	/**
 	 * Format a web script using regular expressions.
@@ -49,10 +73,15 @@ public class IACleaner {
 	 * @throws CleanerException if an exception occurs
 	 */
 	public String cleanScript(String script) throws CleanerException {
+		// get rid of all explicit exceptions
+		for (String key : getExceptions().keySet()) {
+			script = script.replace(key, getExceptions().get(key));
+		}
+				
 		// replace all escaped quotes
-		script.replace("\\\"", REPLACE_QUOTE);
-		script.replace("\\'", REPLACE_QUOTE_SQ);
-		
+		script = script.replace("\\\"", REPLACE_QUOTE);
+		script = script.replace("\\'", REPLACE_QUOTE_SQ);
+
 		// find all single strings and replace them
 		Map<String,String> replaceQuotes = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
@@ -60,7 +89,7 @@ public class IACleaner {
 			if (start != -1) {
 				int end = script.indexOf("\"", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated \"\" string at character position " + i);
+					throw new CleanerException("Unterminated \"\" string at character position " + i, getContext(script, i));
 				}
 				
 				String key = KEY_QUOTE + i + KEY_END;
@@ -84,12 +113,12 @@ public class IACleaner {
 			if (start != -1) {
 				int end = script.indexOf("'", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated '' string at character position " + i);
+					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i));
 				}
 				
 				String key = KEY_QUOTE_SQ + i + KEY_END;
 				String value = script.substring(start, end + 1);
-				replaceQuotes.put(key, value);
+				replaceQuotesSq.put(key, value);
 				i = end + 1;
 			} else {
 				break;
@@ -100,10 +129,10 @@ public class IACleaner {
 			String value = replaceQuotesSq.get(key);
 			script = script.replace(value, key);
 		}
-		
+
 		// replace single-line comments with block comments
-		script = script.replaceAll("//([^\n]+)\n", "/*$1 */\n");
-		
+		script = script.replaceAll("([^:])//([^\r\n]+)[\r\n]", "$1/*$2 */\n");	// first char disables replacing http:// addresses
+
 		// get rid of all newlines and tabs
 		script = script.replaceAll("[\r\n\t]", " ");
 
@@ -127,6 +156,8 @@ public class IACleaner {
 		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
 		StringBuffer buf = new StringBuffer();
 		for (String line : lines) {
+			boolean nextBrace = false;
+			
 			if (line.indexOf("}") != -1) {
 				// close the brace
 				brace_count--;
@@ -135,20 +166,28 @@ public class IACleaner {
 				brace_count--;
 			}
 			
+			int next_brace_count = brace_count;
+			if (line.indexOf("{") != -1) {
+				// open the brace for next lines
+				next_brace_count++;
+			} else if (line.matches(match_indent_open)) {
+				// open the tag for next lines
+				next_brace_count++;
+			}
+			
 			// indent the line
 			if (brace_count < 0) {
-				throwWarning("Unbalanced braces as of line: " + line);
+				if (next_brace_count < 0) {
+					// this means that the next line will definitely be out
+					throwWarning("Unbalanced braces as of line: " + line);
+				}
+				// otherwise, it could be a line like "{ }"
 				brace_count = 0;
+				next_brace_count = 0;
 			}
 			line = repeatString("  ", brace_count) + line;
 			
-			if (line.indexOf("{") != -1) {
-				// open the brace for next lines
-				brace_count++;
-			} else if (line.matches(match_indent_open)) {
-				// open the tag for next lines
-				brace_count++;
-			}
+			brace_count = next_brace_count;
 			
 			buf.append(line).append("\n");
 		}
@@ -165,10 +204,26 @@ public class IACleaner {
 			String value = replaceQuotes.get(key);
 			script = script.replace(key, value);
 		}
-		script.replace(REPLACE_QUOTE_SQ, "'");
-		script.replace(REPLACE_QUOTE, "\"");
+		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
+		script = script.replace(REPLACE_QUOTE, "\\\"");
+		
+		// return explicit exceptions
+		for (String key : getExceptions().keySet()) {
+			script = script.replace(getExceptions().get(key), key);
+		}
 		
 		return script;
+	}
+
+	/**
+	 * Get the string context at a given position.
+	 * 
+	 * @param script
+	 * @param i
+	 * @return
+	 */
+	private String getContext(String script, int i) {
+		return script.substring( i - 20, i + 20 );
 	}
 
 	/**
@@ -179,7 +234,7 @@ public class IACleaner {
 	 * @param string
 	 */
 	private void throwWarning(String string) {
-		System.err.println(string);
+		System.err.println("Warning: " + string);
 		warnings.add(string);
 	}
 
@@ -213,6 +268,15 @@ public class IACleaner {
 	 * @throws CleanerException if a cleaner exception occurs
 	 */
 	public String cleanScript(File sourceFile) throws IOException, CleanerException {
+		return cleanScript(readFile(sourceFile));
+	}
+	
+	/**
+	 * Read in a file into a string.
+	 * 
+	 * @throws IOException if an IO exception occurs
+	 */
+	public static String readFile(File sourceFile) throws IOException {
 		int bufSize = 128;
 		StringBuffer sb = new StringBuffer(bufSize);
 		BufferedReader reader = new BufferedReader(new FileReader(sourceFile), bufSize);
@@ -224,8 +288,7 @@ public class IACleaner {
 		}
 		
 		reader.close();
-		
-		return cleanScript(sb.toString());
+		return sb.toString();
 	}
 	
 	/**

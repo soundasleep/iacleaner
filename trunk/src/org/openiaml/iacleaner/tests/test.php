@@ -823,7 +823,7 @@ $s->execute(array("visual.11e37b8d948.d")) or local_die("could not execute delet
 		
 		<!-- for test cases to improve speed: an outstanding ajax calls counter -->
 		<div id="ajax_monitor"></div>
-		
+
 		</body>
 		</html>
 	
