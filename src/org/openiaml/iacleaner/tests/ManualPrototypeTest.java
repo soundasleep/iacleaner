@@ -13,22 +13,14 @@ import org.openiaml.iacleaner.IACleaner;
 import org.openiaml.iacleaner.IACleaner.CleanerException;
 
 /**
- * Manually test the cleaner. 
- * TODO In the future we should add this to automated tests, perhaps using
- * JWebUnit or other to ensure the formatted code continues to work
- * as expected. 
- * 
- * The source file ("test.php") was generated automatically by the IAML
- * project.
- * 
- * @see test.php
+ * @see prototype.js
  * @author Jevon
  *
  */
-public class ManualTest extends TestCase {
+public class ManualPrototypeTest extends TestCase {
 	
-	public File sourceFile = new File("src/org/openiaml/iacleaner/tests/test.php");
-	public File targetFile = new File("src/org/openiaml/iacleaner/tests/out.php");
+	public File sourceFile = new File("src/org/openiaml/iacleaner/tests/prototype.js");
+	public File targetFile = new File("src/org/openiaml/iacleaner/tests/prototype.out.js");
 	
 	public void testManual() throws IOException, CleanerException {
 		IACleaner clean = new IACleaner();
@@ -40,11 +32,10 @@ public class ManualTest extends TestCase {
 		FileWriter fw = new FileWriter(targetFile);
 		fw.write(output);
 		fw.close();
-
+		
 		// print out any warnings
 		for (String warning : clean.getWarnings()) {
 			System.err.println(warning);
 		}
-
 	}
 }
