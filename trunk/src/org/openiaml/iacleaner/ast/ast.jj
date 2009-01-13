@@ -229,6 +229,36 @@ TOKEN :
 	< ACCESS_MODIFIER: "public" | "private" | "protected" >
 }
 
+TOKEN :
+{
+	< PHP_TRY_STATEMENT: "try" >
+}
+
+TOKEN :
+{
+	< PHP_CATCH_STATEMENT: "catch" >
+}
+
+TOKEN :
+{
+	< PHP_THROW_STATEMENT: "throw" >
+}
+
+TOKEN :
+{
+	< PHP_FINALLY_STATEMENT: "finally" >
+}
+
+TOKEN :
+{
+	< PHP_DIE_STATEMENT: "die" >
+}
+
+TOKEN :
+{
+	< PHP_EXIT_STATEMENT: "exit" >
+}
+
 TOKEN : /* if statement */
 {
 	< PHP_IF_STATEMENT:
@@ -290,13 +320,10 @@ TOKEN :
 	< PHP_OBJECT_OPERATOR: "::" >
 }
 
-TOKEN : /* operator -- 
-	includes => for arrays, also includes ?: for 
-	ternary (although we don't specifically check 
-	that it is a valid expression) */
+TOKEN : /* operator -- includes '=>' for arrays */
 {
 	< PHP_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" | "?" | ":" >
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" >
 }
 
 TOKEN : /* prefix operator */
@@ -769,7 +796,8 @@ void PhpStatement() : {/*@bgen(jjtree) PhpStatement */
 	| PhpLanguageStatement() ";"
 	| PhpIfStatement()
 	| (<ACCESS_MODIFIER>)?
-		( PhpClassDefinition() | PhpInterfaceDefinition() )/*@bgen(jjtree)*/
+		( PhpClassDefinition() | PhpInterfaceDefinition() ) 
+	| PhpTryCatchBlock()/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -789,7 +817,7 @@ void PhpStatement() : {/*@bgen(jjtree) PhpStatement */
             jjtree.closeNodeScope(jjtn000, true);
           }
         }
-/*@egen*/ 
+/*@egen*/
 }
 
 void PhpLanguageStatement() : {/*@bgen(jjtree) PhpLanguageStatement */
@@ -800,12 +828,49 @@ void PhpLanguageStatement() : {/*@bgen(jjtree) PhpLanguageStatement */
 {/*@bgen(jjtree) PhpLanguageStatement */
         try {
 /*@egen*/
-	<ECHO_STATEMENT> PhpValue()
+	<ECHO_STATEMENT> PhpValuePossiblyWrapped()
+	| <PHP_THROW_STATEMENT> PhpValue()
+	| <PHP_DIE_STATEMENT> (
+			PhpValuePossiblyWrapped()
+		)?
 	| (PhpFunctionCall() "(" (PhpArgumentList())? ")"
 		(PhpOrSomething()) ?)
-	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
+	| <RETURN_STATEMENT> (PhpValuePossiblyWrapped() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> (<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* "=" PhpValue() (PhpOrSomething()) ?/*@bgen(jjtree)*/
+	| PhpVariableAssignment()/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void PhpVariableAssignment() : {/*@bgen(jjtree) PhpVariableAssignment */
+  ASTPhpVariableAssignment jjtn000 = new ASTPhpVariableAssignment(JJTPHPVARIABLEASSIGNMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpVariableAssignment */
+        try {
+/*@egen*/
+	<PHP_VARIABLE> 
+		(<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* 
+		"=" PhpValuePossiblyWrapped() (<PHP_THROW_STATEMENT> PhpOrSomething()) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -877,30 +942,23 @@ void PhpOrSomething() : {/*@bgen(jjtree) PhpOrSomething */
 /*@egen*/
 }
 
-void PhpValue() : {/*@bgen(jjtree) PhpValue */
-  ASTPhpValue jjtn000 = new ASTPhpValue(JJTPHPVALUE);
+void PhpTryCatchBlock() : {/*@bgen(jjtree) PhpTryCatchBlock */
+  ASTPhpTryCatchBlock jjtn000 = new ASTPhpTryCatchBlock(JJTPHPTRYCATCHBLOCK);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
 /*@egen*/}
-{/*@bgen(jjtree) PhpValue */
+{/*@bgen(jjtree) PhpTryCatchBlock */
         try {
 /*@egen*/
-	(
-		(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
-		
-		(
-		  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-		  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-		  | <PHP_VARIABLE>
-		  | PhpSimpleValue() )
-		  	  
-		( PhpSelectArray()) ?		/* e.g $a[1][2][3] */
-	
-		( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
-	) | (
-		"(" PhpValue() ")"
-	)
-	( <PHP_OPERATOR> PhpValue() )?/*@bgen(jjtree)*/
+	<PHP_TRY_STATEMENT> "{"
+		PhpBlock()
+	"}" 
+	(<PHP_CATCH_STATEMENT> "(" <PHP_FUNCTION_NAME> <PHP_VARIABLE> ")" "{"
+		PhpBlock()
+	"}")*
+	(<PHP_FINALLY_STATEMENT> "{"
+		PhpBlock()
+	"}")?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -920,7 +978,88 @@ void PhpValue() : {/*@bgen(jjtree) PhpValue */
             jjtree.closeNodeScope(jjtn000, true);
           }
         }
-/*@egen*/			/* e.g. "f() + 42" */
+/*@egen*/
+}
+
+void PhpValue() : {/*@bgen(jjtree) PhpValue */
+  ASTPhpValue jjtn000 = new ASTPhpValue(JJTPHPVALUE);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpValue */
+        try {
+/*@egen*/
+	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
+	
+	(
+	  (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")")
+	  | (<NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")")
+	  | (<PHP_VARIABLE>)
+	  | (PhpSimpleValue()) 
+	)
+
+	( PhpSelectArray()) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/		/* e.g $a[1][2][3] */
+
+}
+
+void PhpValuePossiblyWrapped() : {/*@bgen(jjtree) PhpValuePossiblyWrapped */
+  ASTPhpValuePossiblyWrapped jjtn000 = new ASTPhpValuePossiblyWrapped(JJTPHPVALUEPOSSIBLYWRAPPED);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpValuePossiblyWrapped */
+        try {
+/*@egen*/
+	(( "(" PhpValuePossiblyWrapped() ")" ) | PhpValue() )
+
+	(
+		/* e.g. "f() + 42" */
+		(<PHP_OPERATOR> PhpValuePossiblyWrapped())
+		|
+		/* e.g. "f() ? 1 : 2" */
+		("?" PhpValuePossiblyWrapped() ":" PhpValuePossiblyWrapped()) 
+	)?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+
 }
 
 void PhpSimpleValue() : {/*@bgen(jjtree) PhpSimpleValue */
@@ -948,7 +1087,7 @@ void PhpSelectArray() : {/*@bgen(jjtree) PhpSelectArray */
 {/*@bgen(jjtree) PhpSelectArray */
         try {
 /*@egen*/
-	"[" PhpValue() "]" 
+	"[" PhpValuePossiblyWrapped() "]" 
 	(PhpSelectArray()) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -981,7 +1120,7 @@ void PhpArgumentList() : {/*@bgen(jjtree) PhpArgumentList */
 {/*@bgen(jjtree) PhpArgumentList */
         try {
 /*@egen*/
-	PhpValue() ("," (PhpArgumentList())? )?/*@bgen(jjtree)*/
+	PhpValuePossiblyWrapped() ("," (PhpArgumentList())? )?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1111,7 +1250,7 @@ void PhpIfStatement() : {/*@bgen(jjtree) PhpIfStatement */
 {/*@bgen(jjtree) PhpIfStatement */
         try {
 /*@egen*/
-	<PHP_IF_STATEMENT> "(" PhpValue() ")" "{" PhpBlock() "}"
+	<PHP_IF_STATEMENT> "(" PhpValuePossiblyWrapped() ")" "{" PhpBlock() "}"
 	( <PHP_ELSE_STATEMENT> "{" PhpBlock() "}" ) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {

@@ -43,7 +43,10 @@ import org.openiaml.iacleaner.ast.ASTPhpRootBlock;
 import org.openiaml.iacleaner.ast.ASTPhpSelectArray;
 import org.openiaml.iacleaner.ast.ASTPhpSimpleValue;
 import org.openiaml.iacleaner.ast.ASTPhpStatement;
+import org.openiaml.iacleaner.ast.ASTPhpTryCatchBlock;
 import org.openiaml.iacleaner.ast.ASTPhpValue;
+import org.openiaml.iacleaner.ast.ASTPhpValuePossiblyWrapped;
+import org.openiaml.iacleaner.ast.ASTPhpVariableAssignment;
 import org.openiaml.iacleaner.ast.ASTPhpVariableList;
 import org.openiaml.iacleaner.ast.ASTStart;
 import org.openiaml.iacleaner.ast.ASTStartJs;
@@ -375,6 +378,33 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTPhpFunctionCall node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpTryCatchBlock, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpTryCatchBlock node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpVariableAssignment, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpVariableAssignment node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpValuePossiblyWrapped, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpValuePossiblyWrapped node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}

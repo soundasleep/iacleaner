@@ -251,6 +251,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case CLASS_STATEMENT:
         case INTERFACE_STATEMENT:
         case ACCESS_MODIFIER:
+        case PHP_TRY_STATEMENT:
+        case PHP_THROW_STATEMENT:
+        case PHP_DIE_STATEMENT:
         case PHP_IF_STATEMENT:
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
@@ -269,6 +272,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case CLASS_STATEMENT:
         case INTERFACE_STATEMENT:
         case ACCESS_MODIFIER:
+        case PHP_TRY_STATEMENT:
+        case PHP_THROW_STATEMENT:
+        case PHP_DIE_STATEMENT:
         case PHP_IF_STATEMENT:
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
@@ -377,10 +383,12 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       case ECHO_STATEMENT:
       case RETURN_STATEMENT:
       case GLOBAL_STATEMENT:
+      case PHP_THROW_STATEMENT:
+      case PHP_DIE_STATEMENT:
       case PHP_FUNCTION_NAME:
       case PHP_VARIABLE:
         PhpLanguageStatement();
-        jj_consume_token(92);
+        jj_consume_token(98);
         break;
       case PHP_IF_STATEMENT:
         PhpIfStatement();
@@ -408,6 +416,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           jj_consume_token(-1);
           throw new ParseException();
         }
+        break;
+      case PHP_TRY_STATEMENT:
+        PhpTryCatchBlock();
         break;
       default:
         jj_la1[8] = jj_gen;
@@ -444,11 +455,14 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case ECHO_STATEMENT:
         jj_consume_token(ECHO_STATEMENT);
+        PhpValuePossiblyWrapped();
+        break;
+      case PHP_THROW_STATEMENT:
+        jj_consume_token(PHP_THROW_STATEMENT);
         PhpValue();
         break;
-      case PHP_FUNCTION_NAME:
-        PhpFunctionCall();
-        jj_consume_token(93);
+      case PHP_DIE_STATEMENT:
+        jj_consume_token(PHP_DIE_STATEMENT);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -459,20 +473,41 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 93:
-          PhpArgumentList();
+        case 99:
+          PhpValuePossiblyWrapped();
           break;
         default:
           jj_la1[9] = jj_gen;
           ;
         }
-        jj_consume_token(94);
+        break;
+      case PHP_FUNCTION_NAME:
+        PhpFunctionCall();
+        jj_consume_token(99);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case NEW_STATEMENT:
+        case STRING:
+        case STRING_SQ:
+        case DECIMAL:
+        case HEXADECIMAL:
+        case PHP_BUILTIN:
+        case PHP_FUNCTION_NAME:
+        case PHP_VARIABLE:
+        case PHP_PREFIX_OPERATOR:
+        case 99:
+          PhpArgumentList();
+          break;
+        default:
+          jj_la1[10] = jj_gen;
+          ;
+        }
+        jj_consume_token(100);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case OR_STATEMENT:
           PhpOrSomething();
           break;
         default:
-          jj_la1[10] = jj_gen;
+          jj_la1[11] = jj_gen;
           ;
         }
         break;
@@ -488,19 +523,19 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 93:
-          PhpValue();
+        case 99:
+          PhpValuePossiblyWrapped();
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case OR_STATEMENT:
             PhpOrSomething();
             break;
           default:
-            jj_la1[11] = jj_gen;
+            jj_la1[12] = jj_gen;
             ;
           }
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[13] = jj_gen;
           ;
         }
         break;
@@ -509,46 +544,75 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         PhpVariableList();
         break;
       case PHP_VARIABLE:
-        jj_consume_token(PHP_VARIABLE);
-        label_4:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case PHP_OBJECT_OPERATOR:
-            ;
-            break;
-          default:
-            jj_la1[13] = jj_gen;
-            break label_4;
+        PhpVariableAssignment();
+        break;
+      default:
+        jj_la1[14] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+    } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
           }
-          jj_consume_token(PHP_OBJECT_OPERATOR);
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case PHP_VARIABLE:
-            jj_consume_token(PHP_VARIABLE);
-            break;
-          case PHP_FUNCTION_NAME:
-            jj_consume_token(PHP_FUNCTION_NAME);
-            break;
-          default:
-            jj_la1[14] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
+          if (jjte000 instanceof RuntimeException) {
+            {if (true) throw (RuntimeException)jjte000;}
           }
-        }
-        jj_consume_token(95);
-        PhpValue();
+          if (jjte000 instanceof ParseException) {
+            {if (true) throw (ParseException)jjte000;}
+          }
+          {if (true) throw (Error)jjte000;}
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
+  static final public void PhpVariableAssignment() throws ParseException {
+                                /*@bgen(jjtree) PhpVariableAssignment */
+  ASTPhpVariableAssignment jjtn000 = new ASTPhpVariableAssignment(JJTPHPVARIABLEASSIGNMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+    try {
+      jj_consume_token(PHP_VARIABLE);
+      label_4:
+      while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case OR_STATEMENT:
-          PhpOrSomething();
+        case PHP_OBJECT_OPERATOR:
+          ;
           break;
         default:
           jj_la1[15] = jj_gen;
-          ;
+          break label_4;
         }
+        jj_consume_token(PHP_OBJECT_OPERATOR);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PHP_VARIABLE:
+          jj_consume_token(PHP_VARIABLE);
+          break;
+        case PHP_FUNCTION_NAME:
+          jj_consume_token(PHP_FUNCTION_NAME);
+          break;
+        default:
+          jj_la1[16] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
+      jj_consume_token(101);
+      PhpValuePossiblyWrapped();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PHP_THROW_STATEMENT:
+        jj_consume_token(PHP_THROW_STATEMENT);
+        PhpOrSomething();
         break;
       default:
-        jj_la1[16] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+        jj_la1[17] = jj_gen;
+        ;
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -585,7 +649,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           ;
           break;
         default:
-          jj_la1[17] = jj_gen;
+          jj_la1[18] = jj_gen;
           break label_5;
         }
         jj_consume_token(PHP_OBJECT_OPERATOR);
@@ -606,7 +670,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(OR_STATEMENT);
       jj_consume_token(PHP_FUNCTION_NAME);
-      jj_consume_token(93);
+      jj_consume_token(99);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NEW_STATEMENT:
       case STRING:
@@ -617,14 +681,75 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       case PHP_FUNCTION_NAME:
       case PHP_VARIABLE:
       case PHP_PREFIX_OPERATOR:
-      case 93:
+      case 99:
         PhpArgumentList();
         break;
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[19] = jj_gen;
         ;
       }
-      jj_consume_token(94);
+      jj_consume_token(100);
+    } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            {if (true) throw (RuntimeException)jjte000;}
+          }
+          if (jjte000 instanceof ParseException) {
+            {if (true) throw (ParseException)jjte000;}
+          }
+          {if (true) throw (Error)jjte000;}
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
+  static final public void PhpTryCatchBlock() throws ParseException {
+                           /*@bgen(jjtree) PhpTryCatchBlock */
+  ASTPhpTryCatchBlock jjtn000 = new ASTPhpTryCatchBlock(JJTPHPTRYCATCHBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+    try {
+      jj_consume_token(PHP_TRY_STATEMENT);
+      jj_consume_token(102);
+      PhpBlock();
+      jj_consume_token(103);
+      label_6:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PHP_CATCH_STATEMENT:
+          ;
+          break;
+        default:
+          jj_la1[20] = jj_gen;
+          break label_6;
+        }
+        jj_consume_token(PHP_CATCH_STATEMENT);
+        jj_consume_token(99);
+        jj_consume_token(PHP_FUNCTION_NAME);
+        jj_consume_token(PHP_VARIABLE);
+        jj_consume_token(100);
+        jj_consume_token(102);
+        PhpBlock();
+        jj_consume_token(103);
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PHP_FINALLY_STATEMENT:
+        jj_consume_token(PHP_FINALLY_STATEMENT);
+        jj_consume_token(102);
+        PhpBlock();
+        jj_consume_token(103);
+        break;
+      default:
+        jj_la1[21] = jj_gen;
+        ;
+      }
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -652,7 +777,120 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
+      label_7:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PHP_PREFIX_OPERATOR:
+          ;
+          break;
+        default:
+          jj_la1[22] = jj_gen;
+          break label_7;
+        }
+        jj_consume_token(PHP_PREFIX_OPERATOR);
+      }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PHP_FUNCTION_NAME:
+        jj_consume_token(PHP_FUNCTION_NAME);
+        jj_consume_token(99);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case NEW_STATEMENT:
+        case STRING:
+        case STRING_SQ:
+        case DECIMAL:
+        case HEXADECIMAL:
+        case PHP_BUILTIN:
+        case PHP_FUNCTION_NAME:
+        case PHP_VARIABLE:
+        case PHP_PREFIX_OPERATOR:
+        case 99:
+          PhpArgumentList();
+          break;
+        default:
+          jj_la1[23] = jj_gen;
+          ;
+        }
+        jj_consume_token(100);
+        break;
+      case NEW_STATEMENT:
+        jj_consume_token(NEW_STATEMENT);
+        jj_consume_token(PHP_FUNCTION_NAME);
+        jj_consume_token(99);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case NEW_STATEMENT:
+        case STRING:
+        case STRING_SQ:
+        case DECIMAL:
+        case HEXADECIMAL:
+        case PHP_BUILTIN:
+        case PHP_FUNCTION_NAME:
+        case PHP_VARIABLE:
+        case PHP_PREFIX_OPERATOR:
+        case 99:
+          PhpArgumentList();
+          break;
+        default:
+          jj_la1[24] = jj_gen;
+          ;
+        }
+        jj_consume_token(100);
+        break;
+      case PHP_VARIABLE:
+        jj_consume_token(PHP_VARIABLE);
+        break;
+      case STRING:
+      case STRING_SQ:
+      case DECIMAL:
+      case HEXADECIMAL:
+      case PHP_BUILTIN:
+        PhpSimpleValue();
+        break;
+      default:
+        jj_la1[25] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 106:
+        PhpSelectArray();
+        break;
+      default:
+        jj_la1[26] = jj_gen;
+        ;
+      }
+    } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            {if (true) throw (RuntimeException)jjte000;}
+          }
+          if (jjte000 instanceof ParseException) {
+            {if (true) throw (ParseException)jjte000;}
+          }
+          {if (true) throw (Error)jjte000;}
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
+  static final public void PhpValuePossiblyWrapped() throws ParseException {
+                                  /*@bgen(jjtree) PhpValuePossiblyWrapped */
+  ASTPhpValuePossiblyWrapped jjtn000 = new ASTPhpValuePossiblyWrapped(JJTPHPVALUEPOSSIBLYWRAPPED);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+    try {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 99:
+        jj_consume_token(99);
+        PhpValuePossiblyWrapped();
+        jj_consume_token(100);
+        break;
       case NEW_STATEMENT:
       case STRING:
       case STRING_SQ:
@@ -662,115 +900,36 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       case PHP_FUNCTION_NAME:
       case PHP_VARIABLE:
       case PHP_PREFIX_OPERATOR:
-        label_6:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case PHP_PREFIX_OPERATOR:
-            ;
-            break;
-          default:
-            jj_la1[19] = jj_gen;
-            break label_6;
-          }
-          jj_consume_token(PHP_PREFIX_OPERATOR);
-        }
+        PhpValue();
+        break;
+      default:
+        jj_la1[27] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PHP_OPERATOR:
+      case 104:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case PHP_FUNCTION_NAME:
-          jj_consume_token(PHP_FUNCTION_NAME);
-          jj_consume_token(93);
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case NEW_STATEMENT:
-          case STRING:
-          case STRING_SQ:
-          case DECIMAL:
-          case HEXADECIMAL:
-          case PHP_BUILTIN:
-          case PHP_FUNCTION_NAME:
-          case PHP_VARIABLE:
-          case PHP_PREFIX_OPERATOR:
-          case 93:
-            PhpArgumentList();
-            break;
-          default:
-            jj_la1[20] = jj_gen;
-            ;
-          }
-          jj_consume_token(94);
+        case PHP_OPERATOR:
+          jj_consume_token(PHP_OPERATOR);
+          PhpValuePossiblyWrapped();
           break;
-        case NEW_STATEMENT:
-          jj_consume_token(NEW_STATEMENT);
-          jj_consume_token(PHP_FUNCTION_NAME);
-          jj_consume_token(93);
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case NEW_STATEMENT:
-          case STRING:
-          case STRING_SQ:
-          case DECIMAL:
-          case HEXADECIMAL:
-          case PHP_BUILTIN:
-          case PHP_FUNCTION_NAME:
-          case PHP_VARIABLE:
-          case PHP_PREFIX_OPERATOR:
-          case 93:
-            PhpArgumentList();
-            break;
-          default:
-            jj_la1[21] = jj_gen;
-            ;
-          }
-          jj_consume_token(94);
-          break;
-        case PHP_VARIABLE:
-          jj_consume_token(PHP_VARIABLE);
-          break;
-        case STRING:
-        case STRING_SQ:
-        case DECIMAL:
-        case HEXADECIMAL:
-        case PHP_BUILTIN:
-          PhpSimpleValue();
+        case 104:
+          jj_consume_token(104);
+          PhpValuePossiblyWrapped();
+          jj_consume_token(105);
+          PhpValuePossiblyWrapped();
           break;
         default:
-          jj_la1[22] = jj_gen;
+          jj_la1[28] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 96:
-          PhpSelectArray();
-          break;
-        default:
-          jj_la1[23] = jj_gen;
-          ;
-        }
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case PHP_OPERATOR:
-          jj_consume_token(PHP_OPERATOR);
-          PhpValue();
-          break;
-        default:
-          jj_la1[24] = jj_gen;
-          ;
-        }
-        break;
-      case 93:
-        jj_consume_token(93);
-        PhpValue();
-        jj_consume_token(94);
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case PHP_OPERATOR:
-          jj_consume_token(PHP_OPERATOR);
-          PhpValue();
-          break;
-        default:
-          jj_la1[25] = jj_gen;
-          ;
-        }
         break;
       default:
-        jj_la1[26] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+        jj_la1[29] = jj_gen;
+        ;
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -816,7 +975,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_consume_token(PHP_BUILTIN);
         break;
       default:
-        jj_la1[27] = jj_gen;
+        jj_la1[30] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -833,15 +992,15 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      jj_consume_token(96);
-      PhpValue();
-      jj_consume_token(97);
+      jj_consume_token(106);
+      PhpValuePossiblyWrapped();
+      jj_consume_token(107);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 96:
+      case 106:
         PhpSelectArray();
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[31] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -872,10 +1031,10 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      PhpValue();
+      PhpValuePossiblyWrapped();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 98:
-        jj_consume_token(98);
+      case 108:
+        jj_consume_token(108);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -886,16 +1045,16 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 93:
+        case 99:
           PhpArgumentList();
           break;
         default:
-          jj_la1[29] = jj_gen;
+          jj_la1[32] = jj_gen;
           ;
         }
         break;
       default:
-        jj_la1[30] = jj_gen;
+        jj_la1[33] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -927,12 +1086,12 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_VARIABLE);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 98:
-        jj_consume_token(98);
+      case 108:
+        jj_consume_token(108);
         PhpVariableList();
         break;
       default:
-        jj_la1[31] = jj_gen;
+        jj_la1[34] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -964,19 +1123,19 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(FUNCTION_STATEMENT);
       jj_consume_token(PHP_FUNCTION_NAME);
-      jj_consume_token(93);
+      jj_consume_token(99);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_VARIABLE:
         PhpFunctionArgumentList();
         break;
       default:
-        jj_la1[32] = jj_gen;
+        jj_la1[35] = jj_gen;
         ;
       }
-      jj_consume_token(94);
-      jj_consume_token(99);
-      PhpBlock();
       jj_consume_token(100);
+      jj_consume_token(102);
+      PhpBlock();
+      jj_consume_token(103);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1006,21 +1165,21 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_VARIABLE);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 95:
-        jj_consume_token(95);
+      case 101:
+        jj_consume_token(101);
         PhpSimpleValue();
         break;
       default:
-        jj_la1[33] = jj_gen;
+        jj_la1[36] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 98:
-        jj_consume_token(98);
+      case 108:
+        jj_consume_token(108);
         PhpFunctionArgumentList();
         break;
       default:
-        jj_la1[34] = jj_gen;
+        jj_la1[37] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1051,21 +1210,21 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   jjtree.openNodeScope(jjtn000);
     try {
       jj_consume_token(PHP_IF_STATEMENT);
-      jj_consume_token(93);
-      PhpValue();
-      jj_consume_token(94);
       jj_consume_token(99);
-      PhpBlock();
+      PhpValuePossiblyWrapped();
       jj_consume_token(100);
+      jj_consume_token(102);
+      PhpBlock();
+      jj_consume_token(103);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_ELSE_STATEMENT:
         jj_consume_token(PHP_ELSE_STATEMENT);
-        jj_consume_token(99);
+        jj_consume_token(102);
         PhpBlock();
-        jj_consume_token(100);
+        jj_consume_token(103);
         break;
       default:
-        jj_la1[35] = jj_gen;
+        jj_la1[38] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1110,7 +1269,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
             PhpInterfaceList();
             break;
           default:
-            jj_la1[36] = jj_gen;
+            jj_la1[39] = jj_gen;
             ;
           }
           break;
@@ -1123,23 +1282,23 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
             jj_consume_token(PHP_FUNCTION_NAME);
             break;
           default:
-            jj_la1[37] = jj_gen;
+            jj_la1[40] = jj_gen;
             ;
           }
           break;
         default:
-          jj_la1[38] = jj_gen;
+          jj_la1[41] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[39] = jj_gen;
+        jj_la1[42] = jj_gen;
         ;
       }
-      jj_consume_token(99);
+      jj_consume_token(102);
       PhpClassBlock();
-      jj_consume_token(100);
+      jj_consume_token(103);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1175,12 +1334,12 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         PhpInterfaceList();
         break;
       default:
-        jj_la1[40] = jj_gen;
+        jj_la1[43] = jj_gen;
         ;
       }
-      jj_consume_token(99);
+      jj_consume_token(102);
       PhpInterfaceBlock();
-      jj_consume_token(100);
+      jj_consume_token(103);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1210,12 +1369,12 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_FUNCTION_NAME);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 98:
-        jj_consume_token(98);
+      case 108:
+        jj_consume_token(108);
         PhpInterfaceList();
         break;
       default:
-        jj_la1[41] = jj_gen;
+        jj_la1[44] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1245,7 +1404,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      label_7:
+      label_8:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case FUNCTION_STATEMENT:
@@ -1254,28 +1413,28 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           ;
           break;
         default:
-          jj_la1[42] = jj_gen;
-          break label_7;
+          jj_la1[45] = jj_gen;
+          break label_8;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ACCESS_MODIFIER:
           jj_consume_token(ACCESS_MODIFIER);
           break;
         default:
-          jj_la1[43] = jj_gen;
+          jj_la1[46] = jj_gen;
           ;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case VAR_STATEMENT:
           jj_consume_token(VAR_STATEMENT);
           PhpFunctionArgumentList();
-          jj_consume_token(92);
+          jj_consume_token(98);
           break;
         case FUNCTION_STATEMENT:
           PhpFunctionDefinition();
           break;
         default:
-          jj_la1[44] = jj_gen;
+          jj_la1[47] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1307,7 +1466,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      label_8:
+      label_9:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case FUNCTION_STATEMENT:
@@ -1315,30 +1474,30 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           ;
           break;
         default:
-          jj_la1[45] = jj_gen;
-          break label_8;
+          jj_la1[48] = jj_gen;
+          break label_9;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ACCESS_MODIFIER:
           jj_consume_token(ACCESS_MODIFIER);
           break;
         default:
-          jj_la1[46] = jj_gen;
+          jj_la1[49] = jj_gen;
           ;
         }
         jj_consume_token(FUNCTION_STATEMENT);
         jj_consume_token(PHP_FUNCTION_NAME);
-        jj_consume_token(93);
+        jj_consume_token(99);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PHP_VARIABLE:
           PhpFunctionArgumentList();
           break;
         default:
-          jj_la1[47] = jj_gen;
+          jj_la1[50] = jj_gen;
           ;
         }
-        jj_consume_token(94);
-        jj_consume_token(92);
+        jj_consume_token(100);
+        jj_consume_token(98);
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1384,7 +1543,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         HtmlComment();
         break;
       default:
-        jj_la1[48] = jj_gen;
+        jj_la1[51] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1448,15 +1607,15 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       jj_consume_token(HTML_OPEN_TAG);
       t = jj_consume_token(HTML_TAG_NAME);
                 jjtn000.setName( t.image );
-      label_9:
+      label_10:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case HTML_ATTRIBUTE_NAME:
           ;
           break;
         default:
-          jj_la1[49] = jj_gen;
-          break label_9;
+          jj_la1[52] = jj_gen;
+          break label_10;
         }
         HtmlTagAttribute();
       }
@@ -1557,7 +1716,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      label_10:
+      label_11:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case JS_FUNCTION_STATEMENT:
@@ -1570,8 +1729,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           ;
           break;
         default:
-          jj_la1[50] = jj_gen;
-          break label_10;
+          jj_la1[53] = jj_gen;
+          break label_11;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case JS_FUNCTION_STATEMENT:
@@ -1588,7 +1747,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           jj_consume_token(JS_MULTI_COMMENT);
           break;
         default:
-          jj_la1[51] = jj_gen;
+          jj_la1[54] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1634,7 +1793,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_consume_token(JS_END);
         break;
       default:
-        jj_la1[52] = jj_gen;
+        jj_la1[55] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1676,7 +1835,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsVariableAssignment();
         break;
       default:
-        jj_la1[53] = jj_gen;
+        jj_la1[56] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1723,7 +1882,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           JsArgumentList();
           break;
         default:
-          jj_la1[54] = jj_gen;
+          jj_la1[57] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
@@ -1743,13 +1902,13 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           JsArgumentList();
           break;
         default:
-          jj_la1[55] = jj_gen;
+          jj_la1[58] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
         break;
       default:
-        jj_la1[56] = jj_gen;
+        jj_la1[59] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1758,7 +1917,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsChainedOperator();
         break;
       default:
-        jj_la1[57] = jj_gen;
+        jj_la1[60] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1800,7 +1959,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsValue();
         break;
       default:
-        jj_la1[58] = jj_gen;
+        jj_la1[61] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1874,7 +2033,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsArgumentList();
         break;
       default:
-        jj_la1[59] = jj_gen;
+        jj_la1[62] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -1883,7 +2042,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsChainedOperator();
         break;
       default:
-        jj_la1[60] = jj_gen;
+        jj_la1[63] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1928,7 +2087,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           JsArgumentList();
           break;
         default:
-          jj_la1[61] = jj_gen;
+          jj_la1[64] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
@@ -1948,7 +2107,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           JsArgumentList();
           break;
         default:
-          jj_la1[62] = jj_gen;
+          jj_la1[65] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
@@ -1969,7 +2128,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_consume_token(JS_BUILTIN);
         break;
       default:
-        jj_la1[63] = jj_gen;
+        jj_la1[66] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1979,7 +2138,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsValue();
         break;
       default:
-        jj_la1[64] = jj_gen;
+        jj_la1[67] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -2023,7 +2182,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_consume_token(JS_BUILTIN);
         break;
       default:
-        jj_la1[65] = jj_gen;
+        jj_la1[68] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2047,7 +2206,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsArgumentList();
         break;
       default:
-        jj_la1[66] = jj_gen;
+        jj_la1[69] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -2084,7 +2243,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsVariableList();
         break;
       default:
-        jj_la1[67] = jj_gen;
+        jj_la1[70] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -2122,7 +2281,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[68] = jj_gen;
+        jj_la1[71] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -2163,7 +2322,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsSimpleValue();
         break;
       default:
-        jj_la1[69] = jj_gen;
+        jj_la1[72] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -2172,7 +2331,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[70] = jj_gen;
+        jj_la1[73] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -2217,7 +2376,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       default:
-        jj_la1[71] = jj_gen;
+        jj_la1[74] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -2251,7 +2410,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[72];
+  static final private int[] jj_la1 = new int[75];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -2263,16 +2422,16 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       jj_la1_init_3();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x0,0x78000000,0x78000000,0x0,0x1,0x0,0x0,0x78000000,0x80000000,0x0,0x0,0x80000000,0x0,0x0,0x0,0x68000000,0x0,0x80000000,0x0,0x80000000,0x80000000,0x80000000,0x0,0x0,0x0,0x80000000,0x0,0x0,0x80000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x10000000,0x10000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x0,0x0,0x78000000,0x78000000,0x0,0x1,0x0,0x0,0x78000000,0x80000000,0x80000000,0x0,0x0,0x80000000,0x68000000,0x0,0x0,0x0,0x0,0x80000000,0x0,0x0,0x0,0x80000000,0x80000000,0x80000000,0x0,0x80000000,0x0,0x0,0x0,0x0,0x80000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x10000000,0x10000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x82b00000,0x82b00000,0x8c0cc,0x8c0cc,0x82a00000,0x100000,0x40,0xc,0xc0cc,0x4fe00,0x1,0x1,0x4fe00,0x10000,0xc000,0x1,0xc000,0x10000,0x4fe00,0x40000,0x4fe00,0x4fe00,0xfe00,0x0,0x20000,0x20000,0x4fe00,0x3e00,0x0,0x4fe00,0x0,0x0,0x8000,0x0,0x0,0x100,0x10,0x20,0x30,0x30,0x20,0x0,0x42,0x40,0x2,0x40,0x40,0x8000,0x82a00000,0x10000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0xac000000,0xac000000,0x2302acc,0x2302acc,0xa8000000,0x4000000,0x40,0xc,0x302acc,0x13f8000,0x13f8000,0x1,0x1,0x13f8000,0x300a00,0x400000,0x300000,0x200,0x400000,0x13f8000,0x100,0x400,0x1000000,0x13f8000,0x13f8000,0x3f8000,0x0,0x13f8000,0x800000,0x800000,0xf8000,0x0,0x13f8000,0x0,0x0,0x200000,0x0,0x0,0x4000,0x10,0x20,0x30,0x30,0x20,0x0,0x42,0x40,0x2,0x40,0x40,0x200000,0xa8000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x1,0x1,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x20000000,0x0,0x0,0x20000000,0x0,0x0,0x0,0x0,0x0,0x20000000,0x0,0x20000000,0x20000000,0x0,0x0,0x0,0x0,0x20000000,0x0,0x0,0x20000000,0x0,0x0,0x0,0x80000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x2700098,0x2700098,0x2100098,0x2100010,0x21f0020,0x21f0020,0x8000100,0x8000000,0x21f0020,0x21f0020,0x8000000,0x21f0020,0x21f0020,0x21f0020,0x4000000,0xf0000,0x4000,0x4000,0x2000000,0x2000,0x4000,0x8000,};
+      jj_la1_2 = new int[] {0x60,0x60,0x0,0x0,0x60,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x60,0x4,0x9c002600,0x9c002600,0x84002600,0x84000400,0x87c00800,0x87c00800,0x4000,0x0,0x87c00800,0x87c00800,0x0,0x87c00800,0x87c00800,0x87c00800,0x0,0x3c00000,0x100000,0x100000,0x80000000,0x80000,0x100000,0x200000,};
    }
    private static void jj_la1_init_3() {
-      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x0,0x4,0x4,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x8,0x0,0x0,0x8,0x0,0x0,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x8,0x8,0x0,0x400,0x8,0x100,0x100,0x0,0x400,0x8,0x1000,0x1000,0x0,0x20,0x1000,0x0,0x0,0x0,0x0,0x0,0x0,0x1000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2,0x2,0x0,0x0,0x2,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -2293,7 +2452,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -2308,7 +2467,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -2325,7 +2484,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -2336,7 +2495,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -2352,7 +2511,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -2362,7 +2521,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 72; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 75; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -2413,12 +2572,12 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[101];
+    boolean[] la1tokens = new boolean[109];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 72; i++) {
+    for (int i = 0; i < 75; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -2436,7 +2595,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         }
       }
     }
-    for (int i = 0; i < 101; i++) {
+    for (int i = 0; i < 109; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

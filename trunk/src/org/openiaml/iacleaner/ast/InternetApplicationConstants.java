@@ -35,103 +35,115 @@ public interface InternetApplicationConstants {
   /** RegularExpression Id. */
   int ACCESS_MODIFIER = 38;
   /** RegularExpression Id. */
-  int PHP_IF_STATEMENT = 39;
+  int PHP_TRY_STATEMENT = 39;
   /** RegularExpression Id. */
-  int PHP_ELSE_STATEMENT = 40;
+  int PHP_CATCH_STATEMENT = 40;
   /** RegularExpression Id. */
-  int STRING = 41;
+  int PHP_THROW_STATEMENT = 41;
   /** RegularExpression Id. */
-  int STRING_SQ = 42;
+  int PHP_FINALLY_STATEMENT = 42;
   /** RegularExpression Id. */
-  int DECIMAL = 43;
+  int PHP_DIE_STATEMENT = 43;
   /** RegularExpression Id. */
-  int HEXADECIMAL = 44;
+  int PHP_EXIT_STATEMENT = 44;
   /** RegularExpression Id. */
-  int PHP_BUILTIN = 45;
+  int PHP_IF_STATEMENT = 45;
   /** RegularExpression Id. */
-  int PHP_FUNCTION_NAME = 46;
+  int PHP_ELSE_STATEMENT = 46;
   /** RegularExpression Id. */
-  int PHP_VARIABLE = 47;
+  int STRING = 47;
   /** RegularExpression Id. */
-  int PHP_OBJECT_OPERATOR = 48;
+  int STRING_SQ = 48;
   /** RegularExpression Id. */
-  int PHP_OPERATOR = 49;
+  int DECIMAL = 49;
   /** RegularExpression Id. */
-  int PHP_PREFIX_OPERATOR = 50;
+  int HEXADECIMAL = 50;
   /** RegularExpression Id. */
-  int PHP_BLOCK_END = 51;
+  int PHP_BUILTIN = 51;
   /** RegularExpression Id. */
-  int PHP_BLOCK_BEGIN = 52;
+  int PHP_FUNCTION_NAME = 52;
   /** RegularExpression Id. */
-  int HTML_SCRIPT_TAG = 53;
+  int PHP_VARIABLE = 53;
   /** RegularExpression Id. */
-  int HTML_SCRIPT_TAG_CLOSE = 54;
+  int PHP_OBJECT_OPERATOR = 54;
   /** RegularExpression Id. */
-  int HTML_OPEN_TAG = 55;
+  int PHP_OPERATOR = 55;
   /** RegularExpression Id. */
-  int HTML_CLOSE_TAG = 56;
+  int PHP_PREFIX_OPERATOR = 56;
   /** RegularExpression Id. */
-  int HTML_CLOSING_TAG = 57;
+  int PHP_BLOCK_END = 57;
   /** RegularExpression Id. */
-  int HTML_TAG_NAME = 58;
+  int PHP_BLOCK_BEGIN = 58;
   /** RegularExpression Id. */
-  int LETTER = 59;
+  int HTML_SCRIPT_TAG = 59;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_NAME = 60;
+  int HTML_SCRIPT_TAG_CLOSE = 60;
   /** RegularExpression Id. */
-  int HTML_STRING = 61;
+  int HTML_OPEN_TAG = 61;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_EQUALS = 62;
+  int HTML_CLOSE_TAG = 62;
   /** RegularExpression Id. */
-  int HTML_TEXT_BLOCK = 63;
+  int HTML_CLOSING_TAG = 63;
   /** RegularExpression Id. */
-  int HTML_COMMENT_START = 64;
+  int HTML_TAG_NAME = 64;
   /** RegularExpression Id. */
-  int JS_FUNCTION_STATEMENT = 67;
+  int LETTER = 65;
   /** RegularExpression Id. */
-  int JS_RETURN_STATEMENT = 68;
+  int HTML_ATTRIBUTE_NAME = 66;
   /** RegularExpression Id. */
-  int JS_NEW_STATEMENT = 69;
+  int HTML_STRING = 67;
   /** RegularExpression Id. */
-  int JS_VAR_STATEMENT = 70;
+  int HTML_ATTRIBUTE_EQUALS = 68;
   /** RegularExpression Id. */
-  int JS_IF_STATEMENT = 71;
+  int HTML_TEXT_BLOCK = 69;
   /** RegularExpression Id. */
-  int JS_BRACKET_OPEN = 72;
+  int HTML_COMMENT_START = 70;
   /** RegularExpression Id. */
-  int JS_BRACKET_CLOSE = 73;
+  int JS_FUNCTION_STATEMENT = 73;
   /** RegularExpression Id. */
-  int JS_BRACE_OPEN = 74;
+  int JS_RETURN_STATEMENT = 74;
   /** RegularExpression Id. */
-  int JS_BRACE_CLOSE = 75;
+  int JS_NEW_STATEMENT = 75;
   /** RegularExpression Id. */
-  int JS_END = 76;
+  int JS_VAR_STATEMENT = 76;
   /** RegularExpression Id. */
-  int JS_EQUAL = 77;
+  int JS_IF_STATEMENT = 77;
   /** RegularExpression Id. */
-  int JS_COMMA = 78;
+  int JS_BRACKET_OPEN = 78;
   /** RegularExpression Id. */
-  int JS_ELSE_STATEMENT = 79;
+  int JS_BRACKET_CLOSE = 79;
   /** RegularExpression Id. */
-  int JS_STRING = 80;
+  int JS_BRACE_OPEN = 80;
   /** RegularExpression Id. */
-  int JS_DECIMAL = 81;
+  int JS_BRACE_CLOSE = 81;
   /** RegularExpression Id. */
-  int JS_HEXADECIMAL = 82;
+  int JS_END = 82;
   /** RegularExpression Id. */
-  int JS_BUILTIN = 83;
+  int JS_EQUAL = 83;
   /** RegularExpression Id. */
-  int JS_FUNCTION_NAME = 84;
+  int JS_COMMA = 84;
   /** RegularExpression Id. */
-  int JS_SINGLE_COMMENT = 85;
+  int JS_ELSE_STATEMENT = 85;
   /** RegularExpression Id. */
-  int JS_MULTI_COMMENT = 86;
+  int JS_STRING = 86;
   /** RegularExpression Id. */
-  int JS_VARIABLE = 89;
+  int JS_DECIMAL = 87;
   /** RegularExpression Id. */
-  int JS_OPERATOR = 90;
+  int JS_HEXADECIMAL = 88;
   /** RegularExpression Id. */
-  int JS_OBJECT_OPERATOR = 91;
+  int JS_BUILTIN = 89;
+  /** RegularExpression Id. */
+  int JS_FUNCTION_NAME = 90;
+  /** RegularExpression Id. */
+  int JS_SINGLE_COMMENT = 91;
+  /** RegularExpression Id. */
+  int JS_MULTI_COMMENT = 92;
+  /** RegularExpression Id. */
+  int JS_VARIABLE = 95;
+  /** RegularExpression Id. */
+  int JS_OPERATOR = 96;
+  /** RegularExpression Id. */
+  int JS_OBJECT_OPERATOR = 97;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -193,6 +205,12 @@ public interface InternetApplicationConstants {
     "\"implements\"",
     "\"extends\"",
     "<ACCESS_MODIFIER>",
+    "\"try\"",
+    "\"catch\"",
+    "\"throw\"",
+    "\"finally\"",
+    "\"die\"",
+    "\"exit\"",
     "\"if\"",
     "\"else\"",
     "<STRING>",
@@ -220,7 +238,7 @@ public interface InternetApplicationConstants {
     "<HTML_TEXT_BLOCK>",
     "\"<!--\"",
     "\"-->\"",
-    "<token of kind 66>",
+    "<token of kind 72>",
     "\"function\"",
     "\"return\"",
     "\"new\"",
@@ -242,7 +260,7 @@ public interface InternetApplicationConstants {
     "<JS_SINGLE_COMMENT>",
     "\"/*\"",
     "\"*/\"",
-    "<token of kind 88>",
+    "<token of kind 94>",
     "<JS_VARIABLE>",
     "<JS_OPERATOR>",
     "\".\"",
@@ -250,11 +268,13 @@ public interface InternetApplicationConstants {
     "\"(\"",
     "\")\"",
     "\"=\"",
+    "\"{\"",
+    "\"}\"",
+    "\"?\"",
+    "\":\"",
     "\"[\"",
     "\"]\"",
     "\",\"",
-    "\"{\"",
-    "\"}\"",
   };
 
 }

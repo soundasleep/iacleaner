@@ -12,9 +12,12 @@ public interface InternetApplicationVisitor
   public Object visit(ASTPhpInlineHtmlBlock node, Object data);
   public Object visit(ASTPhpStatement node, Object data);
   public Object visit(ASTPhpLanguageStatement node, Object data);
+  public Object visit(ASTPhpVariableAssignment node, Object data);
   public Object visit(ASTPhpFunctionCall node, Object data);
   public Object visit(ASTPhpOrSomething node, Object data);
+  public Object visit(ASTPhpTryCatchBlock node, Object data);
   public Object visit(ASTPhpValue node, Object data);
+  public Object visit(ASTPhpValuePossiblyWrapped node, Object data);
   public Object visit(ASTPhpSimpleValue node, Object data);
   public Object visit(ASTPhpSelectArray node, Object data);
   public Object visit(ASTPhpArgumentList node, Object data);
@@ -49,4 +52,4 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsFunctionArgumentList node, Object data);
   public Object visit(ASTJsIfStatement node, Object data);
 }
-/* JavaCC - OriginalChecksum=547db259e08efa63f3fcc6a9b7c41de2 (do not edit this line) */
+/* JavaCC - OriginalChecksum=ccac3fabd3aea4f825ac9029e1cd46f9 (do not edit this line) */
