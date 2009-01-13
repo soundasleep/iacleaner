@@ -32,6 +32,10 @@ public class LoadingTest extends TestCase {
 		loadFile("attributes.html");
 	}
 
+	public void testPhpArray() throws Exception {
+		loadFile("array.php");
+	}
+
 	public void testPhpClass() throws Exception {
 		loadFile("class.php");
 	}

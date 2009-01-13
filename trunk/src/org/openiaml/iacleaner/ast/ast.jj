@@ -168,6 +168,11 @@ TOKEN :
 
 TOKEN :
 {
+	< OR_STATEMENT: "or" >
+}
+
+TOKEN :
+{
 	< VAR_STATEMENT: "var" >
 }
 
@@ -211,13 +216,13 @@ TOKEN : /* else statement */
 TOKEN : /* STRING */
 {
 	< STRING:
-		"\"" ("\\\"" | (~["\""]))+ "\"" >
+		"\"" ("\\\"" | (~["\""]))* "\"" >
 }
 
 TOKEN : /* STRING (single quoted) */
 {
 	< STRING_SQ:
-		"'" ("\\'" | (~["'"]))+ "'" >
+		"'" ("\\'" | (~["'"]))* "'" >
 }
 
 TOKEN : /* Decimal */
@@ -281,6 +286,12 @@ TOKEN : /* operator */
 {
 	< PHP_OPERATOR:
 		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" >
+}
+
+TOKEN : /* prefix operator */
+{
+	< PHP_PREFIX_OPERATOR:
+		"!" >
 }
 
 TOKEN :
@@ -444,7 +455,7 @@ TOKEN : /* else statement */
 TOKEN : /* STRING */
 {
 	< JS_STRING:
-		"\"" ("\\\"" | (~["\""]))+ "\"" >
+		"\"" ("\\\"" | (~["\""]))* "\"" >
 }
 
 <JS_STATE>
@@ -781,10 +792,42 @@ void PhpLanguageStatement() : {/*@bgen(jjtree) PhpLanguageStatement */
         try {
 /*@egen*/
 	<ECHO_STATEMENT> PhpValue()
-	| <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	| <RETURN_STATEMENT> (PhpValue())?
+	| (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		(PhpOrSomething()) ?)
+	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> "=" PhpValue()/*@bgen(jjtree)*/
+	| <PHP_VARIABLE> "=" PhpValue() (PhpOrSomething()) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void PhpOrSomething() : {/*@bgen(jjtree) PhpOrSomething */
+  ASTPhpOrSomething jjtn000 = new ASTPhpOrSomething(JJTPHPORSOMETHING);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpOrSomething */
+        try {
+/*@egen*/
+	<OR_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -815,6 +858,8 @@ void PhpValue() : {/*@bgen(jjtree) PhpValue */
 {/*@bgen(jjtree) PhpValue */
         try {
 /*@egen*/
+	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
+	
 	(
 	  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 	  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
@@ -842,6 +887,7 @@ void PhpValue() : {/*@bgen(jjtree) PhpValue */
           }
         }
 /*@egen*/			/* e.g. "f() + 42" */
+	
 }
 
 void PhpSimpleValue() : {/*@bgen(jjtree) PhpSimpleValue */

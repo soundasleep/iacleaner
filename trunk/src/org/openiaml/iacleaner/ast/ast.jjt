@@ -164,6 +164,11 @@ TOKEN :
 
 TOKEN :
 {
+	< OR_STATEMENT: "or" >
+}
+
+TOKEN :
+{
 	< VAR_STATEMENT: "var" >
 }
 
@@ -207,13 +212,13 @@ TOKEN : /* else statement */
 TOKEN : /* STRING */
 {
 	< STRING:
-		"\"" ("\\\"" | (~["\""]))+ "\"" >
+		"\"" ("\\\"" | (~["\""]))* "\"" >
 }
 
 TOKEN : /* STRING (single quoted) */
 {
 	< STRING_SQ:
-		"'" ("\\'" | (~["'"]))+ "'" >
+		"'" ("\\'" | (~["'"]))* "'" >
 }
 
 TOKEN : /* Decimal */
@@ -277,6 +282,12 @@ TOKEN : /* operator */
 {
 	< PHP_OPERATOR:
 		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" >
+}
+
+TOKEN : /* prefix operator */
+{
+	< PHP_PREFIX_OPERATOR:
+		"!" >
 }
 
 TOKEN :
@@ -440,7 +451,7 @@ TOKEN : /* else statement */
 TOKEN : /* STRING */
 {
 	< JS_STRING:
-		"\"" ("\\\"" | (~["\""]))+ "\"" >
+		"\"" ("\\\"" | (~["\""]))* "\"" >
 }
 
 <JS_STATE>
@@ -579,14 +590,22 @@ void PhpStatement() : {}
 void PhpLanguageStatement() : {}
 {
 	<ECHO_STATEMENT> PhpValue()
-	| <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	| <RETURN_STATEMENT> (PhpValue())?
+	| (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		(PhpOrSomething()) ?)
+	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> "=" PhpValue()
+	| <PHP_VARIABLE> "=" PhpValue() (PhpOrSomething()) ?
+}
+
+void PhpOrSomething() : {}
+{
+	<OR_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 }
 
 void PhpValue() : {}
 {
+	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
+	
 	(
 	  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 	  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
@@ -594,6 +613,7 @@ void PhpValue() : {}
 	  | PhpSimpleValue() )
 	
 	( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
+	
 }
 
 void PhpSimpleValue() : {}
