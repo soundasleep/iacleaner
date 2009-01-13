@@ -30,8 +30,10 @@ public class InternetApplication {
   	InternetApplicationTokenManager.SwitchTo(initialState);
   	SimpleNode n;
   	if (initialState == JS_STATE) {
+  		//System.err.println("JS_STATE");
  		n = StartJs();
   	} else {
+  		//System.err.println("HTML_STATE");
   		n = Start();
   	}
   	return n;
@@ -107,6 +109,15 @@ SKIP :
 }
 
 <HTML_OPENING_TAG>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<JS_STATE>
 SKIP :
 {
   " "
@@ -279,12 +290,6 @@ TOKEN:
 	< HTML_SCRIPT_TAG_CLOSE: "</script>" > : HTML_STATE
 }
 
-<JS_STATE>
-TOKEN:
-{
-	< JS_FUNCTION: "function" >
-}
-
 <HTML_STATE>
 TOKEN:
 {
@@ -356,6 +361,130 @@ MORE:
 	< ~[] >
 }
 
+/** --- javascript --- */
+<JS_STATE>
+TOKEN :
+{
+	< JS_FUNCTION_STATEMENT: "function" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_RETURN_STATEMENT: "return" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_NEW_STATEMENT: "new" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_VAR_STATEMENT: "var" >
+}
+
+<JS_STATE>
+TOKEN : /* if statement */
+{
+	< JS_IF_STATEMENT:
+		"if" >
+}
+
+/**
+ * if we use constants in the rules below, they cannot be reused
+ * across different lexical states (I think)
+ */
+<JS_STATE>
+TOKEN : { < JS_BRACKET_OPEN: "(" > }
+<JS_STATE>
+TOKEN : { < JS_BRACKET_CLOSE: ")" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_OPEN: "{" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_CLOSE: "}" > }
+<JS_STATE>
+TOKEN : { < JS_END: ";" > }
+<JS_STATE>
+TOKEN : { < JS_EQUAL: "=" > }
+<JS_STATE>
+TOKEN : { < JS_COMMA: "," > }
+
+<JS_STATE>
+TOKEN : /* else statement */
+{
+	< JS_ELSE_STATEMENT:
+		"else" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING */
+{
+	< JS_STRING:
+		"\"" ("\\\"" | (~["\""]))+ "\"" >
+}
+
+<JS_STATE>
+TOKEN : /* Decimal */
+{
+	< JS_DECIMAL:
+		(["0"-"9"])+
+		( "." (["0"-"9"]) * )? >	/* can have numbers after the decimal point */
+}
+
+<JS_STATE>
+TOKEN : /* Hexaecimal */
+{
+	< JS_HEXADECIMAL:
+		"0x" (["0"-"9","a"-"f"])+ >
+}
+
+<JS_STATE>
+TOKEN : /* built in variables */
+{
+	< JS_BUILTIN:
+		"true" | "false" | "null" >
+}
+
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_FUNCTION_NAME:
+		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+<JS_STATE>
+TOKEN : /* single line comment */
+{
+	< JS_SINGLE_COMMENT:
+		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
+}
+
+<JS_STATE>
+TOKEN : /* multi line comment */
+{
+	< JS_MULTI_COMMENT:
+		"/" "*" 
+		(~["\0"])* 			/* we assume that php files cannot contain the null character */
+		"*" "/" >
+}
+
+<JS_STATE>
+TOKEN : /* variable */
+{
+	< JS_VARIABLE:
+		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OPERATOR:
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" >
+}
+
 /** Main production. */
 SimpleNode Start() : {}
 {
@@ -402,9 +531,9 @@ void PhpInlineHtmlBlock() : {}
 
 void PhpStatement() : {}
 {
-	PhpLanguageStatement() ";"
+	PhpFunctionDefinition() 
+	| PhpLanguageStatement() ";"
 	| PhpIfStatement()
-	| PhpFunctionDefinition() 
 	| (<ACCESS_MODIFIER>)?
 		( PhpClassDefinition() | PhpInterfaceDefinition() ) 
 }
@@ -537,11 +666,6 @@ void HtmlScriptTag() : {}
 	<HTML_SCRIPT_TAG_CLOSE>
 }
 
-void JsBlock() : {}
-{
-	<JS_FUNCTION>
-}
-
 void HtmlTag() #HtmlTag : { Token t; }
 {
 	<HTML_OPEN_TAG> 
@@ -584,3 +708,75 @@ void HtmlComment() : {}
 	<HTML_COMMENT_START>
 }
 
+/** javascript stuff */
+void JsBlock() : {}
+{
+	( JsStatement() 
+	  | <JS_SINGLE_COMMENT> 
+	  | <JS_MULTI_COMMENT> )*
+}
+
+void JsStatement() : {}
+{
+	JsFunctionDefinition() 
+	| JsIfStatement()
+	| JsLanguageStatement() <JS_END>
+}
+
+void JsLanguageStatement() : {}
+{
+	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	| <JS_RETURN_STATEMENT> (JsValue())?
+	| <JS_VARIABLE> <JS_EQUAL> JsValue()
+}
+
+void JsValue() : {}
+{
+	(
+	  <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	  | <JS_NEW_STATEMENT> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	  | <JS_VARIABLE>
+	  | <JS_STRING>
+	  | <JS_DECIMAL>
+	  | <JS_HEXADECIMAL>
+	  | <JS_BUILTIN> )
+	
+	( <JS_OPERATOR> JsValue() )?			/* e.g. "f() + 42" */
+}
+
+void JsSimpleValue() : {}
+{
+	<JS_STRING> | <JS_DECIMAL> | <JS_HEXADECIMAL> | <JS_BUILTIN>
+}
+
+void JsArgumentList() : {}
+{
+	JsValue() (<JS_COMMA> JsArgumentList())?
+}
+
+void JsVariableList() : {}
+{
+	<JS_VARIABLE> (<JS_COMMA> JsVariableList())?
+}
+
+void JsFunctionDefinition() : {}
+{
+	<JS_FUNCTION_STATEMENT> 
+	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+}
+
+void JsFunctionArgumentList() : {}
+{
+	<JS_VARIABLE>
+	( <JS_EQUAL> JsSimpleValue() )?
+	( <JS_COMMA> JsFunctionArgumentList() )?
+}
+
+void JsIfStatement() : {}
+{
+	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValue() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?
+}
