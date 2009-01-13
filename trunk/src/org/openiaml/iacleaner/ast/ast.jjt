@@ -2,7 +2,7 @@
 options {
   MULTI=true;
   VISITOR=true;
-  NODE_DEFAULT_VOID=true; /* makes all nodes #void by default, reducing the number of elements generated */
+  // NODE_DEFAULT_VOID=true; /* makes all nodes #void by default, reducing the number of elements generated */
 }
 
 PARSER_BEGIN(InternetApplication)
@@ -153,6 +153,12 @@ TOKEN : /* if statement */
 		"if" >
 }
 
+TOKEN : /* else statement */
+{
+	< PHP_ELSE_STATEMENT:
+		"else" >
+}
+
 TOKEN : /* STRING */
 {
 	< STRING:
@@ -223,7 +229,6 @@ TOKEN :
 {
 	<PHP_BLOCK_BEGIN : 
 		"<?php" > : DEFAULT
-		
 }
 
 /** --- html --- */
@@ -283,8 +288,15 @@ TOKEN:
 /** Main production. */
 SimpleNode Start() #Start : {}
 {
-	HtmlBlock() { return jjtThis; }
-	| PhpRootBlock() { return jjtThis; }
+	Block() { return jjtThis; }
+}
+
+void Block() : {}
+{
+	(
+		HtmlBlock()
+		| PhpRootBlock()
+	)+
 }
 
 void PhpRootBlock() : {}
@@ -297,7 +309,19 @@ void PhpBlock() : {}
 {
 	( PhpStatement() 
 	  | <PHP_SINGLE_COMMENT> 
-	  | <PHP_MULTI_COMMENT> )*
+	  | <PHP_MULTI_COMMENT> 
+	  | PhpInlineHtmlBlock() )*
+}
+
+/** 
+ * this is different to a normal HtmlBlock because these are actually in
+ * function structures, e.g. if (true) { [html] }
+ */
+void PhpInlineHtmlBlock() : {}
+{
+	<PHP_BLOCK_END>
+	(HtmlBlock() )*
+	(<PHP_BLOCK_BEGIN> | <EOF> )
 }
 
 void PhpStatement() : {}
@@ -307,7 +331,6 @@ void PhpStatement() : {}
 	| PhpFunctionDefinition() 
 	| (<ACCESS_MODIFIER>)?
 		( PhpClassDefinition() | PhpInterfaceDefinition() ) 
-	| <PHP_BLOCK_END>
 }
 
 void PhpLanguageStatement() : {}
@@ -367,6 +390,7 @@ void PhpFunctionArgumentList() : {}
 void PhpIfStatement() : {}
 {
 	<PHP_IF_STATEMENT> "(" PhpValue() ")" "{" PhpBlock() "}"
+	( <PHP_ELSE_STATEMENT> "{" PhpBlock() "}" ) ?
 }
 
 void PhpClassDefinition() : {}
@@ -426,7 +450,7 @@ void PhpInterfaceBlock() : {}
 
 void HtmlBlock() : {}
 {
-	( HtmlTag() | HtmlClosingTag() | HtmlTextBlock() )+
+	HtmlTag() | HtmlClosingTag() | HtmlTextBlock()
 }
 
 void HtmlTag() #HtmlTag : { Token t; }

@@ -12,10 +12,29 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openiaml.iacleaner.ast.ASTBlock;
+import org.openiaml.iacleaner.ast.ASTHtmlBlock;
 import org.openiaml.iacleaner.ast.ASTHtmlClosingTag;
 import org.openiaml.iacleaner.ast.ASTHtmlTag;
 import org.openiaml.iacleaner.ast.ASTHtmlTagAttribute;
 import org.openiaml.iacleaner.ast.ASTHtmlTextBlock;
+import org.openiaml.iacleaner.ast.ASTPhpArgumentList;
+import org.openiaml.iacleaner.ast.ASTPhpBlock;
+import org.openiaml.iacleaner.ast.ASTPhpBlockEnd;
+import org.openiaml.iacleaner.ast.ASTPhpClassBlock;
+import org.openiaml.iacleaner.ast.ASTPhpClassDefinition;
+import org.openiaml.iacleaner.ast.ASTPhpFunctionArgumentList;
+import org.openiaml.iacleaner.ast.ASTPhpFunctionDefinition;
+import org.openiaml.iacleaner.ast.ASTPhpIfStatement;
+import org.openiaml.iacleaner.ast.ASTPhpInterfaceBlock;
+import org.openiaml.iacleaner.ast.ASTPhpInterfaceDefinition;
+import org.openiaml.iacleaner.ast.ASTPhpInterfaceList;
+import org.openiaml.iacleaner.ast.ASTPhpLanguageStatement;
+import org.openiaml.iacleaner.ast.ASTPhpRootBlock;
+import org.openiaml.iacleaner.ast.ASTPhpSimpleValue;
+import org.openiaml.iacleaner.ast.ASTPhpStatement;
+import org.openiaml.iacleaner.ast.ASTPhpValue;
+import org.openiaml.iacleaner.ast.ASTPhpVariableList;
 import org.openiaml.iacleaner.ast.ASTStart;
 import org.openiaml.iacleaner.ast.InternetApplication;
 import org.openiaml.iacleaner.ast.InternetApplicationVisitor;
@@ -120,6 +139,114 @@ public class IACleaner {
 		@Override
 		public Object visit(ASTHtmlTextBlock node, Object data) {
 			((StringBuffer) data).append(node.getText().trim());
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpRootBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpStatement node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpLanguageStatement node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpValue node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpSimpleValue node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpArgumentList node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpVariableList node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpFunctionDefinition node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpFunctionArgumentList node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpIfStatement node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpClassDefinition node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpInterfaceDefinition node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpInterfaceList node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpClassBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpInterfaceBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTHtmlBlock node, Object data) {
+			// TODO Auto-generated method stub
 			return null;
 		}
 		

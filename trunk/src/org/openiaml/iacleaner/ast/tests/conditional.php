@@ -11,4 +11,9 @@ if (3 == 4) {
 if (my_function($var) + 5 < 12) {
 	echo another_function($var);
 }
+if (true) {
+  echo "true";
+} else {
+  echo "false";
+}
  ?>
