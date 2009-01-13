@@ -128,6 +128,8 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
+| "/*" : JS_WITHIN_COMMENT
+| "//" : JS_WITHIN_COMMENT_SINGLE
 }
 
 <DEFAULT>
@@ -162,6 +164,32 @@ SKIP:
 }
 
 <PHP_WITHIN_COMMENT_SINGLE>
+MORE:
+{
+	< ~["\r","\n"] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT_SINGLE>
+SKIP:
+{
+	< ["\r","\n"] > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT_SINGLE>
 MORE:
 {
 	< ~["\r","\n"] >
@@ -351,7 +379,10 @@ TOKEN :
 <HTML_STATE>
 TOKEN:
 {
-	< HTML_SCRIPT_TAG: "<script>" > : JS_STATE
+	< HTML_SCRIPT_TAG: 
+		"<script>"
+		| "<script language=\"Javascript\">"
+		 > : JS_STATE
 }
 
 <JS_STATE>
@@ -370,6 +401,12 @@ TOKEN:
 TOKEN:
 {
 	< HTML_CLOSE_TAG: ">" > : HTML_STATE
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_CLOSE_TAG_XHTML: "/>" > : HTML_STATE
 }
 
 <HTML_STATE>
@@ -463,6 +500,12 @@ TOKEN : /* if statement */
 		"if" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	< JS_FOR_STATEMENT: "for" >
+}
+
 /**
  * if we use constants in the rules below, they cannot be reused
  * across different lexical states (I think)
@@ -478,8 +521,6 @@ TOKEN : { < JS_BRACE_CLOSE: "}" > }
 <JS_STATE>
 TOKEN : { < JS_END: ";" > }
 <JS_STATE>
-TOKEN : { < JS_EQUAL: "=" > }
-<JS_STATE>
 TOKEN : { < JS_COMMA: "," > }
 
 <JS_STATE>
@@ -494,6 +535,13 @@ TOKEN : /* STRING */
 {
 	< JS_STRING:
 		"\"" ("\\\"" | (~["\""]))* "\"" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING (single quoted) */
+{
+	< JS_STRING_SQ:
+		"'" ("\\'" | (~["'"]))* "'" >
 }
 
 <JS_STATE>
@@ -521,55 +569,52 @@ TOKEN : /* built in variables */
 <JS_STATE>
 TOKEN : /* Function name */
 {
-	< JS_FUNCTION_NAME:
-		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
-}
-
-<JS_STATE>
-TOKEN : /* single line comment */
-{
-	< JS_SINGLE_COMMENT:
-		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
-}
-
-<JS_STATE>
-TOKEN: /* multi line comment */
-{
-	< JS_MULTI_COMMENT: "/*" > : JS_WITHIN_COMMENT
-}
-
-/* order also matters: by placing this before the matchall, the comments will be properly ended. */
-<JS_WITHIN_COMMENT>
-SKIP:
-{
-	< "*/" > : JS_STATE
-}
-
-<JS_WITHIN_COMMENT>
-MORE:
-{
-	< ~[] >
-}
-
-
-<JS_STATE>
-TOKEN : /* variable */
-{
 	< JS_VARIABLE:
-		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+/* JS_VARIABLE === JS_FUNCTION_NAME */
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OBJECT_OPERATOR: "." >
 }
 
 <JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" >
+		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" >
 }
 
 <JS_STATE>
 TOKEN : /* operator */
 {
-	< JS_OBJECT_OPERATOR: "." >
+	< JS_ASSIGNMENT_OPERATOR:
+		"+=" | "-=" | "&=" | "|=" >
+}
+
+<JS_STATE>
+TOKEN : /* single operators */
+{
+	< JS_OPERATOR_SINGLE:
+		"++" | "--" >
+}
+
+<JS_STATE>
+TOKEN : { < JS_EQUAL: "=" > }
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_TERNARY_1: "?" >
+}
+
+<JS_STATE>
+TOKEN : 
+{
+	< JS_TERNARY_2: ":" >
 }
 
 /** Main production. */
@@ -870,7 +915,8 @@ void PhpVariableAssignment() : {/*@bgen(jjtree) PhpVariableAssignment */
 /*@egen*/
 	<PHP_VARIABLE> 
 		(<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* 
-		"=" PhpValuePossiblyWrapped() (<PHP_THROW_STATEMENT> PhpOrSomething()) ?/*@bgen(jjtree)*/
+		( PhpSelectArray()) ?
+		"=" PhpValuePossiblyWrapped() (PhpOrSomething()) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1535,7 +1581,7 @@ void HtmlTag()          : {/*@bgen(jjtree) HtmlTag */
 		jjtn000.setName( t.image );
 	}
 	(HtmlTagAttribute()) *
-	<HTML_CLOSE_TAG>/*@bgen(jjtree)*/
+	( <HTML_CLOSE_TAG> | <HTML_CLOSE_TAG_XHTML> )/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1657,9 +1703,7 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
 {/*@bgen(jjtree) JsBlock */
         try {
 /*@egen*/
-	( JsStatement() 
-	  | <JS_SINGLE_COMMENT> 
-	  | <JS_MULTI_COMMENT> )*/*@bgen(jjtree)*/
+	( JsStatement() )*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1692,6 +1736,7 @@ void JsStatement() : {/*@bgen(jjtree) JsStatement */
 /*@egen*/
 	JsFunctionDefinition() 
 	| JsIfStatement()
+	| JsForStatement()
 	| JsLanguageStatement() <JS_END>/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1723,9 +1768,13 @@ void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
 {/*@bgen(jjtree) JsLanguageStatement */
         try {
 /*@egen*/
-	JsFunctionCall()
-	| JsReturnStatement()
-	| JsVariableAssignment()/*@bgen(jjtree)*/
+	JsReturnStatement()
+	| ( <JS_VAR_STATEMENT> <JS_VARIABLE> (<JS_EQUAL> JsValuePossiblyWrapped())? )
+	| (
+		<JS_VARIABLE> JsTraverseObjects()
+			((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped()) ?
+	)
+	| (JsNewStatement() JsTraverseObjects())/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1748,20 +1797,18 @@ void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
 /*@egen*/
 }
 
-void JsFunctionCall() : {/*@bgen(jjtree) JsFunctionCall */
-                          ASTJsFunctionCall jjtn000 = new ASTJsFunctionCall(JJTJSFUNCTIONCALL);
-                          boolean jjtc000 = true;
-                          jjtree.openNodeScope(jjtn000);
-/*@egen*/ Token t; }
-{/*@bgen(jjtree) JsFunctionCall */
+void JsTraverseObjects() : {/*@bgen(jjtree) JsTraverseObjects */
+  ASTJsTraverseObjects jjtn000 = new ASTJsTraverseObjects(JJTJSTRAVERSEOBJECTS);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsTraverseObjects */
         try {
 /*@egen*/
-	t = <JS_FUNCTION_NAME> { jjtn000.setName(t.image); }
-		(
-		<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-		| <JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-		)
-		( JsChainedOperator() )?/*@bgen(jjtree)*/
+	(
+		(<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>)
+		| (<JS_OBJECT_OPERATOR> <JS_VARIABLE>)
+	)*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1792,7 +1839,7 @@ void JsReturnStatement() : {/*@bgen(jjtree) JsReturnStatement */
 {/*@bgen(jjtree) JsReturnStatement */
         try {
 /*@egen*/
-	<JS_RETURN_STATEMENT> (JsValue())?/*@bgen(jjtree)*/
+	<JS_RETURN_STATEMENT> (JsValuePossiblyWrapped())?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1815,67 +1862,21 @@ void JsReturnStatement() : {/*@bgen(jjtree) JsReturnStatement */
 /*@egen*/
 }
 
-void JsVariableAssignment() : {/*@bgen(jjtree) JsVariableAssignment */
-  ASTJsVariableAssignment jjtn000 = new ASTJsVariableAssignment(JJTJSVARIABLEASSIGNMENT);
+void JsNewStatement() : {/*@bgen(jjtree) JsNewStatement */
+  ASTJsNewStatement jjtn000 = new ASTJsNewStatement(JJTJSNEWSTATEMENT);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
 /*@egen*/}
-{/*@bgen(jjtree) JsVariableAssignment */
+{/*@bgen(jjtree) JsNewStatement */
         try {
 /*@egen*/
-	<JS_VARIABLE> <JS_EQUAL> JsValue()/*@bgen(jjtree)*/
-        } catch (Throwable jjte000) {
-          if (jjtc000) {
-            jjtree.clearNodeScope(jjtn000);
-            jjtc000 = false;
-          } else {
-            jjtree.popNode();
-          }
-          if (jjte000 instanceof RuntimeException) {
-            throw (RuntimeException)jjte000;
-          }
-          if (jjte000 instanceof ParseException) {
-            throw (ParseException)jjte000;
-          }
-          throw (Error)jjte000;
+	<JS_NEW_STATEMENT> <JS_VARIABLE>/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
           }
         }
-/*@egen*/
-}
-
-void JsChainedOperator() : {/*@bgen(jjtree) JsChainedOperator */
-  ASTJsChainedOperator jjtn000 = new ASTJsChainedOperator(JJTJSCHAINEDOPERATOR);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) JsChainedOperator */
-        try {
-/*@egen*/
-	<JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	( JsChainedOperator() )?/*@bgen(jjtree)*/
-        } catch (Throwable jjte000) {
-          if (jjtc000) {
-            jjtree.clearNodeScope(jjtn000);
-            jjtc000 = false;
-          } else {
-            jjtree.popNode();
-          }
-          if (jjte000 instanceof RuntimeException) {
-            throw (RuntimeException)jjte000;
-          }
-          if (jjte000 instanceof ParseException) {
-            throw (ParseException)jjte000;
-          }
-          throw (Error)jjte000;
-        } finally {
-          if (jjtc000) {
-            jjtree.closeNodeScope(jjtn000, true);
-          }
-        }
-/*@egen*/
+/*@egen*/ /* brackets are optional */
 }
 
 void JsValue() : {/*@bgen(jjtree) JsValue */
@@ -1887,15 +1888,18 @@ void JsValue() : {/*@bgen(jjtree) JsValue */
         try {
 /*@egen*/
 	(
-	  <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	  | <JS_NEW_STATEMENT> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	  | <JS_VARIABLE>
+	  <JS_VARIABLE>
+	  | JsNewStatement() 
+	  | JsAnonymousFunction()
 	  | <JS_STRING>
+	  | <JS_STRING_SQ>
 	  | <JS_DECIMAL>
 	  | <JS_HEXADECIMAL>
-	  | <JS_BUILTIN> )
-	
-	( <JS_OPERATOR> JsValue() )?/*@bgen(jjtree)*/
+	  | <JS_BUILTIN>
+	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
+
+	/* we can do crazy things, like "foo".indexOf() */
+  	(JsTraverseObjects() )/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1915,7 +1919,57 @@ void JsValue() : {/*@bgen(jjtree) JsValue */
             jjtree.closeNodeScope(jjtn000, true);
           }
         }
-/*@egen*/			/* e.g. "f() + 42" */
+/*@egen*/
+	
+}
+
+void JsValuePossiblyWrapped() : {/*@bgen(jjtree) JsValuePossiblyWrapped */
+  ASTJsValuePossiblyWrapped jjtn000 = new ASTJsValuePossiblyWrapped(JJTJSVALUEPOSSIBLYWRAPPED);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsValuePossiblyWrapped */
+        try {
+/*@egen*/
+	(( <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> ) | JsValue() )
+
+	(
+		/* e.g. "f() + 42" */
+		(<JS_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() += 42" */
+		(<JS_ASSIGNMENT_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() = 42" */
+		(<JS_EQUAL> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() ? 1 : 2" */
+		(<JS_TERNARY_1> JsValuePossiblyWrapped() <JS_TERNARY_2> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f++" */
+		(<JS_OPERATOR_SINGLE>)
+	)?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+
 }
 
 void JsSimpleValue() : {/*@bgen(jjtree) JsSimpleValue */
@@ -1943,7 +1997,7 @@ void JsArgumentList() : {/*@bgen(jjtree) JsArgumentList */
 {/*@bgen(jjtree) JsArgumentList */
         try {
 /*@egen*/
-	JsValue() (<JS_COMMA> JsArgumentList())?/*@bgen(jjtree)*/
+	JsValuePossiblyWrapped() (<JS_COMMA> JsArgumentList())?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -2006,7 +2060,7 @@ void JsFunctionDefinition() : {/*@bgen(jjtree) JsFunctionDefinition */
         try {
 /*@egen*/
 	<JS_FUNCTION_STATEMENT> 
-	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_VARIABLE> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
 	<JS_BRACE_OPEN>
 		JsBlock()
 	<JS_BRACE_CLOSE>/*@bgen(jjtree)*/
@@ -2065,6 +2119,41 @@ void JsFunctionArgumentList() : {/*@bgen(jjtree) JsFunctionArgumentList */
 /*@egen*/
 }
 
+void JsAnonymousFunction() : {/*@bgen(jjtree) JsAnonymousFunction */
+  ASTJsAnonymousFunction jjtn000 = new ASTJsAnonymousFunction(JJTJSANONYMOUSFUNCTION);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsAnonymousFunction */
+        try {
+/*@egen*/
+	<JS_FUNCTION_STATEMENT> 
+	<JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
 void JsIfStatement() : {/*@bgen(jjtree) JsIfStatement */
   ASTJsIfStatement jjtn000 = new ASTJsIfStatement(JJTJSIFSTATEMENT);
   boolean jjtc000 = true;
@@ -2073,8 +2162,142 @@ void JsIfStatement() : {/*@bgen(jjtree) JsIfStatement */
 {/*@bgen(jjtree) JsIfStatement */
         try {
 /*@egen*/
-	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValue() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
 	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsForStatement() : {/*@bgen(jjtree) JsForStatement */
+  ASTJsForStatement jjtn000 = new ASTJsForStatement(JJTJSFORSTATEMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsForStatement */
+        try {
+/*@egen*/
+	<JS_FOR_STATEMENT> 
+	<JS_BRACKET_OPEN> 
+	(JsForParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())?
+	<JS_BRACKET_CLOSE> 
+	<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsForParameterList() : {/*@bgen(jjtree) JsForParameterList */
+  ASTJsForParameterList jjtn000 = new ASTJsForParameterList(JJTJSFORPARAMETERLIST);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsForParameterList */
+        try {
+/*@egen*/
+	JsLanguageStatement()
+	(<JS_COMMA> JsForParameterList())?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsForEvaluateParameterList() : {/*@bgen(jjtree) JsForEvaluateParameterList */
+  ASTJsForEvaluateParameterList jjtn000 = new ASTJsForEvaluateParameterList(JJTJSFOREVALUATEPARAMETERLIST);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsForEvaluateParameterList */
+        try {
+/*@egen*/
+	JsValuePossiblyWrapped()
+	(<JS_COMMA> JsForEvaluateParameterList())?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+/* inline arrays: { a:3, b:function() {...}, c:"kittens", } */
+void JsInlineArray() : {/*@bgen(jjtree) JsInlineArray */
+  ASTJsInlineArray jjtn000 = new ASTJsInlineArray(JJTJSINLINEARRAY);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsInlineArray */
+        try {
+/*@egen*/
+	<JS_VARIABLE> <JS_TERNARY_2> JsValuePossiblyWrapped()
+	(<JS_COMMA> (JsInlineArray()) ?) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);

@@ -201,7 +201,7 @@ class IamlRuntimeException extends Exception {
 		
 		// outFlows first to = org.openiaml.model.model.impl.ApplicationElementPropertyImpl@13641d6 (isGenerated: false, id: model.11e37b8d89c.17, name: my login key, defaultValue: null)
 		
-			$_SESSION["model_11e37b8d89c_17"] = 
+                  $_SESSION["model_11e37b8d89c_17"] = 
 	"null" /* static value "model_11e47202c05_21" */ 
 ;
 		
@@ -248,10 +248,10 @@ class IamlRuntimeException extends Exception {
 /* approach #2: use event queues stored on the server, if the function is
    not available on the current page */
 function store_event(page_id, event_name, arg0) {
-	var url = 'store_event.php?page_id=' + escape(page_id) + '&event_name=' + escape(event_name) + "&arg0=" + escape(arg0);
+    var url = 'store_event.php?page_id=' + escape(page_id) + '&event_name=' + escape(event_name) + "&arg0=" + escape(arg0);
 	debug("creating ajax request to url: " + url);
-	$('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1;		// increment ajax counter
-	new Ajax.Request(url,
+    $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1;		// increment ajax counter
+    new Ajax.Request(url,
   {
     method:'get',
     onSuccess: function(transport){

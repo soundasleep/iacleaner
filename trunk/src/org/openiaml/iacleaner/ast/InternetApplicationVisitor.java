@@ -40,16 +40,21 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsBlock node, Object data);
   public Object visit(ASTJsStatement node, Object data);
   public Object visit(ASTJsLanguageStatement node, Object data);
-  public Object visit(ASTJsFunctionCall node, Object data);
+  public Object visit(ASTJsTraverseObjects node, Object data);
   public Object visit(ASTJsReturnStatement node, Object data);
-  public Object visit(ASTJsVariableAssignment node, Object data);
-  public Object visit(ASTJsChainedOperator node, Object data);
+  public Object visit(ASTJsNewStatement node, Object data);
   public Object visit(ASTJsValue node, Object data);
+  public Object visit(ASTJsValuePossiblyWrapped node, Object data);
   public Object visit(ASTJsSimpleValue node, Object data);
   public Object visit(ASTJsArgumentList node, Object data);
   public Object visit(ASTJsVariableList node, Object data);
   public Object visit(ASTJsFunctionDefinition node, Object data);
   public Object visit(ASTJsFunctionArgumentList node, Object data);
+  public Object visit(ASTJsAnonymousFunction node, Object data);
   public Object visit(ASTJsIfStatement node, Object data);
+  public Object visit(ASTJsForStatement node, Object data);
+  public Object visit(ASTJsForParameterList node, Object data);
+  public Object visit(ASTJsForEvaluateParameterList node, Object data);
+  public Object visit(ASTJsInlineArray node, Object data);
 }
-/* JavaCC - OriginalChecksum=ccac3fabd3aea4f825ac9029e1cd46f9 (do not edit this line) */
+/* JavaCC - OriginalChecksum=26fb3016e28a962efc1a7b5e4d3dc849 (do not edit this line) */

@@ -76,6 +76,10 @@ public class LoadingTest extends TestCase {
 		loadFile("index.html");
 	}
 
+	public void testJsLoops() throws Exception {
+		loadFile("loops.js");
+	}
+	
 	public void testPhpMultiple() throws Exception {
 		loadFile("multiple.php");
 	}
