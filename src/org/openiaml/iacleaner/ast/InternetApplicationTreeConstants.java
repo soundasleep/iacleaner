@@ -39,17 +39,22 @@ public interface InternetApplicationTreeConstants
   public int JJTJSBLOCK = 33;
   public int JJTJSSTATEMENT = 34;
   public int JJTJSLANGUAGESTATEMENT = 35;
-  public int JJTJSFUNCTIONCALL = 36;
+  public int JJTJSTRAVERSEOBJECTS = 36;
   public int JJTJSRETURNSTATEMENT = 37;
-  public int JJTJSVARIABLEASSIGNMENT = 38;
-  public int JJTJSCHAINEDOPERATOR = 39;
-  public int JJTJSVALUE = 40;
+  public int JJTJSNEWSTATEMENT = 38;
+  public int JJTJSVALUE = 39;
+  public int JJTJSVALUEPOSSIBLYWRAPPED = 40;
   public int JJTJSSIMPLEVALUE = 41;
   public int JJTJSARGUMENTLIST = 42;
   public int JJTJSVARIABLELIST = 43;
   public int JJTJSFUNCTIONDEFINITION = 44;
   public int JJTJSFUNCTIONARGUMENTLIST = 45;
-  public int JJTJSIFSTATEMENT = 46;
+  public int JJTJSANONYMOUSFUNCTION = 46;
+  public int JJTJSIFSTATEMENT = 47;
+  public int JJTJSFORSTATEMENT = 48;
+  public int JJTJSFORPARAMETERLIST = 49;
+  public int JJTJSFOREVALUATEPARAMETERLIST = 50;
+  public int JJTJSINLINEARRAY = 51;
 
 
   public String[] jjtNodeName = {
@@ -89,17 +94,22 @@ public interface InternetApplicationTreeConstants
     "JsBlock",
     "JsStatement",
     "JsLanguageStatement",
-    "JsFunctionCall",
+    "JsTraverseObjects",
     "JsReturnStatement",
-    "JsVariableAssignment",
-    "JsChainedOperator",
+    "JsNewStatement",
     "JsValue",
+    "JsValuePossiblyWrapped",
     "JsSimpleValue",
     "JsArgumentList",
     "JsVariableList",
     "JsFunctionDefinition",
     "JsFunctionArgumentList",
+    "JsAnonymousFunction",
     "JsIfStatement",
+    "JsForStatement",
+    "JsForParameterList",
+    "JsForEvaluateParameterList",
+    "JsInlineArray",
   };
 }
-/* JavaCC - OriginalChecksum=7addb145a4a95c02fbc736fa1b587594 (do not edit this line) */
+/* JavaCC - OriginalChecksum=cc3fdd3bb4bc2d7722dee49932abc305 (do not edit this line) */

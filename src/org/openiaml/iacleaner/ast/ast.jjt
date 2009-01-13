@@ -124,6 +124,8 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
+| "/*" : JS_WITHIN_COMMENT
+| "//" : JS_WITHIN_COMMENT_SINGLE
 }
 
 <DEFAULT>
@@ -158,6 +160,32 @@ SKIP:
 }
 
 <PHP_WITHIN_COMMENT_SINGLE>
+MORE:
+{
+	< ~["\r","\n"] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT_SINGLE>
+SKIP:
+{
+	< ["\r","\n"] > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT_SINGLE>
 MORE:
 {
 	< ~["\r","\n"] >
@@ -347,7 +375,10 @@ TOKEN :
 <HTML_STATE>
 TOKEN:
 {
-	< HTML_SCRIPT_TAG: "<script>" > : JS_STATE
+	< HTML_SCRIPT_TAG: 
+		"<script>"
+		| "<script language=\"Javascript\">"
+		 > : JS_STATE
 }
 
 <JS_STATE>
@@ -366,6 +397,12 @@ TOKEN:
 TOKEN:
 {
 	< HTML_CLOSE_TAG: ">" > : HTML_STATE
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_CLOSE_TAG_XHTML: "/>" > : HTML_STATE
 }
 
 <HTML_STATE>
@@ -459,6 +496,12 @@ TOKEN : /* if statement */
 		"if" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	< JS_FOR_STATEMENT: "for" >
+}
+
 /**
  * if we use constants in the rules below, they cannot be reused
  * across different lexical states (I think)
@@ -474,8 +517,6 @@ TOKEN : { < JS_BRACE_CLOSE: "}" > }
 <JS_STATE>
 TOKEN : { < JS_END: ";" > }
 <JS_STATE>
-TOKEN : { < JS_EQUAL: "=" > }
-<JS_STATE>
 TOKEN : { < JS_COMMA: "," > }
 
 <JS_STATE>
@@ -490,6 +531,13 @@ TOKEN : /* STRING */
 {
 	< JS_STRING:
 		"\"" ("\\\"" | (~["\""]))* "\"" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING (single quoted) */
+{
+	< JS_STRING_SQ:
+		"'" ("\\'" | (~["'"]))* "'" >
 }
 
 <JS_STATE>
@@ -517,55 +565,52 @@ TOKEN : /* built in variables */
 <JS_STATE>
 TOKEN : /* Function name */
 {
-	< JS_FUNCTION_NAME:
-		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
-}
-
-<JS_STATE>
-TOKEN : /* single line comment */
-{
-	< JS_SINGLE_COMMENT:
-		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
-}
-
-<JS_STATE>
-TOKEN: /* multi line comment */
-{
-	< JS_MULTI_COMMENT: "/*" > : JS_WITHIN_COMMENT
-}
-
-/* order also matters: by placing this before the matchall, the comments will be properly ended. */
-<JS_WITHIN_COMMENT>
-SKIP:
-{
-	< "*/" > : JS_STATE
-}
-
-<JS_WITHIN_COMMENT>
-MORE:
-{
-	< ~[] >
-}
-
-
-<JS_STATE>
-TOKEN : /* variable */
-{
 	< JS_VARIABLE:
-		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+/* JS_VARIABLE === JS_FUNCTION_NAME */
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OBJECT_OPERATOR: "." >
 }
 
 <JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" >
+		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" >
 }
 
 <JS_STATE>
 TOKEN : /* operator */
 {
-	< JS_OBJECT_OPERATOR: "." >
+	< JS_ASSIGNMENT_OPERATOR:
+		"+=" | "-=" | "&=" | "|=" >
+}
+
+<JS_STATE>
+TOKEN : /* single operators */
+{
+	< JS_OPERATOR_SINGLE:
+		"++" | "--" >
+}
+
+<JS_STATE>
+TOKEN : { < JS_EQUAL: "=" > }
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_TERNARY_1: "?" >
+}
+
+<JS_STATE>
+TOKEN : 
+{
+	< JS_TERNARY_2: ":" >
 }
 
 /** Main production. */
@@ -642,7 +687,8 @@ void PhpVariableAssignment() : {}
 {
 	<PHP_VARIABLE> 
 		(<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* 
-		"=" PhpValuePossiblyWrapped() (<PHP_THROW_STATEMENT> PhpOrSomething()) ?
+		( PhpSelectArray()) ?
+		"=" PhpValuePossiblyWrapped() (PhpOrSomething()) ?
 }
 
 void PhpFunctionCall() : {}
@@ -815,7 +861,7 @@ void HtmlTag() #HtmlTag : { Token t; }
 		jjtThis.setName( t.image );
 	}
 	(HtmlTagAttribute()) *
-	<HTML_CLOSE_TAG>
+	( <HTML_CLOSE_TAG> | <HTML_CLOSE_TAG_XHTML> )
 }
 
 void HtmlClosingTag() #HtmlClosingTag : { Token t; }
@@ -853,63 +899,85 @@ void HtmlComment() : {}
 /** javascript stuff */
 void JsBlock() : {}
 {
-	( JsStatement() 
-	  | <JS_SINGLE_COMMENT> 
-	  | <JS_MULTI_COMMENT> )*
+	( JsStatement() )*
 }
 
 void JsStatement() : {}
 {
 	JsFunctionDefinition() 
 	| JsIfStatement()
+	| JsForStatement()
 	| JsLanguageStatement() <JS_END>
 }
 
 void JsLanguageStatement() : {}
 {
-	JsFunctionCall()
-	| JsReturnStatement()
-	| JsVariableAssignment()
+	JsReturnStatement()
+	| ( <JS_VAR_STATEMENT> <JS_VARIABLE> (<JS_EQUAL> JsValuePossiblyWrapped())? )
+	| (
+		<JS_VARIABLE> JsTraverseObjects()
+			((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped()) ?
+	)
+	| (JsNewStatement() JsTraverseObjects())
 }
 
-void JsFunctionCall() : { Token t; }
+void JsTraverseObjects() : {}
 {
-	t = <JS_FUNCTION_NAME> { jjtThis.setName(t.image); }
-		(
-		<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-		| <JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-		)
-		( JsChainedOperator() )?
+	(
+		(<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>)
+		| (<JS_OBJECT_OPERATOR> <JS_VARIABLE>)
+	)*
 }
 
 void JsReturnStatement() : {}
 {
-	<JS_RETURN_STATEMENT> (JsValue())?
+	<JS_RETURN_STATEMENT> (JsValuePossiblyWrapped())?
 }
 
-void JsVariableAssignment() : {}
+void JsNewStatement() : {}
 {
-	<JS_VARIABLE> <JS_EQUAL> JsValue()
-}
-
-void JsChainedOperator() : {}
-{
-	<JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	( JsChainedOperator() )?
+	<JS_NEW_STATEMENT> <JS_VARIABLE> /* brackets are optional */
 }
 
 void JsValue() : {}
 {
 	(
-	  <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	  | <JS_NEW_STATEMENT> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	  | <JS_VARIABLE>
+	  <JS_VARIABLE>
+	  | JsNewStatement() 
+	  | JsAnonymousFunction()
 	  | <JS_STRING>
+	  | <JS_STRING_SQ>
 	  | <JS_DECIMAL>
 	  | <JS_HEXADECIMAL>
-	  | <JS_BUILTIN> )
+	  | <JS_BUILTIN>
+	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
+
+	/* we can do crazy things, like "foo".indexOf() */
+  	(JsTraverseObjects() )
 	
-	( <JS_OPERATOR> JsValue() )?			/* e.g. "f() + 42" */
+}
+
+void JsValuePossiblyWrapped() : {}
+{
+	(( <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> ) | JsValue() )
+
+	(
+		/* e.g. "f() + 42" */
+		(<JS_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() += 42" */
+		(<JS_ASSIGNMENT_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() = 42" */
+		(<JS_EQUAL> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() ? 1 : 2" */
+		(<JS_TERNARY_1> JsValuePossiblyWrapped() <JS_TERNARY_2> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f++" */
+		(<JS_OPERATOR_SINGLE>)
+	)?
+
 }
 
 void JsSimpleValue() : {}
@@ -919,7 +987,7 @@ void JsSimpleValue() : {}
 
 void JsArgumentList() : {}
 {
-	JsValue() (<JS_COMMA> JsArgumentList())?
+	JsValuePossiblyWrapped() (<JS_COMMA> JsArgumentList())?
 }
 
 void JsVariableList() : {}
@@ -930,7 +998,7 @@ void JsVariableList() : {}
 void JsFunctionDefinition() : {}
 {
 	<JS_FUNCTION_STATEMENT> 
-	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_VARIABLE> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
 	<JS_BRACE_OPEN>
 		JsBlock()
 	<JS_BRACE_CLOSE>
@@ -943,8 +1011,47 @@ void JsFunctionArgumentList() : {}
 	( <JS_COMMA> JsFunctionArgumentList() )?
 }
 
+void JsAnonymousFunction() : {}
+{
+	<JS_FUNCTION_STATEMENT> 
+	<JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+}
+
 void JsIfStatement() : {}
 {
-	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValue() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
 	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?
+}
+
+void JsForStatement() : {}
+{
+	<JS_FOR_STATEMENT> 
+	<JS_BRACKET_OPEN> 
+	(JsForParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())?
+	<JS_BRACKET_CLOSE> 
+	<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+}
+
+void JsForParameterList() : {}
+{
+	JsLanguageStatement()
+	(<JS_COMMA> JsForParameterList())?
+}
+
+void JsForEvaluateParameterList() : {}
+{
+	JsValuePossiblyWrapped()
+	(<JS_COMMA> JsForEvaluateParameterList())?
+}
+
+/* inline arrays: { a:3, b:function() {...}, c:"kittens", } */
+void JsInlineArray() : {}
+{
+	<JS_VARIABLE> <JS_TERNARY_2> JsValuePossiblyWrapped()
+	(<JS_COMMA> (JsInlineArray()) ?) ?
 }
