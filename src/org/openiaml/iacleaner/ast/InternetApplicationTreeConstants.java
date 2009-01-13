@@ -25,12 +25,21 @@ public interface InternetApplicationTreeConstants
   public int JJTPHPINTERFACEBLOCK = 19;
   public int JJTHTMLBLOCK = 20;
   public int JJTHTMLSCRIPTTAG = 21;
-  public int JJTJSBLOCK = 22;
-  public int JJTHTMLTAG = 23;
-  public int JJTHTMLCLOSINGTAG = 24;
-  public int JJTHTMLTAGATTRIBUTE = 25;
-  public int JJTHTMLTEXTBLOCK = 26;
-  public int JJTHTMLCOMMENT = 27;
+  public int JJTHTMLTAG = 22;
+  public int JJTHTMLCLOSINGTAG = 23;
+  public int JJTHTMLTAGATTRIBUTE = 24;
+  public int JJTHTMLTEXTBLOCK = 25;
+  public int JJTHTMLCOMMENT = 26;
+  public int JJTJSBLOCK = 27;
+  public int JJTJSSTATEMENT = 28;
+  public int JJTJSLANGUAGESTATEMENT = 29;
+  public int JJTJSVALUE = 30;
+  public int JJTJSSIMPLEVALUE = 31;
+  public int JJTJSARGUMENTLIST = 32;
+  public int JJTJSVARIABLELIST = 33;
+  public int JJTJSFUNCTIONDEFINITION = 34;
+  public int JJTJSFUNCTIONARGUMENTLIST = 35;
+  public int JJTJSIFSTATEMENT = 36;
 
 
   public String[] jjtNodeName = {
@@ -56,12 +65,21 @@ public interface InternetApplicationTreeConstants
     "PhpInterfaceBlock",
     "HtmlBlock",
     "HtmlScriptTag",
-    "JsBlock",
     "HtmlTag",
     "HtmlClosingTag",
     "HtmlTagAttribute",
     "HtmlTextBlock",
     "HtmlComment",
+    "JsBlock",
+    "JsStatement",
+    "JsLanguageStatement",
+    "JsValue",
+    "JsSimpleValue",
+    "JsArgumentList",
+    "JsVariableList",
+    "JsFunctionDefinition",
+    "JsFunctionArgumentList",
+    "JsIfStatement",
   };
 }
-/* JavaCC - OriginalChecksum=caee6724e04c150697f8107e766111b0 (do not edit this line) */
+/* JavaCC - OriginalChecksum=36951e4ddc3b62e6946da55673a1d976 (do not edit this line) */

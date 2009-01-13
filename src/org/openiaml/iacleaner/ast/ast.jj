@@ -34,8 +34,10 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   	InternetApplicationTokenManager.SwitchTo(initialState);
   	SimpleNode n;
   	if (initialState == JS_STATE) {
+  		//System.err.println("JS_STATE");
  		n = StartJs();
   	} else {
+  		//System.err.println("HTML_STATE");
   		n = Start();
   	}
   	return n;
@@ -111,6 +113,15 @@ SKIP :
 }
 
 <HTML_OPENING_TAG>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<JS_STATE>
 SKIP :
 {
   " "
@@ -283,12 +294,6 @@ TOKEN:
 	< HTML_SCRIPT_TAG_CLOSE: "</script>" > : HTML_STATE
 }
 
-<JS_STATE>
-TOKEN:
-{
-	< JS_FUNCTION: "function" >
-}
-
 <HTML_STATE>
 TOKEN:
 {
@@ -358,6 +363,130 @@ SKIP:
 MORE:
 {
 	< ~[] >
+}
+
+/** --- javascript --- */
+<JS_STATE>
+TOKEN :
+{
+	< JS_FUNCTION_STATEMENT: "function" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_RETURN_STATEMENT: "return" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_NEW_STATEMENT: "new" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_VAR_STATEMENT: "var" >
+}
+
+<JS_STATE>
+TOKEN : /* if statement */
+{
+	< JS_IF_STATEMENT:
+		"if" >
+}
+
+/**
+ * if we use constants in the rules below, they cannot be reused
+ * across different lexical states (I think)
+ */
+<JS_STATE>
+TOKEN : { < JS_BRACKET_OPEN: "(" > }
+<JS_STATE>
+TOKEN : { < JS_BRACKET_CLOSE: ")" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_OPEN: "{" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_CLOSE: "}" > }
+<JS_STATE>
+TOKEN : { < JS_END: ";" > }
+<JS_STATE>
+TOKEN : { < JS_EQUAL: "=" > }
+<JS_STATE>
+TOKEN : { < JS_COMMA: "," > }
+
+<JS_STATE>
+TOKEN : /* else statement */
+{
+	< JS_ELSE_STATEMENT:
+		"else" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING */
+{
+	< JS_STRING:
+		"\"" ("\\\"" | (~["\""]))+ "\"" >
+}
+
+<JS_STATE>
+TOKEN : /* Decimal */
+{
+	< JS_DECIMAL:
+		(["0"-"9"])+
+		( "." (["0"-"9"]) * )? >	/* can have numbers after the decimal point */
+}
+
+<JS_STATE>
+TOKEN : /* Hexaecimal */
+{
+	< JS_HEXADECIMAL:
+		"0x" (["0"-"9","a"-"f"])+ >
+}
+
+<JS_STATE>
+TOKEN : /* built in variables */
+{
+	< JS_BUILTIN:
+		"true" | "false" | "null" >
+}
+
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_FUNCTION_NAME:
+		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+<JS_STATE>
+TOKEN : /* single line comment */
+{
+	< JS_SINGLE_COMMENT:
+		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
+}
+
+<JS_STATE>
+TOKEN : /* multi line comment */
+{
+	< JS_MULTI_COMMENT:
+		"/" "*" 
+		(~["\0"])* 			/* we assume that php files cannot contain the null character */
+		"*" "/" >
+}
+
+<JS_STATE>
+TOKEN : /* variable */
+{
+	< JS_VARIABLE:
+		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OPERATOR:
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" >
 }
 
 /** Main production. */
@@ -578,9 +707,9 @@ void PhpStatement() : {/*@bgen(jjtree) PhpStatement */
 {/*@bgen(jjtree) PhpStatement */
         try {
 /*@egen*/
-	PhpLanguageStatement() ";"
+	PhpFunctionDefinition() 
+	| PhpLanguageStatement() ";"
 	| PhpIfStatement()
-	| PhpFunctionDefinition() 
 	| (<ACCESS_MODIFIER>)?
 		( PhpClassDefinition() | PhpInterfaceDefinition() )/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
@@ -1109,23 +1238,6 @@ void HtmlScriptTag() : {/*@bgen(jjtree) HtmlScriptTag */
 /*@egen*/
 }
 
-void JsBlock() : {/*@bgen(jjtree) JsBlock */
-  ASTJsBlock jjtn000 = new ASTJsBlock(JJTJSBLOCK);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) JsBlock */
-        try {
-/*@egen*/
-	<JS_FUNCTION>/*@bgen(jjtree)*/
-        } finally {
-          if (jjtc000) {
-            jjtree.closeNodeScope(jjtn000, true);
-          }
-        }
-/*@egen*/
-}
-
 void HtmlTag()          : {/*@bgen(jjtree) HtmlTag */
                             ASTHtmlTag jjtn000 = new ASTHtmlTag(JJTHTMLTAG);
                             boolean jjtc000 = true;
@@ -1252,3 +1364,321 @@ void HtmlComment() : {/*@bgen(jjtree) HtmlComment */
 /*@egen*/
 }
 
+/** javascript stuff */
+void JsBlock() : {/*@bgen(jjtree) JsBlock */
+  ASTJsBlock jjtn000 = new ASTJsBlock(JJTJSBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsBlock */
+        try {
+/*@egen*/
+	( JsStatement() 
+	  | <JS_SINGLE_COMMENT> 
+	  | <JS_MULTI_COMMENT> )*/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsStatement() : {/*@bgen(jjtree) JsStatement */
+  ASTJsStatement jjtn000 = new ASTJsStatement(JJTJSSTATEMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsStatement */
+        try {
+/*@egen*/
+	JsFunctionDefinition() 
+	| JsIfStatement()
+	| JsLanguageStatement() <JS_END>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
+  ASTJsLanguageStatement jjtn000 = new ASTJsLanguageStatement(JJTJSLANGUAGESTATEMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsLanguageStatement */
+        try {
+/*@egen*/
+	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	| <JS_RETURN_STATEMENT> (JsValue())?
+	| <JS_VARIABLE> <JS_EQUAL> JsValue()/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsValue() : {/*@bgen(jjtree) JsValue */
+  ASTJsValue jjtn000 = new ASTJsValue(JJTJSVALUE);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsValue */
+        try {
+/*@egen*/
+	(
+	  <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	  | <JS_NEW_STATEMENT> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	  | <JS_VARIABLE>
+	  | <JS_STRING>
+	  | <JS_DECIMAL>
+	  | <JS_HEXADECIMAL>
+	  | <JS_BUILTIN> )
+	
+	( <JS_OPERATOR> JsValue() )?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/			/* e.g. "f() + 42" */
+}
+
+void JsSimpleValue() : {/*@bgen(jjtree) JsSimpleValue */
+  ASTJsSimpleValue jjtn000 = new ASTJsSimpleValue(JJTJSSIMPLEVALUE);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsSimpleValue */
+        try {
+/*@egen*/
+	<JS_STRING> | <JS_DECIMAL> | <JS_HEXADECIMAL> | <JS_BUILTIN>/*@bgen(jjtree)*/
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsArgumentList() : {/*@bgen(jjtree) JsArgumentList */
+  ASTJsArgumentList jjtn000 = new ASTJsArgumentList(JJTJSARGUMENTLIST);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsArgumentList */
+        try {
+/*@egen*/
+	JsValue() (<JS_COMMA> JsArgumentList())?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsVariableList() : {/*@bgen(jjtree) JsVariableList */
+  ASTJsVariableList jjtn000 = new ASTJsVariableList(JJTJSVARIABLELIST);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsVariableList */
+        try {
+/*@egen*/
+	<JS_VARIABLE> (<JS_COMMA> JsVariableList())?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsFunctionDefinition() : {/*@bgen(jjtree) JsFunctionDefinition */
+  ASTJsFunctionDefinition jjtn000 = new ASTJsFunctionDefinition(JJTJSFUNCTIONDEFINITION);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsFunctionDefinition */
+        try {
+/*@egen*/
+	<JS_FUNCTION_STATEMENT> 
+	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsFunctionArgumentList() : {/*@bgen(jjtree) JsFunctionArgumentList */
+  ASTJsFunctionArgumentList jjtn000 = new ASTJsFunctionArgumentList(JJTJSFUNCTIONARGUMENTLIST);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsFunctionArgumentList */
+        try {
+/*@egen*/
+	<JS_VARIABLE>
+	( <JS_EQUAL> JsSimpleValue() )?
+	( <JS_COMMA> JsFunctionArgumentList() )?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsIfStatement() : {/*@bgen(jjtree) JsIfStatement */
+  ASTJsIfStatement jjtn000 = new ASTJsIfStatement(JJTJSIFSTATEMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsIfStatement */
+        try {
+/*@egen*/
+	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValue() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}

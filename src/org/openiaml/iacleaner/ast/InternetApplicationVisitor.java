@@ -26,11 +26,20 @@ public interface InternetApplicationVisitor
   public Object visit(ASTPhpInterfaceBlock node, Object data);
   public Object visit(ASTHtmlBlock node, Object data);
   public Object visit(ASTHtmlScriptTag node, Object data);
-  public Object visit(ASTJsBlock node, Object data);
   public Object visit(ASTHtmlTag node, Object data);
   public Object visit(ASTHtmlClosingTag node, Object data);
   public Object visit(ASTHtmlTagAttribute node, Object data);
   public Object visit(ASTHtmlTextBlock node, Object data);
   public Object visit(ASTHtmlComment node, Object data);
+  public Object visit(ASTJsBlock node, Object data);
+  public Object visit(ASTJsStatement node, Object data);
+  public Object visit(ASTJsLanguageStatement node, Object data);
+  public Object visit(ASTJsValue node, Object data);
+  public Object visit(ASTJsSimpleValue node, Object data);
+  public Object visit(ASTJsArgumentList node, Object data);
+  public Object visit(ASTJsVariableList node, Object data);
+  public Object visit(ASTJsFunctionDefinition node, Object data);
+  public Object visit(ASTJsFunctionArgumentList node, Object data);
+  public Object visit(ASTJsIfStatement node, Object data);
 }
-/* JavaCC - OriginalChecksum=110e7b9098af2f0160557e01f7a5dbfd (do not edit this line) */
+/* JavaCC - OriginalChecksum=7b9a85bd1749dae5883c9c2ad7a2e883 (do not edit this line) */
