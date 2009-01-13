@@ -225,6 +225,36 @@ TOKEN :
 	< ACCESS_MODIFIER: "public" | "private" | "protected" >
 }
 
+TOKEN :
+{
+	< PHP_TRY_STATEMENT: "try" >
+}
+
+TOKEN :
+{
+	< PHP_CATCH_STATEMENT: "catch" >
+}
+
+TOKEN :
+{
+	< PHP_THROW_STATEMENT: "throw" >
+}
+
+TOKEN :
+{
+	< PHP_FINALLY_STATEMENT: "finally" >
+}
+
+TOKEN :
+{
+	< PHP_DIE_STATEMENT: "die" >
+}
+
+TOKEN :
+{
+	< PHP_EXIT_STATEMENT: "exit" >
+}
+
 TOKEN : /* if statement */
 {
 	< PHP_IF_STATEMENT:
@@ -286,13 +316,10 @@ TOKEN :
 	< PHP_OBJECT_OPERATOR: "::" >
 }
 
-TOKEN : /* operator -- 
-	includes => for arrays, also includes ?: for 
-	ternary (although we don't specifically check 
-	that it is a valid expression) */
+TOKEN : /* operator -- includes '=>' for arrays */
 {
 	< PHP_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" | "?" | ":" >
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" >
 }
 
 TOKEN : /* prefix operator */
@@ -594,16 +621,28 @@ void PhpStatement() : {}
 	| PhpIfStatement()
 	| (<ACCESS_MODIFIER>)?
 		( PhpClassDefinition() | PhpInterfaceDefinition() ) 
+	| PhpTryCatchBlock()
 }
 
 void PhpLanguageStatement() : {}
 {
-	<ECHO_STATEMENT> PhpValue()
+	<ECHO_STATEMENT> PhpValuePossiblyWrapped()
+	| <PHP_THROW_STATEMENT> PhpValue()
+	| <PHP_DIE_STATEMENT> (
+			PhpValuePossiblyWrapped()
+		)?
 	| (PhpFunctionCall() "(" (PhpArgumentList())? ")"
 		(PhpOrSomething()) ?)
-	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
+	| <RETURN_STATEMENT> (PhpValuePossiblyWrapped() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> (<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* "=" PhpValue() (PhpOrSomething()) ?
+	| PhpVariableAssignment()
+}
+
+void PhpVariableAssignment() : {}
+{
+	<PHP_VARIABLE> 
+		(<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* 
+		"=" PhpValuePossiblyWrapped() (<PHP_THROW_STATEMENT> PhpOrSomething()) ?
 }
 
 void PhpFunctionCall() : {}
@@ -617,24 +656,46 @@ void PhpOrSomething() : {}
 	<OR_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 }
 
+void PhpTryCatchBlock() : {}
+{
+	<PHP_TRY_STATEMENT> "{"
+		PhpBlock()
+	"}" 
+	(<PHP_CATCH_STATEMENT> "(" <PHP_FUNCTION_NAME> <PHP_VARIABLE> ")" "{"
+		PhpBlock()
+	"}")*
+	(<PHP_FINALLY_STATEMENT> "{"
+		PhpBlock()
+	"}")?
+}
+
 void PhpValue() : {}
 {
-	(
-		(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
-		
-		(
-		  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-		  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-		  | <PHP_VARIABLE>
-		  | PhpSimpleValue() )
-		  	  
-		( PhpSelectArray()) ?		/* e.g $a[1][2][3] */
+	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
 	
-		( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
-	) | (
-		"(" PhpValue() ")"
+	(
+	  (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")")
+	  | (<NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")")
+	  | (<PHP_VARIABLE>)
+	  | (PhpSimpleValue()) 
 	)
-	( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
+
+	( PhpSelectArray()) ?		/* e.g $a[1][2][3] */
+
+}
+
+void PhpValuePossiblyWrapped() : {}
+{
+	(( "(" PhpValuePossiblyWrapped() ")" ) | PhpValue() )
+
+	(
+		/* e.g. "f() + 42" */
+		(<PHP_OPERATOR> PhpValuePossiblyWrapped())
+		|
+		/* e.g. "f() ? 1 : 2" */
+		("?" PhpValuePossiblyWrapped() ":" PhpValuePossiblyWrapped()) 
+	)?
+
 }
 
 void PhpSimpleValue() : {}
@@ -644,14 +705,14 @@ void PhpSimpleValue() : {}
 
 void PhpSelectArray() : {}
 {
-	"[" PhpValue() "]" 
+	"[" PhpValuePossiblyWrapped() "]" 
 	(PhpSelectArray()) ? 
 }
 
 /* this has a special case to allow for array(1,2,) */
 void PhpArgumentList() : {}
 {
-	PhpValue() ("," (PhpArgumentList())? )?
+	PhpValuePossiblyWrapped() ("," (PhpArgumentList())? )?
 }
 
 void PhpVariableList() : {}
@@ -677,7 +738,7 @@ void PhpFunctionArgumentList() : {}
 
 void PhpIfStatement() : {}
 {
-	<PHP_IF_STATEMENT> "(" PhpValue() ")" "{" PhpBlock() "}"
+	<PHP_IF_STATEMENT> "(" PhpValuePossiblyWrapped() ")" "{" PhpBlock() "}"
 	( <PHP_ELSE_STATEMENT> "{" PhpBlock() "}" ) ?
 }
 

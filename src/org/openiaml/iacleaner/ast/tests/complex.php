@@ -94,7 +94,7 @@ class IamlRuntimeException extends Exception {
 		// outFlows first to = org.openiaml.model.model.impl.ApplicationElementPropertyImpl@1839d2e (isGenerated: true, id: model.11e47202c05.2a, name: fieldValue, defaultValue: null)
 		
 			queue_set_application_property("visual_11e37df5bce_1c", 
-	model_11e47202c05_2b
+	$model_11e47202c05_2b
 );
 		
 

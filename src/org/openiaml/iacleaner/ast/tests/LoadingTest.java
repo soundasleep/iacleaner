@@ -55,6 +55,10 @@ public class LoadingTest extends TestCase {
 	public void testPhpConditional() throws Exception {
 		loadFile("conditional.php");
 	}
+	
+	public void testPhpExceptions() throws Exception {
+		loadFile("exception.php");
+	}
 
 	public void testPhpFunctionComplex() throws Exception {
 		loadFile("function_complex.php");
