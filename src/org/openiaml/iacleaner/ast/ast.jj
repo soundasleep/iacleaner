@@ -506,6 +506,30 @@ TOKEN :
 	< JS_FOR_STATEMENT: "for" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	< JS_TRY_STATEMENT: "try" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_CATCH_STATEMENT: "catch" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_THROW_STATEMENT: "throw" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_FINALLY_STATEMENT: "finally" >
+}
+
 /**
  * if we use constants in the rules below, they cannot be reused
  * across different lexical states (I think)
@@ -518,6 +542,10 @@ TOKEN : { < JS_BRACKET_CLOSE: ")" > }
 TOKEN : { < JS_BRACE_OPEN: "{" > }
 <JS_STATE>
 TOKEN : { < JS_BRACE_CLOSE: "}" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_OPEN: "[" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_CLOSE: "]" > }
 <JS_STATE>
 TOKEN : { < JS_END: ";" > }
 <JS_STATE>
@@ -567,25 +595,30 @@ TOKEN : /* built in variables */
 }
 
 <JS_STATE>
-TOKEN : /* Function name */
-{
-	< JS_VARIABLE:
-		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
-}
-
-/* JS_VARIABLE === JS_FUNCTION_NAME */
-
-<JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OBJECT_OPERATOR: "." >
 }
 
 <JS_STATE>
+TOKEN : /* prefix operators, e.g. !false */
+{
+	< JS_PREFIX_OPERATOR:
+		"!" >
+}
+
+<JS_STATE>
+TOKEN : /* both prefix and operators e.g. -3 and 1-3 */
+{
+	< JS_NUMBER_OPERATOR:
+		"-" | "+" >
+}
+
+<JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" >
+		"*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" | "instanceof" >
 }
 
 <JS_STATE>
@@ -616,6 +649,15 @@ TOKEN :
 {
 	< JS_TERNARY_2: ":" >
 }
+
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_VARIABLE:
+		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+/* JS_VARIABLE === JS_FUNCTION_NAME */
 
 /** Main production. */
 SimpleNode Start() : {/*@bgen(jjtree) Start */
@@ -1703,7 +1745,7 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
 {/*@bgen(jjtree) JsBlock */
         try {
 /*@egen*/
-	( JsStatement() )*/*@bgen(jjtree)*/
+	( LOOKAHEAD(1) JsStatement() )*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1737,7 +1779,11 @@ void JsStatement() : {/*@bgen(jjtree) JsStatement */
 	JsFunctionDefinition() 
 	| JsIfStatement()
 	| JsForStatement()
-	| JsLanguageStatement() <JS_END>/*@bgen(jjtree)*/
+	| JsLanguageStatement()
+	| (<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>)
+	| JsTryCatchBlock()
+	| JsThrowStatement()
+	| <JS_END>/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1757,7 +1803,7 @@ void JsStatement() : {/*@bgen(jjtree) JsStatement */
             jjtree.closeNodeScope(jjtn000, true);
           }
         }
-/*@egen*/
+/*@egen*/ /* ";" can be anywhere in js scripts */
 }
 
 void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
@@ -1772,7 +1818,8 @@ void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
 	| ( <JS_VAR_STATEMENT> <JS_VARIABLE> (<JS_EQUAL> JsValuePossiblyWrapped())? )
 	| (
 		<JS_VARIABLE> JsTraverseObjects()
-			((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped()) ?
+		(((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped())
+			| <JS_OPERATOR_SINGLE>) ?
 	)
 	| (JsNewStatement() JsTraverseObjects())/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
@@ -1808,6 +1855,7 @@ void JsTraverseObjects() : {/*@bgen(jjtree) JsTraverseObjects */
 	(
 		(<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>)
 		| (<JS_OBJECT_OPERATOR> <JS_VARIABLE>)
+		| ( JsSelectArray())
 	)*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1831,6 +1879,37 @@ void JsTraverseObjects() : {/*@bgen(jjtree) JsTraverseObjects */
 /*@egen*/
 }
 
+void JsSelectArray() : {/*@bgen(jjtree) JsSelectArray */
+  ASTJsSelectArray jjtn000 = new ASTJsSelectArray(JJTJSSELECTARRAY);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsSelectArray */
+        try {
+/*@egen*/
+	<JS_ARRAY_OPEN> JsValuePossiblyWrapped() <JS_ARRAY_CLOSE>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/ 
+}
+
 void JsReturnStatement() : {/*@bgen(jjtree) JsReturnStatement */
   ASTJsReturnStatement jjtn000 = new ASTJsReturnStatement(JJTJSRETURNSTATEMENT);
   boolean jjtc000 = true;
@@ -1839,7 +1918,7 @@ void JsReturnStatement() : {/*@bgen(jjtree) JsReturnStatement */
 {/*@bgen(jjtree) JsReturnStatement */
         try {
 /*@egen*/
-	<JS_RETURN_STATEMENT> (JsValuePossiblyWrapped())?/*@bgen(jjtree)*/
+	<JS_RETURN_STATEMENT> (LOOKAHEAD(1) JsValuePossiblyWrapped())?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1891,11 +1970,7 @@ void JsValue() : {/*@bgen(jjtree) JsValue */
 	  <JS_VARIABLE>
 	  | JsNewStatement() 
 	  | JsAnonymousFunction()
-	  | <JS_STRING>
-	  | <JS_STRING_SQ>
-	  | <JS_DECIMAL>
-	  | <JS_HEXADECIMAL>
-	  | <JS_BUILTIN>
+	  | JsSimpleValue()
 	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
 
 	/* we can do crazy things, like "foo".indexOf() */
@@ -1931,11 +2006,16 @@ void JsValuePossiblyWrapped() : {/*@bgen(jjtree) JsValuePossiblyWrapped */
 {/*@bgen(jjtree) JsValuePossiblyWrapped */
         try {
 /*@egen*/
+	( <JS_PREFIX_OPERATOR> )*
+	
 	(( <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> ) | JsValue() )
 
 	(
-		/* e.g. "f() + 42" */
+		/* e.g. "f() *+ 42" */
 		(<JS_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() + 42" */
+		(<JS_NUMBER_OPERATOR> JsValuePossiblyWrapped())
 		|
 		/* e.g. "f() += 42" */
 		(<JS_ASSIGNMENT_OPERATOR> JsValuePossiblyWrapped())
@@ -1980,7 +2060,11 @@ void JsSimpleValue() : {/*@bgen(jjtree) JsSimpleValue */
 {/*@bgen(jjtree) JsSimpleValue */
         try {
 /*@egen*/
-	<JS_STRING> | <JS_DECIMAL> | <JS_HEXADECIMAL> | <JS_BUILTIN>/*@bgen(jjtree)*/
+	<JS_STRING> 
+	| <JS_STRING_SQ> 
+	| ((<JS_NUMBER_OPERATOR>)* <JS_DECIMAL>) 
+	| <JS_HEXADECIMAL> 
+	| <JS_BUILTIN>/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
@@ -2162,8 +2246,11 @@ void JsIfStatement() : {/*@bgen(jjtree) JsIfStatement */
 {/*@bgen(jjtree) JsIfStatement */
         try {
 /*@egen*/
-	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
-	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?/*@bgen(jjtree)*/
+	<JS_IF_STATEMENT> 
+		<JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE>		
+			JsBlock()
+	( LOOKAHEAD(2) <JS_ELSE_STATEMENT> 
+		( JsBlock() ) ) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -2296,8 +2383,79 @@ void JsInlineArray() : {/*@bgen(jjtree) JsInlineArray */
 {/*@bgen(jjtree) JsInlineArray */
         try {
 /*@egen*/
-	<JS_VARIABLE> <JS_TERNARY_2> JsValuePossiblyWrapped()
+	(LOOKAHEAD(2) <JS_VARIABLE> <JS_TERNARY_2>) ?
+	JsValuePossiblyWrapped()
 	(<JS_COMMA> (JsInlineArray()) ?) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsThrowStatement() : {/*@bgen(jjtree) JsThrowStatement */
+  ASTJsThrowStatement jjtn000 = new ASTJsThrowStatement(JJTJSTHROWSTATEMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsThrowStatement */
+        try {
+/*@egen*/
+	<JS_THROW_STATEMENT> JsValue()/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsTryCatchBlock() : {/*@bgen(jjtree) JsTryCatchBlock */
+  ASTJsTryCatchBlock jjtn000 = new ASTJsTryCatchBlock(JJTJSTRYCATCHBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsTryCatchBlock */
+        try {
+/*@egen*/
+	<JS_TRY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+	(<JS_CATCH_STATEMENT> <JS_BRACKET_OPEN> <JS_VARIABLE> (<JS_IF_STATEMENT> JsValuePossiblyWrapped())? <JS_BRACKET_CLOSE> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)*
+	(<JS_FINALLY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);

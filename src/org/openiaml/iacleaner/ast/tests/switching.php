@@ -14,3 +14,7 @@ if (true) {
 <?php } else { ?>
 	<b>not done</b>
 <?php } ?>
+<!-- now let's alternate between html, js and php -->
+<script>
+alert(<?php echo rand(0,42); ?>);
+</script>

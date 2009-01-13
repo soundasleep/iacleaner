@@ -41,6 +41,7 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsStatement node, Object data);
   public Object visit(ASTJsLanguageStatement node, Object data);
   public Object visit(ASTJsTraverseObjects node, Object data);
+  public Object visit(ASTJsSelectArray node, Object data);
   public Object visit(ASTJsReturnStatement node, Object data);
   public Object visit(ASTJsNewStatement node, Object data);
   public Object visit(ASTJsValue node, Object data);
@@ -56,5 +57,7 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsForParameterList node, Object data);
   public Object visit(ASTJsForEvaluateParameterList node, Object data);
   public Object visit(ASTJsInlineArray node, Object data);
+  public Object visit(ASTJsThrowStatement node, Object data);
+  public Object visit(ASTJsTryCatchBlock node, Object data);
 }
-/* JavaCC - OriginalChecksum=26fb3016e28a962efc1a7b5e4d3dc849 (do not edit this line) */
+/* JavaCC - OriginalChecksum=946da49d838bede36b98a905acf80797 (do not edit this line) */

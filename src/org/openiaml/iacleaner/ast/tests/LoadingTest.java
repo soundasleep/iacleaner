@@ -32,8 +32,16 @@ public class LoadingTest extends TestCase {
 		loadFile("attributes.html");
 	}
 
+	public void testJsArray() throws Exception {
+		loadFile("array.js");
+	}
+	
 	public void testPhpArray() throws Exception {
 		loadFile("array.php");
+	}
+
+	public void testJsClass() throws Exception {
+		loadFile("class.js");
 	}
 
 	public void testPhpClass() throws Exception {
@@ -54,6 +62,10 @@ public class LoadingTest extends TestCase {
 
 	public void testPhpConditional() throws Exception {
 		loadFile("conditional.php");
+	}
+	
+	public void testJsExceptions() throws Exception {
+		loadFile("exception.js");
 	}
 	
 	public void testPhpExceptions() throws Exception {

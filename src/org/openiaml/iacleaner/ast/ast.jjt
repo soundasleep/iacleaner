@@ -502,6 +502,30 @@ TOKEN :
 	< JS_FOR_STATEMENT: "for" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	< JS_TRY_STATEMENT: "try" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_CATCH_STATEMENT: "catch" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_THROW_STATEMENT: "throw" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_FINALLY_STATEMENT: "finally" >
+}
+
 /**
  * if we use constants in the rules below, they cannot be reused
  * across different lexical states (I think)
@@ -514,6 +538,10 @@ TOKEN : { < JS_BRACKET_CLOSE: ")" > }
 TOKEN : { < JS_BRACE_OPEN: "{" > }
 <JS_STATE>
 TOKEN : { < JS_BRACE_CLOSE: "}" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_OPEN: "[" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_CLOSE: "]" > }
 <JS_STATE>
 TOKEN : { < JS_END: ";" > }
 <JS_STATE>
@@ -563,25 +591,30 @@ TOKEN : /* built in variables */
 }
 
 <JS_STATE>
-TOKEN : /* Function name */
-{
-	< JS_VARIABLE:
-		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
-}
-
-/* JS_VARIABLE === JS_FUNCTION_NAME */
-
-<JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OBJECT_OPERATOR: "." >
 }
 
 <JS_STATE>
+TOKEN : /* prefix operators, e.g. !false */
+{
+	< JS_PREFIX_OPERATOR:
+		"!" >
+}
+
+<JS_STATE>
+TOKEN : /* both prefix and operators e.g. -3 and 1-3 */
+{
+	< JS_NUMBER_OPERATOR:
+		"-" | "+" >
+}
+
+<JS_STATE>
 TOKEN : /* operator */
 {
 	< JS_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" >
+		"*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" | "instanceof" >
 }
 
 <JS_STATE>
@@ -612,6 +645,15 @@ TOKEN :
 {
 	< JS_TERNARY_2: ":" >
 }
+
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_VARIABLE:
+		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+/* JS_VARIABLE === JS_FUNCTION_NAME */
 
 /** Main production. */
 SimpleNode Start() : { SimpleNode n; }
@@ -899,7 +941,7 @@ void HtmlComment() : {}
 /** javascript stuff */
 void JsBlock() : {}
 {
-	( JsStatement() )*
+	( LOOKAHEAD(1) JsStatement() )*
 }
 
 void JsStatement() : {}
@@ -907,7 +949,11 @@ void JsStatement() : {}
 	JsFunctionDefinition() 
 	| JsIfStatement()
 	| JsForStatement()
-	| JsLanguageStatement() <JS_END>
+	| JsLanguageStatement()
+	| (<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>)
+	| JsTryCatchBlock()
+	| JsThrowStatement()
+	| <JS_END> /* ";" can be anywhere in js scripts */
 }
 
 void JsLanguageStatement() : {}
@@ -916,7 +962,8 @@ void JsLanguageStatement() : {}
 	| ( <JS_VAR_STATEMENT> <JS_VARIABLE> (<JS_EQUAL> JsValuePossiblyWrapped())? )
 	| (
 		<JS_VARIABLE> JsTraverseObjects()
-			((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped()) ?
+		(((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped())
+			| <JS_OPERATOR_SINGLE>) ?
 	)
 	| (JsNewStatement() JsTraverseObjects())
 }
@@ -926,12 +973,18 @@ void JsTraverseObjects() : {}
 	(
 		(<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>)
 		| (<JS_OBJECT_OPERATOR> <JS_VARIABLE>)
+		| ( JsSelectArray())
 	)*
+}
+
+void JsSelectArray() : {}
+{
+	<JS_ARRAY_OPEN> JsValuePossiblyWrapped() <JS_ARRAY_CLOSE> 
 }
 
 void JsReturnStatement() : {}
 {
-	<JS_RETURN_STATEMENT> (JsValuePossiblyWrapped())?
+	<JS_RETURN_STATEMENT> (LOOKAHEAD(1) JsValuePossiblyWrapped())?
 }
 
 void JsNewStatement() : {}
@@ -945,11 +998,7 @@ void JsValue() : {}
 	  <JS_VARIABLE>
 	  | JsNewStatement() 
 	  | JsAnonymousFunction()
-	  | <JS_STRING>
-	  | <JS_STRING_SQ>
-	  | <JS_DECIMAL>
-	  | <JS_HEXADECIMAL>
-	  | <JS_BUILTIN>
+	  | JsSimpleValue()
 	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
 
 	/* we can do crazy things, like "foo".indexOf() */
@@ -959,11 +1008,16 @@ void JsValue() : {}
 
 void JsValuePossiblyWrapped() : {}
 {
+	( <JS_PREFIX_OPERATOR> )*
+	
 	(( <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> ) | JsValue() )
 
 	(
-		/* e.g. "f() + 42" */
+		/* e.g. "f() *+ 42" */
 		(<JS_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() + 42" */
+		(<JS_NUMBER_OPERATOR> JsValuePossiblyWrapped())
 		|
 		/* e.g. "f() += 42" */
 		(<JS_ASSIGNMENT_OPERATOR> JsValuePossiblyWrapped())
@@ -982,7 +1036,11 @@ void JsValuePossiblyWrapped() : {}
 
 void JsSimpleValue() : {}
 {
-	<JS_STRING> | <JS_DECIMAL> | <JS_HEXADECIMAL> | <JS_BUILTIN>
+	<JS_STRING> 
+	| <JS_STRING_SQ> 
+	| ((<JS_NUMBER_OPERATOR>)* <JS_DECIMAL>) 
+	| <JS_HEXADECIMAL> 
+	| <JS_BUILTIN>
 }
 
 void JsArgumentList() : {}
@@ -1022,8 +1080,11 @@ void JsAnonymousFunction() : {}
 
 void JsIfStatement() : {}
 {
-	<JS_IF_STATEMENT> <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
-	( <JS_ELSE_STATEMENT> <JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE> ) ?
+	<JS_IF_STATEMENT> 
+		<JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE>		
+			JsBlock()
+	( LOOKAHEAD(2) <JS_ELSE_STATEMENT> 
+		( JsBlock() ) ) ?
 }
 
 void JsForStatement() : {}
@@ -1052,6 +1113,25 @@ void JsForEvaluateParameterList() : {}
 /* inline arrays: { a:3, b:function() {...}, c:"kittens", } */
 void JsInlineArray() : {}
 {
-	<JS_VARIABLE> <JS_TERNARY_2> JsValuePossiblyWrapped()
+	(LOOKAHEAD(2) <JS_VARIABLE> <JS_TERNARY_2>) ?
+	JsValuePossiblyWrapped()
 	(<JS_COMMA> (JsInlineArray()) ?) ?
+}
+
+void JsThrowStatement() : {}
+{
+	<JS_THROW_STATEMENT> JsValue()
+}
+
+void JsTryCatchBlock() : {}
+{
+	<JS_TRY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+	(<JS_CATCH_STATEMENT> <JS_BRACKET_OPEN> <JS_VARIABLE> (<JS_IF_STATEMENT> JsValuePossiblyWrapped())? <JS_BRACKET_CLOSE> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)*
+	(<JS_FINALLY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)?
 }
