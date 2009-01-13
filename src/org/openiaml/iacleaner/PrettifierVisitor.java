@@ -11,18 +11,29 @@ import org.openiaml.iacleaner.ast.ASTHtmlScriptTag;
 import org.openiaml.iacleaner.ast.ASTHtmlTag;
 import org.openiaml.iacleaner.ast.ASTHtmlTagAttribute;
 import org.openiaml.iacleaner.ast.ASTHtmlTextBlock;
+import org.openiaml.iacleaner.ast.ASTJsAnonymousFunction;
 import org.openiaml.iacleaner.ast.ASTJsArgumentList;
 import org.openiaml.iacleaner.ast.ASTJsBlock;
 import org.openiaml.iacleaner.ast.ASTJsChainedOperator;
+import org.openiaml.iacleaner.ast.ASTJsForEvaluateParameterList;
+import org.openiaml.iacleaner.ast.ASTJsForParameterList;
+import org.openiaml.iacleaner.ast.ASTJsForStatement;
 import org.openiaml.iacleaner.ast.ASTJsFunctionArgumentList;
 import org.openiaml.iacleaner.ast.ASTJsFunctionCall;
 import org.openiaml.iacleaner.ast.ASTJsFunctionDefinition;
 import org.openiaml.iacleaner.ast.ASTJsIfStatement;
+import org.openiaml.iacleaner.ast.ASTJsInlineArray;
 import org.openiaml.iacleaner.ast.ASTJsLanguageStatement;
+import org.openiaml.iacleaner.ast.ASTJsNewStatement;
 import org.openiaml.iacleaner.ast.ASTJsReturnStatement;
+import org.openiaml.iacleaner.ast.ASTJsSelectArray;
 import org.openiaml.iacleaner.ast.ASTJsSimpleValue;
 import org.openiaml.iacleaner.ast.ASTJsStatement;
+import org.openiaml.iacleaner.ast.ASTJsThrowStatement;
+import org.openiaml.iacleaner.ast.ASTJsTraverseObjects;
+import org.openiaml.iacleaner.ast.ASTJsTryCatchBlock;
 import org.openiaml.iacleaner.ast.ASTJsValue;
+import org.openiaml.iacleaner.ast.ASTJsValuePossiblyWrapped;
 import org.openiaml.iacleaner.ast.ASTJsVariableAssignment;
 import org.openiaml.iacleaner.ast.ASTJsVariableList;
 import org.openiaml.iacleaner.ast.ASTPhpArgumentList;
@@ -320,15 +331,6 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsChainedOperator, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTJsChainedOperator node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpOrSomething, java.lang.Object)
 	 */
 	@Override
@@ -338,28 +340,10 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsFunctionCall, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTJsFunctionCall node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsReturnStatement, java.lang.Object)
 	 */
 	@Override
 	public Object visit(ASTJsReturnStatement node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsVariableAssignment, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTJsVariableAssignment node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
@@ -405,6 +389,105 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTPhpValuePossiblyWrapped node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsTraverseObjects, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsTraverseObjects node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsSelectArray, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsSelectArray node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsNewStatement, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsNewStatement node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsValuePossiblyWrapped, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsValuePossiblyWrapped node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsAnonymousFunction, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsAnonymousFunction node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsForStatement, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsForStatement node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsForParameterList, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsForParameterList node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsForEvaluateParameterList, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsForEvaluateParameterList node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsInlineArray, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsInlineArray node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsThrowStatement, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsThrowStatement node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsTryCatchBlock, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsTryCatchBlock node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
