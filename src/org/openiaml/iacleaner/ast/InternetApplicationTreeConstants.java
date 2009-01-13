@@ -4,34 +4,38 @@ package org.openiaml.iacleaner.ast;
 public interface InternetApplicationTreeConstants
 {
   public int JJTSTART = 0;
-  public int JJTBLOCK = 1;
-  public int JJTPHPROOTBLOCK = 2;
-  public int JJTPHPBLOCK = 3;
-  public int JJTPHPINLINEHTMLBLOCK = 4;
-  public int JJTPHPSTATEMENT = 5;
-  public int JJTPHPLANGUAGESTATEMENT = 6;
-  public int JJTPHPVALUE = 7;
-  public int JJTPHPSIMPLEVALUE = 8;
-  public int JJTPHPARGUMENTLIST = 9;
-  public int JJTPHPVARIABLELIST = 10;
-  public int JJTPHPFUNCTIONDEFINITION = 11;
-  public int JJTPHPFUNCTIONARGUMENTLIST = 12;
-  public int JJTPHPIFSTATEMENT = 13;
-  public int JJTPHPCLASSDEFINITION = 14;
-  public int JJTPHPINTERFACEDEFINITION = 15;
-  public int JJTPHPINTERFACELIST = 16;
-  public int JJTPHPCLASSBLOCK = 17;
-  public int JJTPHPINTERFACEBLOCK = 18;
-  public int JJTHTMLBLOCK = 19;
-  public int JJTHTMLTAG = 20;
-  public int JJTHTMLCLOSINGTAG = 21;
-  public int JJTHTMLTAGATTRIBUTE = 22;
-  public int JJTHTMLTEXTBLOCK = 23;
-  public int JJTHTMLCOMMENT = 24;
+  public int JJTSTARTJS = 1;
+  public int JJTBLOCK = 2;
+  public int JJTPHPROOTBLOCK = 3;
+  public int JJTPHPBLOCK = 4;
+  public int JJTPHPINLINEHTMLBLOCK = 5;
+  public int JJTPHPSTATEMENT = 6;
+  public int JJTPHPLANGUAGESTATEMENT = 7;
+  public int JJTPHPVALUE = 8;
+  public int JJTPHPSIMPLEVALUE = 9;
+  public int JJTPHPARGUMENTLIST = 10;
+  public int JJTPHPVARIABLELIST = 11;
+  public int JJTPHPFUNCTIONDEFINITION = 12;
+  public int JJTPHPFUNCTIONARGUMENTLIST = 13;
+  public int JJTPHPIFSTATEMENT = 14;
+  public int JJTPHPCLASSDEFINITION = 15;
+  public int JJTPHPINTERFACEDEFINITION = 16;
+  public int JJTPHPINTERFACELIST = 17;
+  public int JJTPHPCLASSBLOCK = 18;
+  public int JJTPHPINTERFACEBLOCK = 19;
+  public int JJTHTMLBLOCK = 20;
+  public int JJTHTMLSCRIPTTAG = 21;
+  public int JJTJSBLOCK = 22;
+  public int JJTHTMLTAG = 23;
+  public int JJTHTMLCLOSINGTAG = 24;
+  public int JJTHTMLTAGATTRIBUTE = 25;
+  public int JJTHTMLTEXTBLOCK = 26;
+  public int JJTHTMLCOMMENT = 27;
 
 
   public String[] jjtNodeName = {
     "Start",
+    "StartJs",
     "Block",
     "PhpRootBlock",
     "PhpBlock",
@@ -51,6 +55,8 @@ public interface InternetApplicationTreeConstants
     "PhpClassBlock",
     "PhpInterfaceBlock",
     "HtmlBlock",
+    "HtmlScriptTag",
+    "JsBlock",
     "HtmlTag",
     "HtmlClosingTag",
     "HtmlTagAttribute",
@@ -58,4 +64,4 @@ public interface InternetApplicationTreeConstants
     "HtmlComment",
   };
 }
-/* JavaCC - OriginalChecksum=83aa451c9973598ab0666c866a46036f (do not edit this line) */
+/* JavaCC - OriginalChecksum=caee6724e04c150697f8107e766111b0 (do not edit this line) */

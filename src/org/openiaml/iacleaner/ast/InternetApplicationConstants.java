@@ -59,25 +59,31 @@ public interface InternetApplicationConstants {
   /** RegularExpression Id. */
   int PHP_BLOCK_BEGIN = 40;
   /** RegularExpression Id. */
-  int HTML_OPEN_TAG = 41;
+  int HTML_SCRIPT_TAG = 41;
   /** RegularExpression Id. */
-  int HTML_CLOSE_TAG = 42;
+  int HTML_SCRIPT_TAG_CLOSE = 42;
   /** RegularExpression Id. */
-  int HTML_CLOSING_TAG = 43;
+  int JS_FUNCTION = 43;
   /** RegularExpression Id. */
-  int HTML_TAG_NAME = 44;
+  int HTML_OPEN_TAG = 44;
   /** RegularExpression Id. */
-  int LETTER = 45;
+  int HTML_CLOSE_TAG = 45;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_NAME = 46;
+  int HTML_CLOSING_TAG = 46;
   /** RegularExpression Id. */
-  int HTML_STRING = 47;
+  int HTML_TAG_NAME = 47;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_EQUALS = 48;
+  int LETTER = 48;
   /** RegularExpression Id. */
-  int HTML_TEXT_BLOCK = 49;
+  int HTML_ATTRIBUTE_NAME = 49;
   /** RegularExpression Id. */
-  int HTML_COMMENT_START = 50;
+  int HTML_STRING = 50;
+  /** RegularExpression Id. */
+  int HTML_ATTRIBUTE_EQUALS = 51;
+  /** RegularExpression Id. */
+  int HTML_TEXT_BLOCK = 52;
+  /** RegularExpression Id. */
+  int HTML_COMMENT_START = 53;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -88,7 +94,9 @@ public interface InternetApplicationConstants {
   /** Lexical state. */
   int DEFAULT = 3;
   /** Lexical state. */
-  int HTML_WITHIN_COMMENT = 4;
+  int JS_STATE = 4;
+  /** Lexical state. */
+  int HTML_WITHIN_COMMENT = 5;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -133,6 +141,9 @@ public interface InternetApplicationConstants {
     "<PHP_OPERATOR>",
     "\"?>\"",
     "\"<?php\"",
+    "\"<script>\"",
+    "\"</script>\"",
+    "\"function\"",
     "\"<\"",
     "\">\"",
     "\"</\"",
@@ -144,7 +155,7 @@ public interface InternetApplicationConstants {
     "<HTML_TEXT_BLOCK>",
     "\"<!--\"",
     "\"-->\"",
-    "<token of kind 52>",
+    "<token of kind 55>",
     "\";\"",
     "\"(\"",
     "\")\"",
