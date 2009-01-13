@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 
 import org.openiaml.iacleaner.ast.InternetApplication;
 import org.openiaml.iacleaner.ast.SimpleNode;
+import org.openiaml.iacleaner.ast.js.Javascript;
 
 /**
  * A series of tests to load different source files.
@@ -18,10 +19,19 @@ import org.openiaml.iacleaner.ast.SimpleNode;
  */
 public class LoadingTest extends TestCase {
 
-	public SimpleNode loadFile(String relative) throws Exception {
+	public Object loadFile(String relative) throws Exception {
 		File file = new File("src/org/openiaml/iacleaner/ast/tests/" + relative);
 		assertTrue("File '" + file.getAbsolutePath() + "' exists", file.exists());
-		SimpleNode node = InternetApplication.loadFile(file);
+		String extension = file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("."));
+		
+		Object node = null;
+        if (extension.equals(".html") || extension.equals(".php")) {
+        	node = InternetApplication.loadFile(file);
+        } else if (extension.equals(".js")) {
+        	node = Javascript.loadFile(file);
+        } else {
+        	throw new Exception("cannot load file of type " + extension + ": " + file);
+        }
 
 		assertNotNull(node);
 		
@@ -113,7 +123,8 @@ public class LoadingTest extends TestCase {
 	}
 	
 	public void testPhpSwitching() throws Exception {
-		loadFile("switching.php");
+		SimpleNode node = (SimpleNode) loadFile("switching.php");
+		node.dump("");
 	}
 
 	public void testHtmlFunction() throws Exception {
@@ -125,7 +136,7 @@ public class LoadingTest extends TestCase {
 	}
 
 	public void testJsPrototype() throws Exception {
-		SimpleNode node = loadFile("prototype.js");
+		SimpleNode node = (SimpleNode) loadFile("prototype.js");
 		node.dump("");
 	}
 
