@@ -1,0 +1,512 @@
+
+options {
+  MULTI=true;
+  VISITOR=true;
+  // NODE_DEFAULT_VOID=true; /* makes all nodes #void by default, reducing the number of elements generated */
+}
+
+PARSER_BEGIN(Javascript)
+
+package org.openiaml.iacleaner.ast.js;
+
+import java.util.*;
+import java.io.*;
+
+/** A grammar for web applications, maybe? */
+public class Javascript {
+
+  public static Javascript instance = null;
+  
+  /**
+   * For loading test cases programatically.
+   */
+  public static SimpleNode loadFile(File f, int initialState) throws ParseException, FileNotFoundException {
+  	FileInputStream fis = new FileInputStream(f);
+  	if (instance == null) {
+  		instance = new Javascript(fis);
+  	} else {
+  		ReInit(fis);
+  	}
+  	JavascriptTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	n = StartJs();
+  	return n;
+  }
+
+  /**
+   * For loading test cases programatically.
+   * Works out the initial state based on the file extension of the given
+   * file.
+   */
+  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+	  String extension = f.getAbsolutePath().substring(f.getAbsolutePath().lastIndexOf("."));
+	  
+	  int initialState = 0;
+	  if (extension.equals(".js")) {
+	  	initialState = JS_STATE;
+	  } else {
+	  	throw new RuntimeException("Unknown file type: " + extension + " (from file: " + f + ")");
+	  }
+	  
+	  return loadFile(f, initialState);
+  }
+
+  /**
+   * Loading string sources.
+   * 
+   * @throws UnsupportedEncodingException if we have a problem with the charset encoding 
+   */
+  public static SimpleNode loadString(String s, String charset, int initialState) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+	  InputStream fis = new ByteArrayInputStream(s.getBytes(charset));
+ 	if (instance == null) {
+  		instance = new Javascript(fis);
+  	} else {
+  		ReInit(fis);
+  	}
+  	JavascriptTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	n = StartJs();
+  	return n;
+  }
+
+  /** Loads string sources with a default state of JS. */
+  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  	return loadString(s, charset, JS_STATE);
+  }
+  
+}
+
+PARSER_END(Javascript)
+
+<JS_STATE>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "/*" : JS_WITHIN_COMMENT
+| "//" : JS_WITHIN_COMMENT_SINGLE
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT_SINGLE>
+SKIP:
+{
+	< ["\r","\n"] > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT_SINGLE>
+MORE:
+{
+	< ~["\r","\n"] >
+}
+
+/** --- javascript --- */
+<JS_STATE>
+TOKEN :
+{
+	< JS_FUNCTION_STATEMENT: "function" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_RETURN_STATEMENT: "return" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_NEW_STATEMENT: "new" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_VAR_STATEMENT: "var" >
+}
+
+<JS_STATE>
+TOKEN : /* if statement */
+{
+	< JS_IF_STATEMENT:
+		"if" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_FOR_STATEMENT: "for" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_TRY_STATEMENT: "try" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_CATCH_STATEMENT: "catch" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_THROW_STATEMENT: "throw" >
+}
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_FINALLY_STATEMENT: "finally" >
+}
+
+/**
+ * if we use constants in the rules below, they cannot be reused
+ * across different lexical states (I think)
+ */
+<JS_STATE>
+TOKEN : { < JS_BRACKET_OPEN: "(" > }
+<JS_STATE>
+TOKEN : { < JS_BRACKET_CLOSE: ")" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_OPEN: "{" > }
+<JS_STATE>
+TOKEN : { < JS_BRACE_CLOSE: "}" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_OPEN: "[" > }
+<JS_STATE>
+TOKEN : { < JS_ARRAY_CLOSE: "]" > }
+<JS_STATE>
+TOKEN : { < JS_END: ";" > }
+<JS_STATE>
+TOKEN : { < JS_COMMA: "," > }
+
+<JS_STATE>
+TOKEN : /* else statement */
+{
+	< JS_ELSE_STATEMENT:
+		"else" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING */
+{
+	< JS_STRING:
+		"\"" ("\\\"" | (~["\""]))* "\"" >
+}
+
+<JS_STATE>
+TOKEN : /* STRING (single quoted) */
+{
+	< JS_STRING_SQ:
+		"'" ("\\'" | (~["'"]))* "'" >
+}
+
+<JS_STATE>
+TOKEN : /* Decimal */
+{
+	< JS_DECIMAL:
+		(["0"-"9"])+
+		( "." (["0"-"9"]) * )? >	/* can have numbers after the decimal point */
+}
+
+<JS_STATE>
+TOKEN : /* Hexaecimal */
+{
+	< JS_HEXADECIMAL:
+		"0x" (["0"-"9","a"-"f"])+ >
+}
+
+<JS_STATE>
+TOKEN : /* built in variables */
+{
+	< JS_BUILTIN:
+		"true" | "false" | "null" >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OBJECT_OPERATOR: "." >
+}
+
+<JS_STATE>
+TOKEN : /* prefix operators, e.g. !false */
+{
+	< JS_PREFIX_OPERATOR:
+		"!" >
+}
+
+<JS_STATE>
+TOKEN : /* both prefix and operators e.g. -3 and 1-3 */
+{
+	< JS_NUMBER_OPERATOR:
+		"-" | "+" >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OPERATOR:
+		"*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" | "instanceof" >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_ASSIGNMENT_OPERATOR:
+		"+=" | "-=" | "&=" | "|=" >
+}
+
+<JS_STATE>
+TOKEN : /* single operators */
+{
+	< JS_OPERATOR_SINGLE:
+		"++" | "--" >
+}
+
+<JS_STATE>
+TOKEN : { < JS_EQUAL: "=" > }
+
+<JS_STATE>
+TOKEN :
+{
+	< JS_TERNARY_1: "?" >
+}
+
+<JS_STATE>
+TOKEN : 
+{
+	< JS_TERNARY_2: ":" >
+}
+
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_VARIABLE:
+		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+/* JS_VARIABLE === JS_FUNCTION_NAME */
+
+/** Main production. */
+SimpleNode StartJs() : { SimpleNode n; }
+{
+	JsBlock() { n = jjtThis; }
+	<EOF>
+	{ return n; }
+}
+
+void JsBlock() : {}
+{
+	( LOOKAHEAD(1) JsStatement() )*
+}
+
+void JsStatement() : {}
+{
+	JsFunctionDefinition() 
+	| JsIfStatement()
+	| JsForStatement()
+	| JsLanguageStatement()
+	| (<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>)
+	| JsTryCatchBlock()
+	| JsThrowStatement()
+	| <JS_END> /* ";" can be anywhere in js scripts */
+}
+
+void JsLanguageStatement() : {}
+{
+	JsReturnStatement()
+	| ( <JS_VAR_STATEMENT> <JS_VARIABLE> (<JS_EQUAL> JsValuePossiblyWrapped())? )
+	| (
+		<JS_VARIABLE> JsTraverseObjects()
+		(((<JS_EQUAL> | <JS_ASSIGNMENT_OPERATOR>) JsValuePossiblyWrapped())
+			| <JS_OPERATOR_SINGLE>) ?
+	)
+	| (JsNewStatement() JsTraverseObjects())
+}
+
+void JsTraverseObjects() : {}
+{
+	(
+		(<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>)
+		| (<JS_OBJECT_OPERATOR> <JS_VARIABLE>)
+		| ( JsSelectArray())
+	)*
+}
+
+void JsSelectArray() : {}
+{
+	<JS_ARRAY_OPEN> JsValuePossiblyWrapped() <JS_ARRAY_CLOSE> 
+}
+
+void JsReturnStatement() : {}
+{
+	<JS_RETURN_STATEMENT> (LOOKAHEAD(1) JsValuePossiblyWrapped())?
+}
+
+void JsNewStatement() : {}
+{
+	<JS_NEW_STATEMENT> <JS_VARIABLE> /* brackets are optional */
+}
+
+void JsValue() : {}
+{
+	(
+	  <JS_VARIABLE>
+	  | JsNewStatement() 
+	  | JsAnonymousFunction()
+	  | JsSimpleValue()
+	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
+
+	/* we can do crazy things, like "foo".indexOf() */
+  	(JsTraverseObjects() )
+	
+}
+
+void JsValuePossiblyWrapped() : {}
+{
+	( <JS_PREFIX_OPERATOR> )*
+	
+	(( <JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE> ) | JsValue() )
+
+	(
+		/* e.g. "f() *+ 42" */
+		(<JS_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() + 42" */
+		(<JS_NUMBER_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() += 42" */
+		(<JS_ASSIGNMENT_OPERATOR> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() = 42" */
+		(<JS_EQUAL> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f() ? 1 : 2" */
+		(<JS_TERNARY_1> JsValuePossiblyWrapped() <JS_TERNARY_2> JsValuePossiblyWrapped())
+		|
+		/* e.g. "f++" */
+		(<JS_OPERATOR_SINGLE>)
+	)?
+
+}
+
+void JsSimpleValue() : {}
+{
+	<JS_STRING> 
+	| <JS_STRING_SQ> 
+	| ((<JS_NUMBER_OPERATOR>)* <JS_DECIMAL>) 
+	| <JS_HEXADECIMAL> 
+	| <JS_BUILTIN>
+}
+
+void JsArgumentList() : {}
+{
+	JsValuePossiblyWrapped() (<JS_COMMA> JsArgumentList())?
+}
+
+void JsVariableList() : {}
+{
+	<JS_VARIABLE> (<JS_COMMA> JsVariableList())?
+}
+
+void JsFunctionDefinition() : {}
+{
+	<JS_FUNCTION_STATEMENT> 
+	<JS_VARIABLE> <JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+}
+
+void JsFunctionArgumentList() : {}
+{
+	<JS_VARIABLE>
+	( <JS_EQUAL> JsSimpleValue() )?
+	( <JS_COMMA> JsFunctionArgumentList() )?
+}
+
+void JsAnonymousFunction() : {}
+{
+	<JS_FUNCTION_STATEMENT> 
+	<JS_BRACKET_OPEN> (JsFunctionArgumentList()) ? <JS_BRACKET_CLOSE>
+	<JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+}
+
+void JsIfStatement() : {}
+{
+	<JS_IF_STATEMENT> 
+		<JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE>		
+			JsBlock()
+	( LOOKAHEAD(2) <JS_ELSE_STATEMENT> 
+		( JsBlock() ) ) ?
+}
+
+void JsForStatement() : {}
+{
+	<JS_FOR_STATEMENT> 
+	<JS_BRACKET_OPEN> 
+	(JsForParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())? <JS_END> 
+	(JsForEvaluateParameterList())?
+	<JS_BRACKET_CLOSE> 
+	<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+}
+
+void JsForParameterList() : {}
+{
+	JsLanguageStatement()
+	(<JS_COMMA> JsForParameterList())?
+}
+
+void JsForEvaluateParameterList() : {}
+{
+	JsValuePossiblyWrapped()
+	(<JS_COMMA> JsForEvaluateParameterList())?
+}
+
+/* inline arrays: { a:3, b:function() {...}, c:"kittens", } */
+void JsInlineArray() : {}
+{
+	(LOOKAHEAD(2) <JS_VARIABLE> <JS_TERNARY_2>) ?
+	JsValuePossiblyWrapped()
+	(<JS_COMMA> (JsInlineArray()) ?) ?
+}
+
+void JsThrowStatement() : {}
+{
+	<JS_THROW_STATEMENT> JsValue()
+}
+
+void JsTryCatchBlock() : {}
+{
+	<JS_TRY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>
+	(<JS_CATCH_STATEMENT> <JS_BRACKET_OPEN> <JS_VARIABLE> (<JS_IF_STATEMENT> JsValuePossiblyWrapped())? <JS_BRACKET_CLOSE> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)*
+	(<JS_FINALLY_STATEMENT> <JS_BRACE_OPEN>
+		JsBlock()
+	<JS_BRACE_CLOSE>)?
+}

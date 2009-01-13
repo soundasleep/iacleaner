@@ -4,65 +4,40 @@ package org.openiaml.iacleaner.ast;
 public interface InternetApplicationTreeConstants
 {
   public int JJTSTART = 0;
-  public int JJTSTARTJS = 1;
-  public int JJTBLOCK = 2;
-  public int JJTPHPROOTBLOCK = 3;
-  public int JJTPHPBLOCK = 4;
-  public int JJTPHPINLINEHTMLBLOCK = 5;
-  public int JJTPHPSTATEMENT = 6;
-  public int JJTPHPLANGUAGESTATEMENT = 7;
-  public int JJTPHPVARIABLEASSIGNMENT = 8;
-  public int JJTPHPFUNCTIONCALL = 9;
-  public int JJTPHPORSOMETHING = 10;
-  public int JJTPHPTRYCATCHBLOCK = 11;
-  public int JJTPHPVALUE = 12;
-  public int JJTPHPVALUEPOSSIBLYWRAPPED = 13;
-  public int JJTPHPSIMPLEVALUE = 14;
-  public int JJTPHPSELECTARRAY = 15;
-  public int JJTPHPARGUMENTLIST = 16;
-  public int JJTPHPVARIABLELIST = 17;
-  public int JJTPHPFUNCTIONDEFINITION = 18;
-  public int JJTPHPFUNCTIONARGUMENTLIST = 19;
-  public int JJTPHPIFSTATEMENT = 20;
-  public int JJTPHPCLASSDEFINITION = 21;
-  public int JJTPHPINTERFACEDEFINITION = 22;
-  public int JJTPHPINTERFACELIST = 23;
-  public int JJTPHPCLASSBLOCK = 24;
-  public int JJTPHPINTERFACEBLOCK = 25;
-  public int JJTHTMLBLOCK = 26;
-  public int JJTHTMLSCRIPTTAG = 27;
-  public int JJTHTMLTAG = 28;
-  public int JJTHTMLCLOSINGTAG = 29;
-  public int JJTHTMLTAGATTRIBUTE = 30;
-  public int JJTHTMLTEXTBLOCK = 31;
-  public int JJTHTMLCOMMENT = 32;
-  public int JJTJSBLOCK = 33;
-  public int JJTJSSTATEMENT = 34;
-  public int JJTJSLANGUAGESTATEMENT = 35;
-  public int JJTJSTRAVERSEOBJECTS = 36;
-  public int JJTJSSELECTARRAY = 37;
-  public int JJTJSRETURNSTATEMENT = 38;
-  public int JJTJSNEWSTATEMENT = 39;
-  public int JJTJSVALUE = 40;
-  public int JJTJSVALUEPOSSIBLYWRAPPED = 41;
-  public int JJTJSSIMPLEVALUE = 42;
-  public int JJTJSARGUMENTLIST = 43;
-  public int JJTJSVARIABLELIST = 44;
-  public int JJTJSFUNCTIONDEFINITION = 45;
-  public int JJTJSFUNCTIONARGUMENTLIST = 46;
-  public int JJTJSANONYMOUSFUNCTION = 47;
-  public int JJTJSIFSTATEMENT = 48;
-  public int JJTJSFORSTATEMENT = 49;
-  public int JJTJSFORPARAMETERLIST = 50;
-  public int JJTJSFOREVALUATEPARAMETERLIST = 51;
-  public int JJTJSINLINEARRAY = 52;
-  public int JJTJSTHROWSTATEMENT = 53;
-  public int JJTJSTRYCATCHBLOCK = 54;
+  public int JJTBLOCK = 1;
+  public int JJTPHPROOTBLOCK = 2;
+  public int JJTPHPBLOCK = 3;
+  public int JJTPHPINLINEHTMLBLOCK = 4;
+  public int JJTPHPSTATEMENT = 5;
+  public int JJTPHPLANGUAGESTATEMENT = 6;
+  public int JJTPHPVARIABLEASSIGNMENT = 7;
+  public int JJTPHPFUNCTIONCALL = 8;
+  public int JJTPHPORSOMETHING = 9;
+  public int JJTPHPTRYCATCHBLOCK = 10;
+  public int JJTPHPVALUE = 11;
+  public int JJTPHPVALUEPOSSIBLYWRAPPED = 12;
+  public int JJTPHPSIMPLEVALUE = 13;
+  public int JJTPHPSELECTARRAY = 14;
+  public int JJTPHPARGUMENTLIST = 15;
+  public int JJTPHPVARIABLELIST = 16;
+  public int JJTPHPFUNCTIONDEFINITION = 17;
+  public int JJTPHPFUNCTIONARGUMENTLIST = 18;
+  public int JJTPHPIFSTATEMENT = 19;
+  public int JJTPHPCLASSDEFINITION = 20;
+  public int JJTPHPINTERFACEDEFINITION = 21;
+  public int JJTPHPINTERFACELIST = 22;
+  public int JJTPHPCLASSBLOCK = 23;
+  public int JJTPHPINTERFACEBLOCK = 24;
+  public int JJTHTMLBLOCK = 25;
+  public int JJTHTMLTAG = 26;
+  public int JJTHTMLCLOSINGTAG = 27;
+  public int JJTHTMLTAGATTRIBUTE = 28;
+  public int JJTHTMLTEXTBLOCK = 29;
+  public int JJTHTMLCOMMENT = 30;
 
 
   public String[] jjtNodeName = {
     "Start",
-    "StartJs",
     "Block",
     "PhpRootBlock",
     "PhpBlock",
@@ -88,34 +63,11 @@ public interface InternetApplicationTreeConstants
     "PhpClassBlock",
     "PhpInterfaceBlock",
     "HtmlBlock",
-    "HtmlScriptTag",
     "HtmlTag",
     "HtmlClosingTag",
     "HtmlTagAttribute",
     "HtmlTextBlock",
     "HtmlComment",
-    "JsBlock",
-    "JsStatement",
-    "JsLanguageStatement",
-    "JsTraverseObjects",
-    "JsSelectArray",
-    "JsReturnStatement",
-    "JsNewStatement",
-    "JsValue",
-    "JsValuePossiblyWrapped",
-    "JsSimpleValue",
-    "JsArgumentList",
-    "JsVariableList",
-    "JsFunctionDefinition",
-    "JsFunctionArgumentList",
-    "JsAnonymousFunction",
-    "JsIfStatement",
-    "JsForStatement",
-    "JsForParameterList",
-    "JsForEvaluateParameterList",
-    "JsInlineArray",
-    "JsThrowStatement",
-    "JsTryCatchBlock",
   };
 }
-/* JavaCC - OriginalChecksum=ccb1fe8ec7d56a13dc60d568ec606453 (do not edit this line) */
+/* JavaCC - OriginalChecksum=012c50e5aff05ff74eb932d05bf84379 (do not edit this line) */

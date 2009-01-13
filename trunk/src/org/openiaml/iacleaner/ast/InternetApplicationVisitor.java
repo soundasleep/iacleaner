@@ -5,7 +5,6 @@ public interface InternetApplicationVisitor
 {
   public Object visit(SimpleNode node, Object data);
   public Object visit(ASTStart node, Object data);
-  public Object visit(ASTStartJs node, Object data);
   public Object visit(ASTBlock node, Object data);
   public Object visit(ASTPhpRootBlock node, Object data);
   public Object visit(ASTPhpBlock node, Object data);
@@ -31,33 +30,10 @@ public interface InternetApplicationVisitor
   public Object visit(ASTPhpClassBlock node, Object data);
   public Object visit(ASTPhpInterfaceBlock node, Object data);
   public Object visit(ASTHtmlBlock node, Object data);
-  public Object visit(ASTHtmlScriptTag node, Object data);
   public Object visit(ASTHtmlTag node, Object data);
   public Object visit(ASTHtmlClosingTag node, Object data);
   public Object visit(ASTHtmlTagAttribute node, Object data);
   public Object visit(ASTHtmlTextBlock node, Object data);
   public Object visit(ASTHtmlComment node, Object data);
-  public Object visit(ASTJsBlock node, Object data);
-  public Object visit(ASTJsStatement node, Object data);
-  public Object visit(ASTJsLanguageStatement node, Object data);
-  public Object visit(ASTJsTraverseObjects node, Object data);
-  public Object visit(ASTJsSelectArray node, Object data);
-  public Object visit(ASTJsReturnStatement node, Object data);
-  public Object visit(ASTJsNewStatement node, Object data);
-  public Object visit(ASTJsValue node, Object data);
-  public Object visit(ASTJsValuePossiblyWrapped node, Object data);
-  public Object visit(ASTJsSimpleValue node, Object data);
-  public Object visit(ASTJsArgumentList node, Object data);
-  public Object visit(ASTJsVariableList node, Object data);
-  public Object visit(ASTJsFunctionDefinition node, Object data);
-  public Object visit(ASTJsFunctionArgumentList node, Object data);
-  public Object visit(ASTJsAnonymousFunction node, Object data);
-  public Object visit(ASTJsIfStatement node, Object data);
-  public Object visit(ASTJsForStatement node, Object data);
-  public Object visit(ASTJsForParameterList node, Object data);
-  public Object visit(ASTJsForEvaluateParameterList node, Object data);
-  public Object visit(ASTJsInlineArray node, Object data);
-  public Object visit(ASTJsThrowStatement node, Object data);
-  public Object visit(ASTJsTryCatchBlock node, Object data);
 }
-/* JavaCC - OriginalChecksum=946da49d838bede36b98a905acf80797 (do not edit this line) */
+/* JavaCC - OriginalChecksum=4d5d4d5efdbd3cb61d0d5779aee95e45 (do not edit this line) */
