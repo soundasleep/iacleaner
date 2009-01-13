@@ -24,34 +24,68 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   /**
    * For loading test cases programatically.
    */
-  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+  public static SimpleNode loadFile(File f, int initialState) throws ParseException, FileNotFoundException {
   	FileInputStream fis = new FileInputStream(f);
   	if (instance == null) {
   		instance = new InternetApplication(fis);
   	} else {
   		ReInit(fis);
   	}
-  	InternetApplicationTokenManager.SwitchTo(HTML_STATE);
- 	SimpleNode n = Start();
+  	InternetApplicationTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	if (initialState == JS_STATE) {
+ 		n = StartJs();
+  	} else {
+  		n = Start();
+  	}
   	return n;
   }
 
+  /**
+   * For loading test cases programatically.
+   * Works out the initial state based on the file extension of the given
+   * file.
+   */
+  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+	  String extension = f.getAbsolutePath().substring(f.getAbsolutePath().lastIndexOf("."));
+	  
+	  int initialState = 0;
+	  if (extension.equals(".html") || extension.equals(".php")) {
+	  	initialState = HTML_STATE;
+	  } else if (extension.equals(".js")) {
+	  	initialState = JS_STATE;
+	  } else {
+	  	throw new RuntimeException("Unknown file type: " + extension + " (from file: " + f + ")");
+	  }
+	  
+	  return loadFile(f, initialState);
+  }
 
   /**
    * Loading string sources.
    * 
    * @throws UnsupportedEncodingException if we have a problem with the charset encoding 
    */
-  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  public static SimpleNode loadString(String s, String charset, int initialState) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
 	  InputStream fis = new ByteArrayInputStream(s.getBytes(charset));
  	if (instance == null) {
   		instance = new InternetApplication(fis);
   	} else {
   		ReInit(fis);
   	}
-  	InternetApplicationTokenManager.SwitchTo(HTML_STATE);
- 	SimpleNode n = Start();
+  	InternetApplicationTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	if (initialState == JS_STATE) {
+ 		n = StartJs();
+  	} else {
+  		n = Start();
+  	}
   	return n;
+  }
+
+  /** Loads string sources with a default state of HTML. */
+  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  	return loadString(s, charset, HTML_STATE);
   }
   
 }
@@ -240,6 +274,24 @@ TOKEN :
 <HTML_STATE>
 TOKEN:
 {
+	< HTML_SCRIPT_TAG: "<script>" > : JS_STATE
+}
+
+<JS_STATE>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG_CLOSE: "</script>" > : HTML_STATE
+}
+
+<JS_STATE>
+TOKEN:
+{
+	< JS_FUNCTION: "function" >
+}
+
+<HTML_STATE>
+TOKEN:
+{
 	< HTML_OPEN_TAG: "<" > : HTML_OPENING_TAG
 }
 
@@ -309,7 +361,7 @@ MORE:
 }
 
 /** Main production. */
-SimpleNode Start()        : {/*@bgen(jjtree) Start */
+SimpleNode Start() : {/*@bgen(jjtree) Start */
   ASTStart jjtn000 = new ASTStart(JJTSTART);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
@@ -322,6 +374,42 @@ SimpleNode Start()        : {/*@bgen(jjtree) Start */
                   jjtree.closeNodeScope(jjtn000, true);
                   jjtc000 = false;
                 }
+/*@egen*/ { return jjtn000; }/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+SimpleNode StartJs() : {/*@bgen(jjtree) StartJs */
+  ASTStartJs jjtn000 = new ASTStartJs(JJTSTARTJS);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) StartJs */
+        try {
+/*@egen*/
+	JsBlock()/*@bgen(jjtree)*/
+                  {
+                    jjtree.closeNodeScope(jjtn000, true);
+                    jjtc000 = false;
+                  }
 /*@egen*/ { return jjtn000; }/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -964,6 +1052,7 @@ void HtmlBlock() : {/*@bgen(jjtree) HtmlBlock */
 {/*@bgen(jjtree) HtmlBlock */
         try {
 /*@egen*/
+	HtmlScriptTag() |
 	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -979,6 +1068,56 @@ void HtmlBlock() : {/*@bgen(jjtree) HtmlBlock */
             throw (ParseException)jjte000;
           }
           throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void HtmlScriptTag() : {/*@bgen(jjtree) HtmlScriptTag */
+  ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) HtmlScriptTag */
+        try {
+/*@egen*/
+	<HTML_SCRIPT_TAG>
+	JsBlock()
+	<HTML_SCRIPT_TAG_CLOSE>/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void JsBlock() : {/*@bgen(jjtree) JsBlock */
+  ASTJsBlock jjtn000 = new ASTJsBlock(JJTJSBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsBlock */
+        try {
+/*@egen*/
+	<JS_FUNCTION>/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);

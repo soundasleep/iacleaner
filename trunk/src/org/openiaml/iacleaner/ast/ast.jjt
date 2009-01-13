@@ -20,34 +20,68 @@ public class InternetApplication {
   /**
    * For loading test cases programatically.
    */
-  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+  public static SimpleNode loadFile(File f, int initialState) throws ParseException, FileNotFoundException {
   	FileInputStream fis = new FileInputStream(f);
   	if (instance == null) {
   		instance = new InternetApplication(fis);
   	} else {
   		ReInit(fis);
   	}
-  	InternetApplicationTokenManager.SwitchTo(HTML_STATE);
- 	SimpleNode n = Start();
+  	InternetApplicationTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	if (initialState == JS_STATE) {
+ 		n = StartJs();
+  	} else {
+  		n = Start();
+  	}
   	return n;
   }
 
+  /**
+   * For loading test cases programatically.
+   * Works out the initial state based on the file extension of the given
+   * file.
+   */
+  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+	  String extension = f.getAbsolutePath().substring(f.getAbsolutePath().lastIndexOf("."));
+	  
+	  int initialState = 0;
+	  if (extension.equals(".html") || extension.equals(".php")) {
+	  	initialState = HTML_STATE;
+	  } else if (extension.equals(".js")) {
+	  	initialState = JS_STATE;
+	  } else {
+	  	throw new RuntimeException("Unknown file type: " + extension + " (from file: " + f + ")");
+	  }
+	  
+	  return loadFile(f, initialState);
+  }
 
   /**
    * Loading string sources.
    * 
    * @throws UnsupportedEncodingException if we have a problem with the charset encoding 
    */
-  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  public static SimpleNode loadString(String s, String charset, int initialState) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
 	  InputStream fis = new ByteArrayInputStream(s.getBytes(charset));
  	if (instance == null) {
   		instance = new InternetApplication(fis);
   	} else {
   		ReInit(fis);
   	}
-  	InternetApplicationTokenManager.SwitchTo(HTML_STATE);
- 	SimpleNode n = Start();
+  	InternetApplicationTokenManager.SwitchTo(initialState);
+  	SimpleNode n;
+  	if (initialState == JS_STATE) {
+ 		n = StartJs();
+  	} else {
+  		n = Start();
+  	}
   	return n;
+  }
+
+  /** Loads string sources with a default state of HTML. */
+  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  	return loadString(s, charset, HTML_STATE);
   }
   
 }
@@ -236,6 +270,24 @@ TOKEN :
 <HTML_STATE>
 TOKEN:
 {
+	< HTML_SCRIPT_TAG: "<script>" > : JS_STATE
+}
+
+<JS_STATE>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG_CLOSE: "</script>" > : HTML_STATE
+}
+
+<JS_STATE>
+TOKEN:
+{
+	< JS_FUNCTION: "function" >
+}
+
+<HTML_STATE>
+TOKEN:
+{
 	< HTML_OPEN_TAG: "<" > : HTML_OPENING_TAG
 }
 
@@ -305,9 +357,14 @@ MORE:
 }
 
 /** Main production. */
-SimpleNode Start() #Start : {}
+SimpleNode Start() : {}
 {
 	Block() { return jjtThis; }
+}
+
+SimpleNode StartJs() : {}
+{
+	JsBlock() { return jjtThis; }
 }
 
 void Block() : {}
@@ -469,7 +526,20 @@ void PhpInterfaceBlock() : {}
 
 void HtmlBlock() : {}
 {
+	HtmlScriptTag() |
 	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()
+}
+
+void HtmlScriptTag() : {}
+{
+	<HTML_SCRIPT_TAG>
+	JsBlock()
+	<HTML_SCRIPT_TAG_CLOSE>
+}
+
+void JsBlock() : {}
+{
+	<JS_FUNCTION>
 }
 
 void HtmlTag() #HtmlTag : { Token t; }

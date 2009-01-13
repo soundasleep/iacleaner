@@ -87,5 +87,13 @@ public class LoadingTest extends TestCase {
 	public void testPhpSwitching() throws Exception {
 		loadFile("switching.php");
 	}
-	
+
+	public void testHtmlFunction() throws Exception {
+		loadFile("function.html");
+	}
+
+	public void testJsFunction() throws Exception {
+		loadFile("function.js");
+	}
+
 }
