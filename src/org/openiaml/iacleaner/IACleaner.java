@@ -15,6 +15,7 @@ import java.util.List;
 import org.openiaml.iacleaner.ast.ASTBlock;
 import org.openiaml.iacleaner.ast.ASTHtmlBlock;
 import org.openiaml.iacleaner.ast.ASTHtmlClosingTag;
+import org.openiaml.iacleaner.ast.ASTHtmlComment;
 import org.openiaml.iacleaner.ast.ASTHtmlTag;
 import org.openiaml.iacleaner.ast.ASTHtmlTagAttribute;
 import org.openiaml.iacleaner.ast.ASTHtmlTextBlock;
@@ -26,6 +27,7 @@ import org.openiaml.iacleaner.ast.ASTPhpClassDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpFunctionArgumentList;
 import org.openiaml.iacleaner.ast.ASTPhpFunctionDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpIfStatement;
+import org.openiaml.iacleaner.ast.ASTPhpInlineHtmlBlock;
 import org.openiaml.iacleaner.ast.ASTPhpInterfaceBlock;
 import org.openiaml.iacleaner.ast.ASTPhpInterfaceDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpInterfaceList;
@@ -246,6 +248,18 @@ public class IACleaner {
 
 		@Override
 		public Object visit(ASTHtmlBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTPhpInlineHtmlBlock node, Object data) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTHtmlComment node, Object data) {
 			// TODO Auto-generated method stub
 			return null;
 		}
