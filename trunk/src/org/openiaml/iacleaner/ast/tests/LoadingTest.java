@@ -36,6 +36,10 @@ public class LoadingTest extends TestCase {
 		loadFile("class.php");
 	}
 
+	public void testHtmlComments() throws Exception {
+		loadFile("comments.html");
+	}
+
 	public void testPhpComments() throws Exception {
 		loadFile("comments.php");
 	}
@@ -73,8 +77,7 @@ public class LoadingTest extends TestCase {
 	}
 	
 	public void testPhpSimple() throws Exception {
-		SimpleNode node = loadFile("simple.php");
-		node.dump("");		
+		loadFile("simple.php");
 	}
 	
 	public void testPhpVariables() throws Exception {
@@ -82,8 +85,7 @@ public class LoadingTest extends TestCase {
 	}
 	
 	public void testPhpSwitching() throws Exception {
-		SimpleNode node = loadFile("switching.php");
-		node.dump("");
+		loadFile("switching.php");
 	}
 	
 }

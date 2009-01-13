@@ -285,6 +285,25 @@ TOKEN:
 		(~["<"])+ >
 }
 
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_COMMENT_START: "<!--" > : HTML_WITHIN_COMMENT
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<HTML_WITHIN_COMMENT>
+SKIP:
+{
+	< "-->" > : HTML_STATE
+}
+
+<HTML_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
 /** Main production. */
 SimpleNode Start() #Start : {}
 {
@@ -450,7 +469,7 @@ void PhpInterfaceBlock() : {}
 
 void HtmlBlock() : {}
 {
-	HtmlTag() | HtmlClosingTag() | HtmlTextBlock()
+	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()
 }
 
 void HtmlTag() #HtmlTag : { Token t; }
@@ -488,5 +507,10 @@ void HtmlTextBlock() #HtmlTextBlock : { Token t; }
 	t = <HTML_TEXT_BLOCK> {
 		jjtThis.setText( t.image );
 	}
+}
+
+void HtmlComment() : {}
+{
+	<HTML_COMMENT_START>
 }
 
