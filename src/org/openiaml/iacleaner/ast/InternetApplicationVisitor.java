@@ -28,5 +28,6 @@ public interface InternetApplicationVisitor
   public Object visit(ASTHtmlClosingTag node, Object data);
   public Object visit(ASTHtmlTagAttribute node, Object data);
   public Object visit(ASTHtmlTextBlock node, Object data);
+  public Object visit(ASTHtmlComment node, Object data);
 }
-/* JavaCC - OriginalChecksum=42125e84a951f1ee123b6821e6c4a7e4 (do not edit this line) */
+/* JavaCC - OriginalChecksum=dce41c8e791f598ac9d98225faa4477c (do not edit this line) */

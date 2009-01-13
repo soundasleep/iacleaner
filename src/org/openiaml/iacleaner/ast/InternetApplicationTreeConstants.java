@@ -27,6 +27,7 @@ public interface InternetApplicationTreeConstants
   public int JJTHTMLCLOSINGTAG = 21;
   public int JJTHTMLTAGATTRIBUTE = 22;
   public int JJTHTMLTEXTBLOCK = 23;
+  public int JJTHTMLCOMMENT = 24;
 
 
   public String[] jjtNodeName = {
@@ -54,6 +55,7 @@ public interface InternetApplicationTreeConstants
     "HtmlClosingTag",
     "HtmlTagAttribute",
     "HtmlTextBlock",
+    "HtmlComment",
   };
 }
-/* JavaCC - OriginalChecksum=5d9276d2ec433763768bf8d2d44e3b7b (do not edit this line) */
+/* JavaCC - OriginalChecksum=83aa451c9973598ab0666c866a46036f (do not edit this line) */

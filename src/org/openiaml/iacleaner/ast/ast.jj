@@ -289,6 +289,25 @@ TOKEN:
 		(~["<"])+ >
 }
 
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_COMMENT_START: "<!--" > : HTML_WITHIN_COMMENT
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<HTML_WITHIN_COMMENT>
+SKIP:
+{
+	< "-->" > : HTML_STATE
+}
+
+<HTML_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
 /** Main production. */
 SimpleNode Start()        : {/*@bgen(jjtree) Start */
   ASTStart jjtn000 = new ASTStart(JJTSTART);
@@ -945,7 +964,7 @@ void HtmlBlock() : {/*@bgen(jjtree) HtmlBlock */
 {/*@bgen(jjtree) HtmlBlock */
         try {
 /*@egen*/
-	HtmlTag() | HtmlClosingTag() | HtmlTextBlock()/*@bgen(jjtree)*/
+	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1069,6 +1088,23 @@ void HtmlTextBlock()                : {/*@bgen(jjtree) HtmlTextBlock */
 /*@egen*/ {
 		jjtn000.setText( t.image );
 	}/*@bgen(jjtree)*/
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void HtmlComment() : {/*@bgen(jjtree) HtmlComment */
+  ASTHtmlComment jjtn000 = new ASTHtmlComment(JJTHTMLCOMMENT);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) HtmlComment */
+        try {
+/*@egen*/
+	<HTML_COMMENT_START>/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);

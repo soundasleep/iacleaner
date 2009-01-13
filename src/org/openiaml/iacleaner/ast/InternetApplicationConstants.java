@@ -76,6 +76,8 @@ public interface InternetApplicationConstants {
   int HTML_ATTRIBUTE_EQUALS = 48;
   /** RegularExpression Id. */
   int HTML_TEXT_BLOCK = 49;
+  /** RegularExpression Id. */
+  int HTML_COMMENT_START = 50;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -85,6 +87,8 @@ public interface InternetApplicationConstants {
   int HTML_OPENING_TAG = 2;
   /** Lexical state. */
   int DEFAULT = 3;
+  /** Lexical state. */
+  int HTML_WITHIN_COMMENT = 4;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -138,6 +142,9 @@ public interface InternetApplicationConstants {
     "<HTML_STRING>",
     "\"=\"",
     "<HTML_TEXT_BLOCK>",
+    "\"<!--\"",
+    "\"-->\"",
+    "<token of kind 52>",
     "\";\"",
     "\"(\"",
     "\")\"",
