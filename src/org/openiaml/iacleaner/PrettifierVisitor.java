@@ -13,6 +13,7 @@ import org.openiaml.iacleaner.ast.ASTHtmlTagAttribute;
 import org.openiaml.iacleaner.ast.ASTHtmlTextBlock;
 import org.openiaml.iacleaner.ast.ASTJsArgumentList;
 import org.openiaml.iacleaner.ast.ASTJsBlock;
+import org.openiaml.iacleaner.ast.ASTJsChainedOperator;
 import org.openiaml.iacleaner.ast.ASTJsFunctionArgumentList;
 import org.openiaml.iacleaner.ast.ASTJsFunctionDefinition;
 import org.openiaml.iacleaner.ast.ASTJsIfStatement;
@@ -306,6 +307,15 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	@Override
 	public Object visit(ASTJsIfStatement node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsChainedOperator, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsChainedOperator node, Object data) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

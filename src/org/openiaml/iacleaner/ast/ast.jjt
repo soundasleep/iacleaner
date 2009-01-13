@@ -210,6 +210,12 @@ TOKEN : /* STRING */
 		"\"" ("\\\"" | (~["\""]))+ "\"" >
 }
 
+TOKEN : /* STRING (single quoted) */
+{
+	< STRING_SQ:
+		"'" ("\\'" | (~["'"]))+ "'" >
+}
+
 TOKEN : /* Decimal */
 {
 	< DECIMAL:
@@ -241,12 +247,23 @@ TOKEN : /* single line comment */
 		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
 }
 
-TOKEN : /* multi line comment */
+<DEFAULT>
+TOKEN: /* multi line comment */
 {
-	< PHP_MULTI_COMMENT:
-		"/" "*" 
-		(~["\0"])* 			/* we assume that php files cannot contain the null character */
-		"*" "/" >
+	< PHP_MULTI_COMMENT: "/*" > : PHP_WITHIN_COMMENT
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<PHP_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : DEFAULT
+}
+
+<PHP_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
 }
 
 TOKEN : /* variable */
@@ -463,13 +480,24 @@ TOKEN : /* single line comment */
 }
 
 <JS_STATE>
-TOKEN : /* multi line comment */
+TOKEN: /* multi line comment */
 {
-	< JS_MULTI_COMMENT:
-		"/" "*" 
-		(~["\0"])* 			/* we assume that php files cannot contain the null character */
-		"*" "/" >
+	< JS_MULTI_COMMENT: "/*" > : JS_WITHIN_COMMENT
 }
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<JS_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : JS_STATE
+}
+
+<JS_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
 
 <JS_STATE>
 TOKEN : /* variable */
@@ -482,18 +510,28 @@ TOKEN : /* variable */
 TOKEN : /* operator */
 {
 	< JS_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" >
+		"+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" >
+}
+
+<JS_STATE>
+TOKEN : /* operator */
+{
+	< JS_OBJECT_OPERATOR: "." >
 }
 
 /** Main production. */
-SimpleNode Start() : {}
+SimpleNode Start() : { SimpleNode n; }
 {
-	Block() { return jjtThis; }
+	Block() { n = jjtThis; }
+	<EOF>
+	{ return n; }
 }
 
-SimpleNode StartJs() : {}
+SimpleNode StartJs() : { SimpleNode n; }
 {
-	JsBlock() { return jjtThis; }
+	JsBlock() { n = jjtThis; }
+	<EOF>
+	{ return n; }
 }
 
 void Block() : {}
@@ -553,17 +591,14 @@ void PhpValue() : {}
 	  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 	  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
 	  | <PHP_VARIABLE>
-	  | <STRING>
-	  | <DECIMAL>
-	  | <HEXADECIMAL>
-	  | <PHP_BUILTIN> )
+	  | PhpSimpleValue() )
 	
 	( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
 }
 
 void PhpSimpleValue() : {}
 {
-	<STRING> | <DECIMAL> | <HEXADECIMAL> | <PHP_BUILTIN>
+	<STRING> | <STRING_SQ> | <DECIMAL> | <HEXADECIMAL> | <PHP_BUILTIN>
 }
 
 void PhpArgumentList() : {}
@@ -725,9 +760,35 @@ void JsStatement() : {}
 
 void JsLanguageStatement() : {}
 {
-	<JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
-	| <JS_RETURN_STATEMENT> (JsValue())?
-	| <JS_VARIABLE> <JS_EQUAL> JsValue()
+	JsFunctionCall()
+	| JsReturnStatement()
+	| JsVariableAssignment()
+}
+
+void JsFunctionCall() : { Token t; }
+{
+	t = <JS_FUNCTION_NAME> { jjtThis.setName(t.image); }
+		(
+		<JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+		| <JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+		)
+		( JsChainedOperator() )?
+}
+
+void JsReturnStatement() : {}
+{
+	<JS_RETURN_STATEMENT> (JsValue())?
+}
+
+void JsVariableAssignment() : {}
+{
+	<JS_VARIABLE> <JS_EQUAL> JsValue()
+}
+
+void JsChainedOperator() : {}
+{
+	<JS_OBJECT_OPERATOR> <JS_FUNCTION_NAME> <JS_BRACKET_OPEN> (JsArgumentList())? <JS_BRACKET_CLOSE>
+	( JsChainedOperator() )?
 }
 
 void JsValue() : {}

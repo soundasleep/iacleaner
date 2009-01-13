@@ -8,3 +8,5 @@ something();
 function something() { alert("hello, world!"); }
 
 something();
+
+Element.something();
