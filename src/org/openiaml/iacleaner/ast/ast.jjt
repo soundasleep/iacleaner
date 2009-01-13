@@ -133,6 +133,34 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
+| "/*" : PHP_WITHIN_COMMENT
+| "//" : PHP_WITHIN_COMMENT_SINGLE
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<PHP_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : DEFAULT
+}
+
+<PHP_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<PHP_WITHIN_COMMENT_SINGLE>
+SKIP:
+{
+	< ["\r","\n"] > : DEFAULT
+}
+
+<PHP_WITHIN_COMMENT_SINGLE>
+MORE:
+{
+	< ~["\r","\n"] >
 }
 
 /* php reserved words */
@@ -246,36 +274,16 @@ TOKEN : /* Function name */
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
 }
 
-TOKEN : /* single line comment */
-{
-	< PHP_SINGLE_COMMENT:
-		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
-}
-
-<DEFAULT>
-TOKEN: /* multi line comment */
-{
-	< PHP_MULTI_COMMENT: "/*" > : PHP_WITHIN_COMMENT
-}
-
-/* order also matters: by placing this before the matchall, the comments will be properly ended. */
-<PHP_WITHIN_COMMENT>
-SKIP:
-{
-	< "*/" > : DEFAULT
-}
-
-<PHP_WITHIN_COMMENT>
-MORE:
-{
-	< ~[] >
-}
-
 TOKEN : /* variable */
 {
 	< PHP_VARIABLE:
 		"$" 
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+TOKEN :
+{
+	< PHP_OBJECT_OPERATOR: "::" >
 }
 
 TOKEN : /* operator -- 
@@ -565,8 +573,6 @@ void PhpRootBlock() : {}
 void PhpBlock() : {}
 {
 	( PhpStatement() 
-	  | <PHP_SINGLE_COMMENT> 
-	  | <PHP_MULTI_COMMENT> 
 	  | PhpInlineHtmlBlock() )*
 }
 
@@ -593,11 +599,17 @@ void PhpStatement() : {}
 void PhpLanguageStatement() : {}
 {
 	<ECHO_STATEMENT> PhpValue()
-	| (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+	| (PhpFunctionCall() "(" (PhpArgumentList())? ")"
 		(PhpOrSomething()) ?)
 	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> "=" PhpValue() (PhpOrSomething()) ?
+	| <PHP_VARIABLE> (<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* "=" PhpValue() (PhpOrSomething()) ?
+}
+
+void PhpFunctionCall() : {}
+{
+	<PHP_FUNCTION_NAME>
+	( <PHP_OBJECT_OPERATOR> <PHP_FUNCTION_NAME> )*
 }
 
 void PhpOrSomething() : {}
@@ -709,8 +721,7 @@ void PhpClassBlock() : {}
 			<VAR_STATEMENT> PhpFunctionArgumentList() ";"
 			| PhpFunctionDefinition()
 		)
-	| <PHP_SINGLE_COMMENT>
-	| <PHP_MULTI_COMMENT> )*
+	)*
 }
 
 void PhpInterfaceBlock() : {}
@@ -720,8 +731,7 @@ void PhpInterfaceBlock() : {}
 		(
 			<FUNCTION_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpFunctionArgumentList()) ? ")" ";"
 		)
-	| <PHP_SINGLE_COMMENT>
-	| <PHP_MULTI_COMMENT> )*
+	)*
 }
 
 void HtmlBlock() : {}
