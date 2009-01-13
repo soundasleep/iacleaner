@@ -40,21 +40,24 @@ public interface InternetApplicationTreeConstants
   public int JJTJSSTATEMENT = 34;
   public int JJTJSLANGUAGESTATEMENT = 35;
   public int JJTJSTRAVERSEOBJECTS = 36;
-  public int JJTJSRETURNSTATEMENT = 37;
-  public int JJTJSNEWSTATEMENT = 38;
-  public int JJTJSVALUE = 39;
-  public int JJTJSVALUEPOSSIBLYWRAPPED = 40;
-  public int JJTJSSIMPLEVALUE = 41;
-  public int JJTJSARGUMENTLIST = 42;
-  public int JJTJSVARIABLELIST = 43;
-  public int JJTJSFUNCTIONDEFINITION = 44;
-  public int JJTJSFUNCTIONARGUMENTLIST = 45;
-  public int JJTJSANONYMOUSFUNCTION = 46;
-  public int JJTJSIFSTATEMENT = 47;
-  public int JJTJSFORSTATEMENT = 48;
-  public int JJTJSFORPARAMETERLIST = 49;
-  public int JJTJSFOREVALUATEPARAMETERLIST = 50;
-  public int JJTJSINLINEARRAY = 51;
+  public int JJTJSSELECTARRAY = 37;
+  public int JJTJSRETURNSTATEMENT = 38;
+  public int JJTJSNEWSTATEMENT = 39;
+  public int JJTJSVALUE = 40;
+  public int JJTJSVALUEPOSSIBLYWRAPPED = 41;
+  public int JJTJSSIMPLEVALUE = 42;
+  public int JJTJSARGUMENTLIST = 43;
+  public int JJTJSVARIABLELIST = 44;
+  public int JJTJSFUNCTIONDEFINITION = 45;
+  public int JJTJSFUNCTIONARGUMENTLIST = 46;
+  public int JJTJSANONYMOUSFUNCTION = 47;
+  public int JJTJSIFSTATEMENT = 48;
+  public int JJTJSFORSTATEMENT = 49;
+  public int JJTJSFORPARAMETERLIST = 50;
+  public int JJTJSFOREVALUATEPARAMETERLIST = 51;
+  public int JJTJSINLINEARRAY = 52;
+  public int JJTJSTHROWSTATEMENT = 53;
+  public int JJTJSTRYCATCHBLOCK = 54;
 
 
   public String[] jjtNodeName = {
@@ -95,6 +98,7 @@ public interface InternetApplicationTreeConstants
     "JsStatement",
     "JsLanguageStatement",
     "JsTraverseObjects",
+    "JsSelectArray",
     "JsReturnStatement",
     "JsNewStatement",
     "JsValue",
@@ -110,6 +114,8 @@ public interface InternetApplicationTreeConstants
     "JsForParameterList",
     "JsForEvaluateParameterList",
     "JsInlineArray",
+    "JsThrowStatement",
+    "JsTryCatchBlock",
   };
 }
-/* JavaCC - OriginalChecksum=cc3fdd3bb4bc2d7722dee49932abc305 (do not edit this line) */
+/* JavaCC - OriginalChecksum=ccb1fe8ec7d56a13dc60d568ec606453 (do not edit this line) */

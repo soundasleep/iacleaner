@@ -389,7 +389,7 @@ function is_array_equal(a) {
 function IamlJavascriptException(message) {
 	this.message = message;
 	
-	this.getMessage = function() { return message; }
+    this.getMessage = function() { return message; }
 	this.toString = function() { return "IamlJavascriptException: " + message; } 
 }
 

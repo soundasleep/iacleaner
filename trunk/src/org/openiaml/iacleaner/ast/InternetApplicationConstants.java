@@ -113,45 +113,61 @@ public interface InternetApplicationConstants {
   /** RegularExpression Id. */
   int JS_FOR_STATEMENT = 85;
   /** RegularExpression Id. */
-  int JS_BRACKET_OPEN = 86;
+  int JS_TRY_STATEMENT = 86;
   /** RegularExpression Id. */
-  int JS_BRACKET_CLOSE = 87;
+  int JS_CATCH_STATEMENT = 87;
   /** RegularExpression Id. */
-  int JS_BRACE_OPEN = 88;
+  int JS_THROW_STATEMENT = 88;
   /** RegularExpression Id. */
-  int JS_BRACE_CLOSE = 89;
+  int JS_FINALLY_STATEMENT = 89;
   /** RegularExpression Id. */
-  int JS_END = 90;
+  int JS_BRACKET_OPEN = 90;
   /** RegularExpression Id. */
-  int JS_COMMA = 91;
+  int JS_BRACKET_CLOSE = 91;
   /** RegularExpression Id. */
-  int JS_ELSE_STATEMENT = 92;
+  int JS_BRACE_OPEN = 92;
   /** RegularExpression Id. */
-  int JS_STRING = 93;
+  int JS_BRACE_CLOSE = 93;
   /** RegularExpression Id. */
-  int JS_STRING_SQ = 94;
+  int JS_ARRAY_OPEN = 94;
   /** RegularExpression Id. */
-  int JS_DECIMAL = 95;
+  int JS_ARRAY_CLOSE = 95;
   /** RegularExpression Id. */
-  int JS_HEXADECIMAL = 96;
+  int JS_END = 96;
   /** RegularExpression Id. */
-  int JS_BUILTIN = 97;
+  int JS_COMMA = 97;
   /** RegularExpression Id. */
-  int JS_VARIABLE = 98;
+  int JS_ELSE_STATEMENT = 98;
   /** RegularExpression Id. */
-  int JS_OBJECT_OPERATOR = 99;
+  int JS_STRING = 99;
   /** RegularExpression Id. */
-  int JS_OPERATOR = 100;
+  int JS_STRING_SQ = 100;
   /** RegularExpression Id. */
-  int JS_ASSIGNMENT_OPERATOR = 101;
+  int JS_DECIMAL = 101;
   /** RegularExpression Id. */
-  int JS_OPERATOR_SINGLE = 102;
+  int JS_HEXADECIMAL = 102;
   /** RegularExpression Id. */
-  int JS_EQUAL = 103;
+  int JS_BUILTIN = 103;
   /** RegularExpression Id. */
-  int JS_TERNARY_1 = 104;
+  int JS_OBJECT_OPERATOR = 104;
   /** RegularExpression Id. */
-  int JS_TERNARY_2 = 105;
+  int JS_PREFIX_OPERATOR = 105;
+  /** RegularExpression Id. */
+  int JS_NUMBER_OPERATOR = 106;
+  /** RegularExpression Id. */
+  int JS_OPERATOR = 107;
+  /** RegularExpression Id. */
+  int JS_ASSIGNMENT_OPERATOR = 108;
+  /** RegularExpression Id. */
+  int JS_OPERATOR_SINGLE = 109;
+  /** RegularExpression Id. */
+  int JS_EQUAL = 110;
+  /** RegularExpression Id. */
+  int JS_TERNARY_1 = 111;
+  /** RegularExpression Id. */
+  int JS_TERNARY_2 = 112;
+  /** RegularExpression Id. */
+  int JS_VARIABLE = 113;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -262,10 +278,16 @@ public interface InternetApplicationConstants {
     "\"var\"",
     "\"if\"",
     "\"for\"",
+    "\"try\"",
+    "\"catch\"",
+    "\"throw\"",
+    "\"finally\"",
     "\"(\"",
     "\")\"",
     "\"{\"",
     "\"}\"",
+    "\"[\"",
+    "\"]\"",
     "\";\"",
     "\",\"",
     "\"else\"",
@@ -274,14 +296,16 @@ public interface InternetApplicationConstants {
     "<JS_DECIMAL>",
     "<JS_HEXADECIMAL>",
     "<JS_BUILTIN>",
-    "<JS_VARIABLE>",
     "\".\"",
+    "\"!\"",
+    "<JS_NUMBER_OPERATOR>",
     "<JS_OPERATOR>",
     "<JS_ASSIGNMENT_OPERATOR>",
     "<JS_OPERATOR_SINGLE>",
     "\"=\"",
     "\"?\"",
     "\":\"",
+    "<JS_VARIABLE>",
     "\";\"",
     "\"(\"",
     "\")\"",
