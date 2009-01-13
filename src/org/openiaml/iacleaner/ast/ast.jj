@@ -282,10 +282,13 @@ TOKEN : /* variable */
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
 }
 
-TOKEN : /* operator */
+TOKEN : /* operator -- 
+	includes => for arrays, also includes ?: for 
+	ternary (although we don't specifically check 
+	that it is a valid expression) */
 {
 	< PHP_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" >
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" | "?" | ":" >
 }
 
 TOKEN : /* prefix operator */
@@ -858,14 +861,21 @@ void PhpValue() : {/*@bgen(jjtree) PhpValue */
 {/*@bgen(jjtree) PhpValue */
         try {
 /*@egen*/
-	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
-	
 	(
-	  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	  | <PHP_VARIABLE>
-	  | PhpSimpleValue() )
+		(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
+		
+		(
+		  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		  | <PHP_VARIABLE>
+		  | PhpSimpleValue() )
+		  	  
+		( PhpSelectArray()) ?		/* e.g $a[1][2][3] */
 	
+		( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
+	) | (
+		"(" PhpValue() ")"
+	)
 	( <PHP_OPERATOR> PhpValue() )?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -887,7 +897,6 @@ void PhpValue() : {/*@bgen(jjtree) PhpValue */
           }
         }
 /*@egen*/			/* e.g. "f() + 42" */
-	
 }
 
 void PhpSimpleValue() : {/*@bgen(jjtree) PhpSimpleValue */
@@ -907,6 +916,39 @@ void PhpSimpleValue() : {/*@bgen(jjtree) PhpSimpleValue */
 /*@egen*/
 }
 
+void PhpSelectArray() : {/*@bgen(jjtree) PhpSelectArray */
+  ASTPhpSelectArray jjtn000 = new ASTPhpSelectArray(JJTPHPSELECTARRAY);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpSelectArray */
+        try {
+/*@egen*/
+	"[" PhpValue() "]" 
+	(PhpSelectArray()) ?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/ 
+}
+
+/* this has a special case to allow for array(1,2,) */
 void PhpArgumentList() : {/*@bgen(jjtree) PhpArgumentList */
   ASTPhpArgumentList jjtn000 = new ASTPhpArgumentList(JJTPHPARGUMENTLIST);
   boolean jjtc000 = true;
@@ -915,7 +957,7 @@ void PhpArgumentList() : {/*@bgen(jjtree) PhpArgumentList */
 {/*@bgen(jjtree) PhpArgumentList */
         try {
 /*@egen*/
-	PhpValue() ("," PhpArgumentList())?/*@bgen(jjtree)*/
+	PhpValue() ("," (PhpArgumentList())? )?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);

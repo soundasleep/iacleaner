@@ -278,10 +278,13 @@ TOKEN : /* variable */
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
 }
 
-TOKEN : /* operator */
+TOKEN : /* operator -- 
+	includes => for arrays, also includes ?: for 
+	ternary (although we don't specifically check 
+	that it is a valid expression) */
 {
 	< PHP_OPERATOR:
-		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" >
+		"+" | "-" | "*" | "/" | "%" | "." | "==" | "!=" | "<" | ">" | "<=" | ">=" | "->" | "=>" | "?" | ":" >
 }
 
 TOKEN : /* prefix operator */
@@ -604,16 +607,22 @@ void PhpOrSomething() : {}
 
 void PhpValue() : {}
 {
-	(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
-	
 	(
-	  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
-	  | <PHP_VARIABLE>
-	  | PhpSimpleValue() )
+		(<PHP_PREFIX_OPERATOR>) *		/* e.g. !true */
+		
+		(
+		  <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		  | <NEW_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+		  | <PHP_VARIABLE>
+		  | PhpSimpleValue() )
+		  	  
+		( PhpSelectArray()) ?		/* e.g $a[1][2][3] */
 	
+		( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
+	) | (
+		"(" PhpValue() ")"
+	)
 	( <PHP_OPERATOR> PhpValue() )?			/* e.g. "f() + 42" */
-	
 }
 
 void PhpSimpleValue() : {}
@@ -621,9 +630,16 @@ void PhpSimpleValue() : {}
 	<STRING> | <STRING_SQ> | <DECIMAL> | <HEXADECIMAL> | <PHP_BUILTIN>
 }
 
+void PhpSelectArray() : {}
+{
+	"[" PhpValue() "]" 
+	(PhpSelectArray()) ? 
+}
+
+/* this has a special case to allow for array(1,2,) */
 void PhpArgumentList() : {}
 {
-	PhpValue() ("," PhpArgumentList())?
+	PhpValue() ("," (PhpArgumentList())? )?
 }
 
 void PhpVariableList() : {}

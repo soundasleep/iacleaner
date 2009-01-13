@@ -83,7 +83,11 @@ public class LoadingTest extends TestCase {
 	public void testPhpSimple() throws Exception {
 		loadFile("simple.php");
 	}
-	
+
+	public void testPhpTernary() throws Exception {
+		loadFile("ternary.php");
+	}
+
 	public void testPhpVariables() throws Exception {
 		loadFile("variable.php");
 	}
