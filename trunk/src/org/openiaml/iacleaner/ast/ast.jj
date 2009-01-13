@@ -137,6 +137,34 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
+| "/*" : PHP_WITHIN_COMMENT
+| "//" : PHP_WITHIN_COMMENT_SINGLE
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<PHP_WITHIN_COMMENT>
+SKIP:
+{
+	< "*/" > : DEFAULT
+}
+
+<PHP_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<PHP_WITHIN_COMMENT_SINGLE>
+SKIP:
+{
+	< ["\r","\n"] > : DEFAULT
+}
+
+<PHP_WITHIN_COMMENT_SINGLE>
+MORE:
+{
+	< ~["\r","\n"] >
 }
 
 /* php reserved words */
@@ -250,36 +278,16 @@ TOKEN : /* Function name */
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
 }
 
-TOKEN : /* single line comment */
-{
-	< PHP_SINGLE_COMMENT:
-		"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
-}
-
-<DEFAULT>
-TOKEN: /* multi line comment */
-{
-	< PHP_MULTI_COMMENT: "/*" > : PHP_WITHIN_COMMENT
-}
-
-/* order also matters: by placing this before the matchall, the comments will be properly ended. */
-<PHP_WITHIN_COMMENT>
-SKIP:
-{
-	< "*/" > : DEFAULT
-}
-
-<PHP_WITHIN_COMMENT>
-MORE:
-{
-	< ~[] >
-}
-
 TOKEN : /* variable */
 {
 	< PHP_VARIABLE:
 		"$" 
 		["A"-"Z","a"-"z","_"] (["0"-"9","A"-"Z","a"-"z","_"])* >
+}
+
+TOKEN :
+{
+	< PHP_OBJECT_OPERATOR: "::" >
 }
 
 TOKEN : /* operator -- 
@@ -689,8 +697,6 @@ void PhpBlock() : {/*@bgen(jjtree) PhpBlock */
         try {
 /*@egen*/
 	( PhpStatement() 
-	  | <PHP_SINGLE_COMMENT> 
-	  | <PHP_MULTI_COMMENT> 
 	  | PhpInlineHtmlBlock() )*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -795,11 +801,11 @@ void PhpLanguageStatement() : {/*@bgen(jjtree) PhpLanguageStatement */
         try {
 /*@egen*/
 	<ECHO_STATEMENT> PhpValue()
-	| (<PHP_FUNCTION_NAME> "(" (PhpArgumentList())? ")"
+	| (PhpFunctionCall() "(" (PhpArgumentList())? ")"
 		(PhpOrSomething()) ?)
 	| <RETURN_STATEMENT> (PhpValue() (PhpOrSomething()) ?)?
 	| <GLOBAL_STATEMENT> PhpVariableList()
-	| <PHP_VARIABLE> "=" PhpValue() (PhpOrSomething()) ?/*@bgen(jjtree)*/
+	| <PHP_VARIABLE> (<PHP_OBJECT_OPERATOR> (<PHP_VARIABLE> | <PHP_FUNCTION_NAME>))* "=" PhpValue() (PhpOrSomething()) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -814,6 +820,24 @@ void PhpLanguageStatement() : {/*@bgen(jjtree) PhpLanguageStatement */
             throw (ParseException)jjte000;
           }
           throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void PhpFunctionCall() : {/*@bgen(jjtree) PhpFunctionCall */
+  ASTPhpFunctionCall jjtn000 = new ASTPhpFunctionCall(JJTPHPFUNCTIONCALL);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) PhpFunctionCall */
+        try {
+/*@egen*/
+	<PHP_FUNCTION_NAME>
+	( <PHP_OBJECT_OPERATOR> <PHP_FUNCTION_NAME> )*/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
@@ -1235,8 +1259,7 @@ void PhpClassBlock() : {/*@bgen(jjtree) PhpClassBlock */
 			<VAR_STATEMENT> PhpFunctionArgumentList() ";"
 			| PhpFunctionDefinition()
 		)
-	| <PHP_SINGLE_COMMENT>
-	| <PHP_MULTI_COMMENT> )*/*@bgen(jjtree)*/
+	)*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1272,8 +1295,7 @@ void PhpInterfaceBlock() : {/*@bgen(jjtree) PhpInterfaceBlock */
 		(
 			<FUNCTION_STATEMENT> <PHP_FUNCTION_NAME> "(" (PhpFunctionArgumentList()) ? ")" ";"
 		)
-	| <PHP_SINGLE_COMMENT>
-	| <PHP_MULTI_COMMENT> )*/*@bgen(jjtree)*/
+	)*/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);

@@ -30,6 +30,7 @@ import org.openiaml.iacleaner.ast.ASTPhpBlock;
 import org.openiaml.iacleaner.ast.ASTPhpClassBlock;
 import org.openiaml.iacleaner.ast.ASTPhpClassDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpFunctionArgumentList;
+import org.openiaml.iacleaner.ast.ASTPhpFunctionCall;
 import org.openiaml.iacleaner.ast.ASTPhpFunctionDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpIfStatement;
 import org.openiaml.iacleaner.ast.ASTPhpInlineHtmlBlock;
@@ -39,6 +40,7 @@ import org.openiaml.iacleaner.ast.ASTPhpInterfaceList;
 import org.openiaml.iacleaner.ast.ASTPhpLanguageStatement;
 import org.openiaml.iacleaner.ast.ASTPhpOrSomething;
 import org.openiaml.iacleaner.ast.ASTPhpRootBlock;
+import org.openiaml.iacleaner.ast.ASTPhpSelectArray;
 import org.openiaml.iacleaner.ast.ASTPhpSimpleValue;
 import org.openiaml.iacleaner.ast.ASTPhpStatement;
 import org.openiaml.iacleaner.ast.ASTPhpValue;
@@ -319,7 +321,7 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTJsChainedOperator node, Object data) {
-		// TODO Auto-generated method stub
+		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 
@@ -328,7 +330,7 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTPhpOrSomething node, Object data) {
-		// TODO Auto-generated method stub
+		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 
@@ -337,7 +339,7 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTJsFunctionCall node, Object data) {
-		// TODO Auto-generated method stub
+		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 
@@ -346,7 +348,7 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTJsReturnStatement node, Object data) {
-		// TODO Auto-generated method stub
+		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 
@@ -355,7 +357,25 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTJsVariableAssignment node, Object data) {
-		// TODO Auto-generated method stub
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpSelectArray, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpSelectArray node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpFunctionCall, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpFunctionCall node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 	
