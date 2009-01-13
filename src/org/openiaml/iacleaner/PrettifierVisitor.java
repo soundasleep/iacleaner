@@ -15,12 +15,15 @@ import org.openiaml.iacleaner.ast.ASTJsArgumentList;
 import org.openiaml.iacleaner.ast.ASTJsBlock;
 import org.openiaml.iacleaner.ast.ASTJsChainedOperator;
 import org.openiaml.iacleaner.ast.ASTJsFunctionArgumentList;
+import org.openiaml.iacleaner.ast.ASTJsFunctionCall;
 import org.openiaml.iacleaner.ast.ASTJsFunctionDefinition;
 import org.openiaml.iacleaner.ast.ASTJsIfStatement;
 import org.openiaml.iacleaner.ast.ASTJsLanguageStatement;
+import org.openiaml.iacleaner.ast.ASTJsReturnStatement;
 import org.openiaml.iacleaner.ast.ASTJsSimpleValue;
 import org.openiaml.iacleaner.ast.ASTJsStatement;
 import org.openiaml.iacleaner.ast.ASTJsValue;
+import org.openiaml.iacleaner.ast.ASTJsVariableAssignment;
 import org.openiaml.iacleaner.ast.ASTJsVariableList;
 import org.openiaml.iacleaner.ast.ASTPhpArgumentList;
 import org.openiaml.iacleaner.ast.ASTPhpBlock;
@@ -34,6 +37,7 @@ import org.openiaml.iacleaner.ast.ASTPhpInterfaceBlock;
 import org.openiaml.iacleaner.ast.ASTPhpInterfaceDefinition;
 import org.openiaml.iacleaner.ast.ASTPhpInterfaceList;
 import org.openiaml.iacleaner.ast.ASTPhpLanguageStatement;
+import org.openiaml.iacleaner.ast.ASTPhpOrSomething;
 import org.openiaml.iacleaner.ast.ASTPhpRootBlock;
 import org.openiaml.iacleaner.ast.ASTPhpSimpleValue;
 import org.openiaml.iacleaner.ast.ASTPhpStatement;
@@ -315,6 +319,42 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	 */
 	@Override
 	public Object visit(ASTJsChainedOperator node, Object data) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpOrSomething, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTPhpOrSomething node, Object data) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsFunctionCall, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsFunctionCall node, Object data) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsReturnStatement, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsReturnStatement node, Object data) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsVariableAssignment, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsVariableAssignment node, Object data) {
 		// TODO Auto-generated method stub
 		return null;
 	}
