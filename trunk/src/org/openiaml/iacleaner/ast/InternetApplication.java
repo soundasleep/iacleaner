@@ -19,7 +19,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         } else {
                 ReInit(fis);
         }
-        token_source.SwitchTo(HTML_STATE);
+        InternetApplicationTokenManager.SwitchTo(HTML_STATE);
         SimpleNode n = Start();
         return n;
   }
@@ -37,7 +37,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         } else {
                 ReInit(fis);
         }
-        token_source.SwitchTo(HTML_STATE);
+        InternetApplicationTokenManager.SwitchTo(HTML_STATE);
         SimpleNode n = Start();
         return n;
   }
