@@ -14,37 +14,38 @@ public interface InternetApplicationTreeConstants
   public int JJTPHPORSOMETHING = 8;
   public int JJTPHPVALUE = 9;
   public int JJTPHPSIMPLEVALUE = 10;
-  public int JJTPHPARGUMENTLIST = 11;
-  public int JJTPHPVARIABLELIST = 12;
-  public int JJTPHPFUNCTIONDEFINITION = 13;
-  public int JJTPHPFUNCTIONARGUMENTLIST = 14;
-  public int JJTPHPIFSTATEMENT = 15;
-  public int JJTPHPCLASSDEFINITION = 16;
-  public int JJTPHPINTERFACEDEFINITION = 17;
-  public int JJTPHPINTERFACELIST = 18;
-  public int JJTPHPCLASSBLOCK = 19;
-  public int JJTPHPINTERFACEBLOCK = 20;
-  public int JJTHTMLBLOCK = 21;
-  public int JJTHTMLSCRIPTTAG = 22;
-  public int JJTHTMLTAG = 23;
-  public int JJTHTMLCLOSINGTAG = 24;
-  public int JJTHTMLTAGATTRIBUTE = 25;
-  public int JJTHTMLTEXTBLOCK = 26;
-  public int JJTHTMLCOMMENT = 27;
-  public int JJTJSBLOCK = 28;
-  public int JJTJSSTATEMENT = 29;
-  public int JJTJSLANGUAGESTATEMENT = 30;
-  public int JJTJSFUNCTIONCALL = 31;
-  public int JJTJSRETURNSTATEMENT = 32;
-  public int JJTJSVARIABLEASSIGNMENT = 33;
-  public int JJTJSCHAINEDOPERATOR = 34;
-  public int JJTJSVALUE = 35;
-  public int JJTJSSIMPLEVALUE = 36;
-  public int JJTJSARGUMENTLIST = 37;
-  public int JJTJSVARIABLELIST = 38;
-  public int JJTJSFUNCTIONDEFINITION = 39;
-  public int JJTJSFUNCTIONARGUMENTLIST = 40;
-  public int JJTJSIFSTATEMENT = 41;
+  public int JJTPHPSELECTARRAY = 11;
+  public int JJTPHPARGUMENTLIST = 12;
+  public int JJTPHPVARIABLELIST = 13;
+  public int JJTPHPFUNCTIONDEFINITION = 14;
+  public int JJTPHPFUNCTIONARGUMENTLIST = 15;
+  public int JJTPHPIFSTATEMENT = 16;
+  public int JJTPHPCLASSDEFINITION = 17;
+  public int JJTPHPINTERFACEDEFINITION = 18;
+  public int JJTPHPINTERFACELIST = 19;
+  public int JJTPHPCLASSBLOCK = 20;
+  public int JJTPHPINTERFACEBLOCK = 21;
+  public int JJTHTMLBLOCK = 22;
+  public int JJTHTMLSCRIPTTAG = 23;
+  public int JJTHTMLTAG = 24;
+  public int JJTHTMLCLOSINGTAG = 25;
+  public int JJTHTMLTAGATTRIBUTE = 26;
+  public int JJTHTMLTEXTBLOCK = 27;
+  public int JJTHTMLCOMMENT = 28;
+  public int JJTJSBLOCK = 29;
+  public int JJTJSSTATEMENT = 30;
+  public int JJTJSLANGUAGESTATEMENT = 31;
+  public int JJTJSFUNCTIONCALL = 32;
+  public int JJTJSRETURNSTATEMENT = 33;
+  public int JJTJSVARIABLEASSIGNMENT = 34;
+  public int JJTJSCHAINEDOPERATOR = 35;
+  public int JJTJSVALUE = 36;
+  public int JJTJSSIMPLEVALUE = 37;
+  public int JJTJSARGUMENTLIST = 38;
+  public int JJTJSVARIABLELIST = 39;
+  public int JJTJSFUNCTIONDEFINITION = 40;
+  public int JJTJSFUNCTIONARGUMENTLIST = 41;
+  public int JJTJSIFSTATEMENT = 42;
 
 
   public String[] jjtNodeName = {
@@ -59,6 +60,7 @@ public interface InternetApplicationTreeConstants
     "PhpOrSomething",
     "PhpValue",
     "PhpSimpleValue",
+    "PhpSelectArray",
     "PhpArgumentList",
     "PhpVariableList",
     "PhpFunctionDefinition",
@@ -92,4 +94,4 @@ public interface InternetApplicationTreeConstants
     "JsIfStatement",
   };
 }
-/* JavaCC - OriginalChecksum=1c6b9c14c2183598abcf758830dc9d9a (do not edit this line) */
+/* JavaCC - OriginalChecksum=3a6edaf9ca8abd9d9b76b69bc7c3296d (do not edit this line) */

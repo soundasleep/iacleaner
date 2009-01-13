@@ -247,6 +247,8 @@ public interface InternetApplicationConstants {
     "\"(\"",
     "\")\"",
     "\"=\"",
+    "\"[\"",
+    "\"]\"",
     "\",\"",
     "\"{\"",
     "\"}\"",
