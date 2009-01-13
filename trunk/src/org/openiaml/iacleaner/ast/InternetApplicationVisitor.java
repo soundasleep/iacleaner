@@ -34,6 +34,10 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsBlock node, Object data);
   public Object visit(ASTJsStatement node, Object data);
   public Object visit(ASTJsLanguageStatement node, Object data);
+  public Object visit(ASTJsFunctionCall node, Object data);
+  public Object visit(ASTJsReturnStatement node, Object data);
+  public Object visit(ASTJsVariableAssignment node, Object data);
+  public Object visit(ASTJsChainedOperator node, Object data);
   public Object visit(ASTJsValue node, Object data);
   public Object visit(ASTJsSimpleValue node, Object data);
   public Object visit(ASTJsArgumentList node, Object data);
@@ -42,4 +46,4 @@ public interface InternetApplicationVisitor
   public Object visit(ASTJsFunctionArgumentList node, Object data);
   public Object visit(ASTJsIfStatement node, Object data);
 }
-/* JavaCC - OriginalChecksum=7b9a85bd1749dae5883c9c2ad7a2e883 (do not edit this line) */
+/* JavaCC - OriginalChecksum=949977fec9df9676dc4592de47607277 (do not edit this line) */

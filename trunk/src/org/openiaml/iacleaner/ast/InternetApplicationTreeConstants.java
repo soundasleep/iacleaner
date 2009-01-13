@@ -33,13 +33,17 @@ public interface InternetApplicationTreeConstants
   public int JJTJSBLOCK = 27;
   public int JJTJSSTATEMENT = 28;
   public int JJTJSLANGUAGESTATEMENT = 29;
-  public int JJTJSVALUE = 30;
-  public int JJTJSSIMPLEVALUE = 31;
-  public int JJTJSARGUMENTLIST = 32;
-  public int JJTJSVARIABLELIST = 33;
-  public int JJTJSFUNCTIONDEFINITION = 34;
-  public int JJTJSFUNCTIONARGUMENTLIST = 35;
-  public int JJTJSIFSTATEMENT = 36;
+  public int JJTJSFUNCTIONCALL = 30;
+  public int JJTJSRETURNSTATEMENT = 31;
+  public int JJTJSVARIABLEASSIGNMENT = 32;
+  public int JJTJSCHAINEDOPERATOR = 33;
+  public int JJTJSVALUE = 34;
+  public int JJTJSSIMPLEVALUE = 35;
+  public int JJTJSARGUMENTLIST = 36;
+  public int JJTJSVARIABLELIST = 37;
+  public int JJTJSFUNCTIONDEFINITION = 38;
+  public int JJTJSFUNCTIONARGUMENTLIST = 39;
+  public int JJTJSIFSTATEMENT = 40;
 
 
   public String[] jjtNodeName = {
@@ -73,6 +77,10 @@ public interface InternetApplicationTreeConstants
     "JsBlock",
     "JsStatement",
     "JsLanguageStatement",
+    "JsFunctionCall",
+    "JsReturnStatement",
+    "JsVariableAssignment",
+    "JsChainedOperator",
     "JsValue",
     "JsSimpleValue",
     "JsArgumentList",
@@ -82,4 +90,4 @@ public interface InternetApplicationTreeConstants
     "JsIfStatement",
   };
 }
-/* JavaCC - OriginalChecksum=36951e4ddc3b62e6946da55673a1d976 (do not edit this line) */
+/* JavaCC - OriginalChecksum=8436883f496b6609aa81412c6fa99de5 (do not edit this line) */

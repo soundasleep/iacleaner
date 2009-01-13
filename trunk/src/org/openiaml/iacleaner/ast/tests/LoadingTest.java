@@ -96,4 +96,9 @@ public class LoadingTest extends TestCase {
 		loadFile("function.js");
 	}
 
+	public void testJsPrototype() throws Exception {
+		SimpleNode node = loadFile("prototype.js");
+		node.dump("");
+	}
+
 }
