@@ -73,11 +73,17 @@ public class LoadingTest extends TestCase {
 	}
 	
 	public void testPhpSimple() throws Exception {
-		loadFile("simple.php");
+		SimpleNode node = loadFile("simple.php");
+		node.dump("");		
 	}
 	
 	public void testPhpVariables() throws Exception {
 		loadFile("variable.php");
+	}
+	
+	public void testPhpSwitching() throws Exception {
+		SimpleNode node = loadFile("switching.php");
+		node.dump("");
 	}
 	
 }
