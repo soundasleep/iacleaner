@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Internet Application Cleaner/Formatter
+Bundle-SymbolicName: org.openiaml.iacleaner
+Bundle-Version: 0.1
+Export-Package: org.openiaml.iacleaner,
+ org.openiaml.iacleaner.tests

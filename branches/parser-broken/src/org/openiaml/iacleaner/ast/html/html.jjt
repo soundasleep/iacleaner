@@ -1,0 +1,343 @@
+
+options {
+  MULTI=true;
+  VISITOR=true;
+  // NODE_DEFAULT_VOID=true; /* makes all nodes #void by default, reducing the number of elements generated */
+}
+
+PARSER_BEGIN(HtmlPage)
+
+package org.openiaml.iacleaner.ast.html;
+
+import java.util.*;
+import java.io.*;
+
+/** A grammar for web applications, maybe? */
+public class HtmlPage {
+
+  public static HtmlPage instance = null;
+  
+  /**
+   * For loading test cases programatically.
+   */
+  public static SimpleNode loadFile(File f, int initialState) throws ParseException, FileNotFoundException {
+  	FileInputStream fis = new FileInputStream(f);
+  	if (instance == null) {
+  		instance = new HtmlPage(fis);
+  	} else {
+  		ReInit(fis);
+  	}
+  	HtmlPageTokenManager.SwitchTo(initialState);
+  	SimpleNode n = Start();
+  	return n;
+  }
+
+  /**
+   * For loading test cases programatically.
+   * Works out the initial state based on the file extension of the given
+   * file.
+   */
+  public static SimpleNode loadFile(File f) throws ParseException, FileNotFoundException {
+	  String extension = f.getAbsolutePath().substring(f.getAbsolutePath().lastIndexOf("."));
+	  
+	  int initialState = 0;
+	  if (extension.equals(".html") || extension.equals(".php")) {
+	  	initialState = HTML_STATE;
+	  } else {
+	  	throw new RuntimeException("Unknown file type: " + extension + " (from file: " + f + ")");
+	  }
+	  
+	  return loadFile(f, initialState);
+  }
+
+  /**
+   * Loading string sources.
+   * 
+   * @throws UnsupportedEncodingException if we have a problem with the charset encoding 
+   */
+  public static SimpleNode loadString(String s, String charset, int initialState) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+	  InputStream fis = new ByteArrayInputStream(s.getBytes(charset));
+ 	if (instance == null) {
+  		instance = new HtmlPage(fis);
+  	} else {
+  		ReInit(fis);
+  	}
+  	HtmlPageTokenManager.SwitchTo(initialState);
+  	SimpleNode n = Start();
+ 	return n;
+  }
+
+  /** Loads string sources with a default state of HTML. */
+  public static SimpleNode loadString(String s, String charset) throws ParseException, FileNotFoundException, UnsupportedEncodingException {
+  	return loadString(s, charset, HTML_STATE);
+  }
+  
+}
+
+PARSER_END(HtmlPage)
+
+<HTML_STATE>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<HTML_TAG_STATE>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<HTML_OPENING_TAG>
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<WITHIN_SCRIPT2>
+SKIP:
+{
+	"</script>" : HTML_STATE
+}
+
+/** --- html --- */
+
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_OPEN_TAG: "<" > : HTML_OPENING_TAG
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_CLOSE_TAG: ">" > : HTML_STATE
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_CLOSE_TAG_XHTML: "/>" > : HTML_STATE
+}
+
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_CLOSING_TAG: "</" > : HTML_OPENING_TAG
+}
+
+<HTML_OPENING_TAG>
+TOKEN: /* HTML_TAG_NAME */
+{
+	< HTML_TAG_NAME: (<LETTER>)+ > : HTML_TAG_STATE
+|
+	< #LETTER: ["A"-"Z","a"-"z"] >
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_ATTRIBUTE_NAME: (["A"-"Z","a"-"z"])+ >
+}
+
+<HTML_TAG_STATE>
+TOKEN :
+{
+	< HTML_STRING:
+		"\"" ("\\\"" | (~["\""]))+ "\"" >
+}
+
+<HTML_TAG_STATE>
+TOKEN:
+{
+	< HTML_ATTRIBUTE_EQUALS : "=" >
+}
+
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_TEXT_BLOCK:
+		(~["<"])+ >
+}
+
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_COMMENT_START: "<!--" > : HTML_WITHIN_COMMENT
+}
+
+/* order also matters: by placing this before the matchall, the comments will be properly ended. */
+<HTML_WITHIN_COMMENT>
+SKIP:
+{
+	< "-->" > : HTML_STATE
+}
+
+<HTML_WITHIN_COMMENT>
+MORE:
+{
+	< ~[] >
+}
+
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG : ("<script>" | "<script language=\"Javascript\">") > 
+		: WITHIN_SCRIPT
+}
+
+/*
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG_END : "</script>" > : HTML_STATE
+}
+*/
+
+/**
+ * We use custom code to parse the input until we find the end of
+ * the script, through </script>
+ */
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< JS_SCRIPT : (~[]) > /*{
+		String end_script = "</script>"; 
+		System.out.println("image == " + image.toString().replace("\n", "").replace("\r", ""));
+		if (image.length() > end_script.length()) {
+			if (image.substring(image.length() - end_script.length()).equals(end_script)) {
+				// end of script
+				// remove end tag and assign token
+				// image = new StringBuffer(image.substring(0, image.length() - end_script.length()));
+				HtmlPageTokenManager.SwitchTo(HTML_STATE);
+			}
+		}
+	} */ : WITHIN_SCRIPT2
+}
+
+<WITHIN_SCRIPT2>
+MORE:
+{
+	< (~[]) >
+}
+
+<HTML_STATE>
+TOKEN :
+{
+	< PHP_BLOCK_BEGIN : 
+		"<?php" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+	< PHP_SCRIPT : (~[])? ((~["?"]) (~[">"]))+ > : HTML_STATE
+}
+
+/** Main production. */
+SimpleNode Start() : { SimpleNode n; }
+{
+	Block() { n = jjtThis; }
+	<EOF>
+	{ return n; }
+}
+
+void Block() : {}
+{
+	(
+		HtmlBlock()
+	)+
+}
+
+void HtmlBlock() : {}
+{
+	HtmlScriptTag() |
+	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment() |
+	HtmlPhpInlineBlock()
+}
+
+void HtmlPhpInlineBlock() : {}
+{
+	<PHP_BLOCK_BEGIN>
+	(PhpBlock())?
+	/* ended as part of <PHP_SCRIPT> */
+}
+
+void HtmlScriptTag() : {
+	Token t;
+}
+{
+	<HTML_SCRIPT_TAG>
+	(JsBlock())?
+	/* <HTML_SCRIPT_TAG_END>  -- ended as part of <JS_SCRIPT> */
+}
+
+void HtmlTag() #HtmlTag : { Token t; }
+{
+	<HTML_OPEN_TAG> 
+	t = <HTML_TAG_NAME> {
+		jjtThis.setName( t.image );
+	}
+	(HtmlTagAttribute()) *
+	( <HTML_CLOSE_TAG> | <HTML_CLOSE_TAG_XHTML> )
+}
+
+void HtmlClosingTag() #HtmlClosingTag : { Token t; }
+{
+	<HTML_CLOSING_TAG> 
+	t = <HTML_TAG_NAME> {
+		jjtThis.setName( t.image );
+	} 
+	<HTML_CLOSE_TAG>
+}
+
+void HtmlTagAttribute() #HtmlTagAttribute : { Token t; }
+{
+	t = <HTML_ATTRIBUTE_NAME> {
+		jjtThis.setName( t.image );
+	} 
+	<HTML_ATTRIBUTE_EQUALS> 
+	t = <HTML_STRING> {
+		jjtThis.setValue( t.image );
+	}
+}
+
+void HtmlTextBlock() #HtmlTextBlock : { Token t; }
+{
+	t = <HTML_TEXT_BLOCK> {
+		jjtThis.setText( t.image );
+	}
+}
+
+void HtmlComment() : {}
+{
+	<HTML_COMMENT_START>
+}
+
+void JsBlock() : {
+	Token t;
+}
+{
+	t = <JS_SCRIPT> {
+		jjtThis.setScript(t.image);
+	}
+}
+
+void PhpBlock() : {
+	Token t;
+}
+{
+	t = <PHP_SCRIPT> {
+		jjtThis.setScript(t.image);
+	}
+}
+
