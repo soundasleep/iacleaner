@@ -3,39 +3,42 @@
  */
 package org.openiaml.iacleaner;
 
-import org.openiaml.iacleaner.ast.ASTBlock;
-import org.openiaml.iacleaner.ast.ASTHtmlBlock;
-import org.openiaml.iacleaner.ast.ASTHtmlClosingTag;
-import org.openiaml.iacleaner.ast.ASTHtmlComment;
-import org.openiaml.iacleaner.ast.ASTHtmlTag;
-import org.openiaml.iacleaner.ast.ASTHtmlTagAttribute;
-import org.openiaml.iacleaner.ast.ASTHtmlTextBlock;
-import org.openiaml.iacleaner.ast.ASTPhpArgumentList;
-import org.openiaml.iacleaner.ast.ASTPhpBlock;
-import org.openiaml.iacleaner.ast.ASTPhpClassBlock;
-import org.openiaml.iacleaner.ast.ASTPhpClassDefinition;
-import org.openiaml.iacleaner.ast.ASTPhpFunctionArgumentList;
-import org.openiaml.iacleaner.ast.ASTPhpFunctionCall;
-import org.openiaml.iacleaner.ast.ASTPhpFunctionDefinition;
-import org.openiaml.iacleaner.ast.ASTPhpIfStatement;
-import org.openiaml.iacleaner.ast.ASTPhpInlineHtmlBlock;
-import org.openiaml.iacleaner.ast.ASTPhpInterfaceBlock;
-import org.openiaml.iacleaner.ast.ASTPhpInterfaceDefinition;
-import org.openiaml.iacleaner.ast.ASTPhpInterfaceList;
-import org.openiaml.iacleaner.ast.ASTPhpLanguageStatement;
-import org.openiaml.iacleaner.ast.ASTPhpOrSomething;
-import org.openiaml.iacleaner.ast.ASTPhpRootBlock;
-import org.openiaml.iacleaner.ast.ASTPhpSelectArray;
-import org.openiaml.iacleaner.ast.ASTPhpSimpleValue;
-import org.openiaml.iacleaner.ast.ASTPhpStatement;
-import org.openiaml.iacleaner.ast.ASTPhpTryCatchBlock;
-import org.openiaml.iacleaner.ast.ASTPhpValue;
-import org.openiaml.iacleaner.ast.ASTPhpValuePossiblyWrapped;
-import org.openiaml.iacleaner.ast.ASTPhpVariableAssignment;
-import org.openiaml.iacleaner.ast.ASTPhpVariableList;
-import org.openiaml.iacleaner.ast.ASTStart;
-import org.openiaml.iacleaner.ast.InternetApplicationVisitor;
-import org.openiaml.iacleaner.ast.SimpleNode;
+import org.openiaml.iacleaner.ast.html.ASTBlock;
+import org.openiaml.iacleaner.ast.html.ASTHtmlBlock;
+import org.openiaml.iacleaner.ast.html.ASTHtmlClosingTag;
+import org.openiaml.iacleaner.ast.html.ASTHtmlComment;
+import org.openiaml.iacleaner.ast.html.ASTHtmlPhpInlineBlock;
+import org.openiaml.iacleaner.ast.html.ASTHtmlScriptTag;
+import org.openiaml.iacleaner.ast.html.ASTHtmlTag;
+import org.openiaml.iacleaner.ast.html.ASTHtmlTagAttribute;
+import org.openiaml.iacleaner.ast.html.ASTHtmlTextBlock;
+import org.openiaml.iacleaner.ast.html.ASTJsBlock;
+import org.openiaml.iacleaner.ast.html.ASTPhpBlock;
+import org.openiaml.iacleaner.ast.html.ASTStart;
+import org.openiaml.iacleaner.ast.html.HtmlPageVisitor;
+import org.openiaml.iacleaner.ast.html.SimpleNode;
+import org.openiaml.iacleaner.ast.php.ASTPhpArgumentList;
+import org.openiaml.iacleaner.ast.php.ASTPhpClassBlock;
+import org.openiaml.iacleaner.ast.php.ASTPhpClassDefinition;
+import org.openiaml.iacleaner.ast.php.ASTPhpFunctionArgumentList;
+import org.openiaml.iacleaner.ast.php.ASTPhpFunctionCall;
+import org.openiaml.iacleaner.ast.php.ASTPhpFunctionDefinition;
+import org.openiaml.iacleaner.ast.php.ASTPhpIfStatement;
+import org.openiaml.iacleaner.ast.php.ASTPhpInlineHtmlBlock;
+import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceBlock;
+import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceDefinition;
+import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceList;
+import org.openiaml.iacleaner.ast.php.ASTPhpLanguageStatement;
+import org.openiaml.iacleaner.ast.php.ASTPhpOrSomething;
+import org.openiaml.iacleaner.ast.php.ASTPhpRootBlock;
+import org.openiaml.iacleaner.ast.php.ASTPhpSelectArray;
+import org.openiaml.iacleaner.ast.php.ASTPhpSimpleValue;
+import org.openiaml.iacleaner.ast.php.ASTPhpStatement;
+import org.openiaml.iacleaner.ast.php.ASTPhpTryCatchBlock;
+import org.openiaml.iacleaner.ast.php.ASTPhpValue;
+import org.openiaml.iacleaner.ast.php.ASTPhpValuePossiblyWrapped;
+import org.openiaml.iacleaner.ast.php.ASTPhpVariableAssignment;
+import org.openiaml.iacleaner.ast.php.ASTPhpVariableList;
 
 /**
  * A simple visitor that traverses the node tree and outputs
@@ -44,7 +47,7 @@ import org.openiaml.iacleaner.ast.SimpleNode;
  * @author jmwright
  *
  */
-public class PrettifierVisitor implements InternetApplicationVisitor {
+public class PrettifierVisitor implements HtmlPageVisitor {
 	@Override
 	public Object visit(SimpleNode node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
@@ -91,113 +94,41 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	}
 
 	@Override
-	public Object visit(ASTPhpRootBlock node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpBlock node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpStatement node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpLanguageStatement node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpValue node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpSimpleValue node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpArgumentList node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpVariableList node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpFunctionDefinition node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpFunctionArgumentList node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpIfStatement node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpClassDefinition node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpInterfaceDefinition node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpInterfaceList node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpClassBlock node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
-	public Object visit(ASTPhpInterfaceBlock node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	@Override
 	public Object visit(ASTHtmlBlock node, Object data) {
 		node.childrenAccept(this, data);	// visit children (nothing to see here)
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTHtmlScriptTag, java.lang.Object)
+	 */
 	@Override
-	public Object visit(ASTPhpInlineHtmlBlock node, Object data) {
+	public Object visit(ASTHtmlScriptTag node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTJsBlock, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTJsBlock node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.html.HtmlPageVisitor#visit(org.openiaml.iacleaner.ast.html.ASTHtmlPhpInlineBlock, java.lang.Object)
+	 */
+	@Override
+	public Object visit(ASTHtmlPhpInlineBlock node, Object data) {
+		((StringBuffer) data).append("unknown node: " + node);
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.ast.html.HtmlPageVisitor#visit(org.openiaml.iacleaner.ast.html.ASTHtmlComment, java.lang.Object)
+	 */
 	@Override
 	public Object visit(ASTHtmlComment node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
@@ -205,55 +136,10 @@ public class PrettifierVisitor implements InternetApplicationVisitor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpOrSomething, java.lang.Object)
+	 * @see org.openiaml.iacleaner.ast.html.HtmlPageVisitor#visit(org.openiaml.iacleaner.ast.html.ASTPhpBlock, java.lang.Object)
 	 */
 	@Override
-	public Object visit(ASTPhpOrSomething node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpSelectArray, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTPhpSelectArray node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpFunctionCall, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTPhpFunctionCall node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpTryCatchBlock, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTPhpTryCatchBlock node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpVariableAssignment, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTPhpVariableAssignment node, Object data) {
-		((StringBuffer) data).append("unknown node: " + node);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.ast.InternetApplicationVisitor#visit(org.openiaml.iacleaner.ast.ASTPhpValuePossiblyWrapped, java.lang.Object)
-	 */
-	@Override
-	public Object visit(ASTPhpValuePossiblyWrapped node, Object data) {
+	public Object visit(ASTPhpBlock node, Object data) {
 		((StringBuffer) data).append("unknown node: " + node);
 		return null;
 	}
