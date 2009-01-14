@@ -1699,6 +1699,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
                           jjtree.closeNodeScope(jjtn000, true);
                           jjtc000 = false;
                 jjtn000.setScript(t.image);
+                jjtn000.parseScript();
     } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);

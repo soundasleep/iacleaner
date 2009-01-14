@@ -77,6 +77,14 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     try {
       JsBlock();
                     n = jjtn000;
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case JS_SCRIPT_END:
+        jj_consume_token(JS_SCRIPT_END);
+        break;
+      default:
+        jj_la1[0] = jj_gen;
+        ;
+      }
       jj_consume_token(0);
           jjtree.closeNodeScope(jjtn000, true);
           jjtc000 = false;
@@ -126,7 +134,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[0] = jj_gen;
+          jj_la1[1] = jj_gen;
           break label_1;
         }
         JsStatement();
@@ -189,7 +197,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         jj_consume_token(JS_END);
         break;
       default:
-        jj_la1[1] = jj_gen;
+        jj_la1[2] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -233,7 +241,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsValuePossiblyWrapped();
           break;
         default:
-          jj_la1[2] = jj_gen;
+          jj_la1[3] = jj_gen;
           ;
         }
         break;
@@ -255,7 +263,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
               jj_consume_token(JS_ASSIGNMENT_OPERATOR);
               break;
             default:
-              jj_la1[3] = jj_gen;
+              jj_la1[4] = jj_gen;
               jj_consume_token(-1);
               throw new ParseException();
             }
@@ -265,13 +273,13 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
             jj_consume_token(JS_OPERATOR_SINGLE);
             break;
           default:
-            jj_la1[4] = jj_gen;
+            jj_la1[5] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[5] = jj_gen;
+          jj_la1[6] = jj_gen;
           ;
         }
         break;
@@ -280,7 +288,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsTraverseObjects();
         break;
       default:
-        jj_la1[6] = jj_gen;
+        jj_la1[7] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -320,7 +328,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[7] = jj_gen;
+          jj_la1[8] = jj_gen;
           break label_2;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -342,7 +350,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
             JsArgumentList();
             break;
           default:
-            jj_la1[8] = jj_gen;
+            jj_la1[9] = jj_gen;
             ;
           }
           jj_consume_token(JS_BRACKET_CLOSE);
@@ -355,7 +363,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsSelectArray();
           break;
         default:
-          jj_la1[9] = jj_gen;
+          jj_la1[10] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -434,7 +442,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsValuePossiblyWrapped();
         break;
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[11] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -515,13 +523,13 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsInlineArray();
           break;
         default:
-          jj_la1[11] = jj_gen;
+          jj_la1[12] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       default:
-        jj_la1[12] = jj_gen;
+        jj_la1[13] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -560,7 +568,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[13] = jj_gen;
+          jj_la1[14] = jj_gen;
           break label_3;
         }
         jj_consume_token(JS_PREFIX_OPERATOR);
@@ -584,7 +592,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsValue();
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[15] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -622,13 +630,13 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           jj_consume_token(JS_OPERATOR_SINGLE);
           break;
         default:
-          jj_la1[15] = jj_gen;
+          jj_la1[16] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[16] = jj_gen;
+        jj_la1[17] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -674,7 +682,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
             ;
             break;
           default:
-            jj_la1[17] = jj_gen;
+            jj_la1[18] = jj_gen;
             break label_4;
           }
           jj_consume_token(JS_NUMBER_OPERATOR);
@@ -688,7 +696,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         jj_consume_token(JS_BUILTIN);
         break;
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[19] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -712,7 +720,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsArgumentList();
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[20] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -749,7 +757,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsVariableList();
         break;
       default:
-        jj_la1[20] = jj_gen;
+        jj_la1[21] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -787,7 +795,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[22] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -828,7 +836,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsSimpleValue();
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[23] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -837,7 +845,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[23] = jj_gen;
+        jj_la1[24] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -874,7 +882,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[24] = jj_gen;
+        jj_la1[25] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -956,26 +964,6 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForParameterList();
         break;
       default:
-        jj_la1[25] = jj_gen;
-        ;
-      }
-      jj_consume_token(JS_END);
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case JS_FUNCTION_STATEMENT:
-      case JS_NEW_STATEMENT:
-      case JS_BRACKET_OPEN:
-      case JS_BRACE_OPEN:
-      case JS_STRING:
-      case JS_STRING_SQ:
-      case JS_DECIMAL:
-      case JS_HEXADECIMAL:
-      case JS_BUILTIN:
-      case JS_PREFIX_OPERATOR:
-      case JS_NUMBER_OPERATOR:
-      case JS_VARIABLE:
-        JsForEvaluateParameterList();
-        break;
-      default:
         jj_la1[26] = jj_gen;
         ;
       }
@@ -997,6 +985,26 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         break;
       default:
         jj_la1[27] = jj_gen;
+        ;
+      }
+      jj_consume_token(JS_END);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case JS_FUNCTION_STATEMENT:
+      case JS_NEW_STATEMENT:
+      case JS_BRACKET_OPEN:
+      case JS_BRACE_OPEN:
+      case JS_STRING:
+      case JS_STRING_SQ:
+      case JS_DECIMAL:
+      case JS_HEXADECIMAL:
+      case JS_BUILTIN:
+      case JS_PREFIX_OPERATOR:
+      case JS_NUMBER_OPERATOR:
+      case JS_VARIABLE:
+        JsForEvaluateParameterList();
+        break;
+      default:
+        jj_la1[28] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -1037,7 +1045,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForParameterList();
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[29] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1074,7 +1082,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForEvaluateParameterList();
         break;
       default:
-        jj_la1[29] = jj_gen;
+        jj_la1[30] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1131,12 +1139,12 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsInlineArray();
           break;
         default:
-          jj_la1[30] = jj_gen;
+          jj_la1[31] = jj_gen;
           ;
         }
         break;
       default:
-        jj_la1[31] = jj_gen;
+        jj_la1[32] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1206,7 +1214,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[32] = jj_gen;
+          jj_la1[33] = jj_gen;
           break label_5;
         }
         jj_consume_token(JS_CATCH_STATEMENT);
@@ -1218,7 +1226,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsValuePossiblyWrapped();
           break;
         default:
-          jj_la1[33] = jj_gen;
+          jj_la1[34] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
@@ -1234,7 +1242,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       default:
-        jj_la1[34] = jj_gen;
+        jj_la1[35] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1270,30 +1278,6 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     try { return !jj_3_2(); }
     catch(LookaheadSuccess ls) { return true; }
     finally { jj_save(1, xla); }
-  }
-
-  static private boolean jj_3R_6() {
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_7()) { jj_scanpos = xsp; break; }
-    }
-    return false;
-  }
-
-  static private boolean jj_3R_17() {
-    if (jj_scan_token(JS_IF_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_26() {
-    if (jj_scan_token(JS_RETURN_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(JS_TRY_STATEMENT)) return true;
-    return false;
   }
 
   static private boolean jj_3R_21() {
@@ -1432,6 +1416,30 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     return false;
   }
 
+  static private boolean jj_3R_6() {
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_7()) { jj_scanpos = xsp; break; }
+    }
+    return false;
+  }
+
+  static private boolean jj_3R_17() {
+    if (jj_scan_token(JS_IF_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_26() {
+    if (jj_scan_token(JS_RETURN_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(JS_TRY_STATEMENT)) return true;
+    return false;
+  }
+
   static private boolean jj_initialized_once = false;
   /** Generated Token Manager. */
   static public JavascriptTokenManager token_source;
@@ -1444,7 +1452,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
   static private Token jj_scanpos, jj_lastpos;
   static private int jj_la;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[35];
+  static final private int[] jj_la1 = new int[36];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -1452,10 +1460,10 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x88bf800,0x88bf800,0x0,0x0,0x0,0x0,0x7000,0x2200000,0xc0a02800,0x2200000,0xc0a02800,0xc0a02800,0xc0802800,0x0,0xc0a02800,0x0,0x0,0x0,0xc0000000,0x10000000,0x10000000,0x0,0x0,0x10000000,0x0,0x7000,0xc0a02800,0xc0a02800,0x10000000,0x10000000,0xc0a02800,0x10000000,0x40000,0x8000,0x100000,};
+      jj_la1_0 = new int[] {0x0,0x88bf800,0x88bf800,0x0,0x0,0x0,0x0,0x7000,0x2200000,0xc0a02800,0x2200000,0xc0a02800,0xc0a02800,0xc0802800,0x0,0xc0a02800,0x0,0x0,0x0,0xc0000000,0x10000000,0x10000000,0x0,0x0,0x10000000,0x0,0x7000,0xc0a02800,0xc0a02800,0x10000000,0x10000000,0xc0a02800,0x10000000,0x40000,0x8000,0x100000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x1000,0x1000,0x200,0x280,0x380,0x380,0x1000,0x8,0x1037,0x8,0x1037,0x1037,0x1027,0x10,0x1027,0x7e0,0x7e0,0x20,0x27,0x0,0x0,0x1000,0x200,0x0,0x1000,0x1000,0x1037,0x1037,0x0,0x0,0x1037,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x2000,0x1000,0x1000,0x200,0x280,0x380,0x380,0x1000,0x8,0x1037,0x8,0x1037,0x1037,0x1027,0x10,0x1027,0x7e0,0x7e0,0x20,0x27,0x0,0x0,0x1000,0x200,0x0,0x1000,0x1000,0x1037,0x1037,0x0,0x0,0x1037,0x0,0x0,0x0,0x0,};
    }
   static final private JJCalls[] jj_2_rtns = new JJCalls[2];
   static private boolean jj_rescan = false;
@@ -1479,7 +1487,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1495,7 +1503,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1513,7 +1521,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1525,7 +1533,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1542,7 +1550,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1553,7 +1561,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 35; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1665,12 +1673,12 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[45];
+    boolean[] la1tokens = new boolean[46];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 35; i++) {
+    for (int i = 0; i < 36; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1682,7 +1690,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         }
       }
     }
-    for (int i = 0; i < 45; i++) {
+    for (int i = 0; i < 46; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

@@ -78,6 +78,8 @@ public interface JavascriptConstants {
   int JS_TERNARY_2 = 43;
   /** RegularExpression Id. */
   int JS_VARIABLE = 44;
+  /** RegularExpression Id. */
+  int JS_SCRIPT_END = 45;
 
   /** Lexical state. */
   int JS_STATE = 0;
@@ -135,6 +137,7 @@ public interface JavascriptConstants {
     "\"?\"",
     "\":\"",
     "<JS_VARIABLE>",
+    "\"</script>\"",
   };
 
 }

@@ -304,12 +304,19 @@ TOKEN : /* Function name */
 		["A"-"Z","a"-"z","_","$"] (["0"-"9","A"-"Z","a"-"z","_"])* >
 }
 
+<JS_STATE>
+TOKEN : /* Function name */
+{
+	< JS_SCRIPT_END: "</script>" >
+}
+
 /* JS_VARIABLE === JS_FUNCTION_NAME */
 
 /** Main production. */
 SimpleNode StartJs() : { SimpleNode n; }
 {
 	JsBlock() { n = jjtThis; }
+	( <JS_SCRIPT_END> )?
 	<EOF>
 	{ return n; }
 }
