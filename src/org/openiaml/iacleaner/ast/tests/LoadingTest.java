@@ -7,8 +7,8 @@ import java.io.File;
 
 import junit.framework.TestCase;
 
-import org.openiaml.iacleaner.ast.InternetApplication;
-import org.openiaml.iacleaner.ast.SimpleNode;
+import org.openiaml.iacleaner.ast.html.SimpleNode;
+import org.openiaml.iacleaner.ast.html.HtmlPage;
 import org.openiaml.iacleaner.ast.js.Javascript;
 
 /**
@@ -25,8 +25,8 @@ public class LoadingTest extends TestCase {
 		String extension = file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("."));
 		
 		Object node = null;
-        if (extension.equals(".html") || extension.equals(".php")) {
-        	node = InternetApplication.loadFile(file);
+		if (extension.equals(".php") || extension.equals(".html")) {
+        	node = HtmlPage.loadFile(file);
         } else if (extension.equals(".js")) {
         	node = Javascript.loadFile(file);
         } else {
@@ -124,12 +124,12 @@ public class LoadingTest extends TestCase {
 	
 	public void testPhpSwitching() throws Exception {
 		SimpleNode node = (SimpleNode) loadFile("switching.php");
-		//node.dump("");
+		node.dump("");
 	}
 
 	public void testHtmlFunction() throws Exception {
 		SimpleNode node = (SimpleNode) loadFile("function.html");
-		node.dump("");
+		//node.dump("");
 	}
 
 	public void testJsFunction() throws Exception {

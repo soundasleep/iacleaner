@@ -12,10 +12,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openiaml.iacleaner.ast.InternetApplication;
-import org.openiaml.iacleaner.ast.InternetApplicationVisitor;
-import org.openiaml.iacleaner.ast.ParseException;
-import org.openiaml.iacleaner.ast.SimpleNode;
+import org.openiaml.iacleaner.ast.html.HtmlPage;
+import org.openiaml.iacleaner.ast.html.HtmlPageVisitor;
+import org.openiaml.iacleaner.ast.html.ParseException;
+import org.openiaml.iacleaner.ast.html.SimpleNode;
 
 /**
  * A syntax formatter for Internet 
@@ -56,7 +56,7 @@ public class IACleaner {
 
 		SimpleNode node;
 		try {
-			node = InternetApplication.loadString(script, "UTF8");
+			node = HtmlPage.loadString(script, "UTF8");
 		} catch (FileNotFoundException e) {
 			throw new CleanerException(e);
 		} catch (UnsupportedEncodingException e) {
@@ -75,7 +75,7 @@ public class IACleaner {
 	}
 
 	private void traverse(StringBuffer out, SimpleNode node) {
-		InternetApplicationVisitor visitor = new PrettifierVisitor();
+		HtmlPageVisitor visitor = new PrettifierVisitor();
 		
 		node.childrenAccept(visitor, out);
 	}
