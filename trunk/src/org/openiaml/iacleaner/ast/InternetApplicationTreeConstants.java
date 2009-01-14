@@ -29,11 +29,13 @@ public interface InternetApplicationTreeConstants
   public int JJTPHPCLASSBLOCK = 23;
   public int JJTPHPINTERFACEBLOCK = 24;
   public int JJTHTMLBLOCK = 25;
-  public int JJTHTMLTAG = 26;
-  public int JJTHTMLCLOSINGTAG = 27;
-  public int JJTHTMLTAGATTRIBUTE = 28;
-  public int JJTHTMLTEXTBLOCK = 29;
-  public int JJTHTMLCOMMENT = 30;
+  public int JJTHTMLSCRIPTTAG = 26;
+  public int JJTHTMLTAG = 27;
+  public int JJTHTMLCLOSINGTAG = 28;
+  public int JJTHTMLTAGATTRIBUTE = 29;
+  public int JJTHTMLTEXTBLOCK = 30;
+  public int JJTHTMLCOMMENT = 31;
+  public int JJTJSBLOCK = 32;
 
 
   public String[] jjtNodeName = {
@@ -63,11 +65,13 @@ public interface InternetApplicationTreeConstants
     "PhpClassBlock",
     "PhpInterfaceBlock",
     "HtmlBlock",
+    "HtmlScriptTag",
     "HtmlTag",
     "HtmlClosingTag",
     "HtmlTagAttribute",
     "HtmlTextBlock",
     "HtmlComment",
+    "JsBlock",
   };
 }
-/* JavaCC - OriginalChecksum=012c50e5aff05ff74eb932d05bf84379 (do not edit this line) */
+/* JavaCC - OriginalChecksum=6a89a47f6c7e48fec069b71c8184525b (do not edit this line) */

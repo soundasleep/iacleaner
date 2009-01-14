@@ -124,11 +124,12 @@ public class LoadingTest extends TestCase {
 	
 	public void testPhpSwitching() throws Exception {
 		SimpleNode node = (SimpleNode) loadFile("switching.php");
-		node.dump("");
+		//node.dump("");
 	}
 
 	public void testHtmlFunction() throws Exception {
-		loadFile("function.html");
+		SimpleNode node = (SimpleNode) loadFile("function.html");
+		node.dump("");
 	}
 
 	public void testJsFunction() throws Exception {
@@ -137,7 +138,7 @@ public class LoadingTest extends TestCase {
 
 	public void testJsPrototype() throws Exception {
 		SimpleNode node = (SimpleNode) loadFile("prototype.js");
-		node.dump("");
+		//node.dump("");
 	}
 
 }

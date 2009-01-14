@@ -413,6 +413,28 @@ MORE:
 	< ~[] >
 }
 
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG : ("<script>" | "<script language=\"Javascript\">") > 
+		: WITHIN_SCRIPT
+}
+
+/*
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG_END : "</script>" > : HTML_STATE
+}
+*/
+
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< JS_SCRIPT : (~[])+ "</script>" > : HTML_STATE
+}
+
+
 /** Main production. */
 SimpleNode Start() : {/*@bgen(jjtree) Start */
                        ASTStart jjtn000 = new ASTStart(JJTSTART);
@@ -1269,7 +1291,7 @@ void HtmlBlock() : {/*@bgen(jjtree) HtmlBlock */
 {/*@bgen(jjtree) HtmlBlock */
         try {
 /*@egen*/
-	/* HtmlScriptTag() | */
+	HtmlScriptTag() |
 	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1293,14 +1315,38 @@ void HtmlBlock() : {/*@bgen(jjtree) HtmlBlock */
 /*@egen*/
 }
 
-/*
-void HtmlScriptTag() : {}
-{
+void HtmlScriptTag() : {/*@bgen(jjtree) HtmlScriptTag */
+  ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) HtmlScriptTag */
+        try {
+/*@egen*/
 	<HTML_SCRIPT_TAG>
-	JsBlock()
-	<HTML_SCRIPT_TAG_CLOSE>
+	(JsBlock())*/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+	/* <HTML_SCRIPT_TAG_END>  -- ended as part of <JS_SCRIPT> */
 }
-*/
 
 void HtmlTag()          : {/*@bgen(jjtree) HtmlTag */
                             ASTHtmlTag jjtn000 = new ASTHtmlTag(JJTHTMLTAG);
@@ -1420,6 +1466,33 @@ void HtmlComment() : {/*@bgen(jjtree) HtmlComment */
         try {
 /*@egen*/
 	<HTML_COMMENT_START>/*@bgen(jjtree)*/
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+
+void JsBlock() : {/*@bgen(jjtree) JsBlock */
+        ASTJsBlock jjtn000 = new ASTJsBlock(JJTJSBLOCK);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);
+/*@egen*/
+	Token t;
+}
+{/*@bgen(jjtree) JsBlock */
+        try {
+/*@egen*/
+	t = <JS_SCRIPT>/*@bgen(jjtree)*/
+                        {
+                          jjtree.closeNodeScope(jjtn000, true);
+                          jjtc000 = false;
+                        }
+/*@egen*/ {
+		jjtn000.setScript(t.image);
+	}/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);

@@ -409,6 +409,28 @@ MORE:
 	< ~[] >
 }
 
+<HTML_STATE>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG : ("<script>" | "<script language=\"Javascript\">") > 
+		: WITHIN_SCRIPT
+}
+
+/*
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< HTML_SCRIPT_TAG_END : "</script>" > : HTML_STATE
+}
+*/
+
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< JS_SCRIPT : (~[])+ "</script>" > : HTML_STATE
+}
+
+
 /** Main production. */
 SimpleNode Start() : { SimpleNode n; }
 {
@@ -632,18 +654,16 @@ void PhpInterfaceBlock() : {}
 
 void HtmlBlock() : {}
 {
-	/* HtmlScriptTag() | */
+	HtmlScriptTag() |
 	HtmlTag() | HtmlClosingTag() | HtmlTextBlock() | HtmlComment()
 }
 
-/*
 void HtmlScriptTag() : {}
 {
 	<HTML_SCRIPT_TAG>
-	JsBlock()
-	<HTML_SCRIPT_TAG_CLOSE>
+	(JsBlock())*
+	/* <HTML_SCRIPT_TAG_END>  -- ended as part of <JS_SCRIPT> */
 }
-*/
 
 void HtmlTag() #HtmlTag : { Token t; }
 {
@@ -685,5 +705,15 @@ void HtmlTextBlock() #HtmlTextBlock : { Token t; }
 void HtmlComment() : {}
 {
 	<HTML_COMMENT_START>
+}
+
+
+void JsBlock() : {
+	Token t;
+}
+{
+	t = <JS_SCRIPT> {
+		jjtThis.setScript(t.image);
+	}
 }
 

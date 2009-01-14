@@ -30,10 +30,12 @@ public interface InternetApplicationVisitor
   public Object visit(ASTPhpClassBlock node, Object data);
   public Object visit(ASTPhpInterfaceBlock node, Object data);
   public Object visit(ASTHtmlBlock node, Object data);
+  public Object visit(ASTHtmlScriptTag node, Object data);
   public Object visit(ASTHtmlTag node, Object data);
   public Object visit(ASTHtmlClosingTag node, Object data);
   public Object visit(ASTHtmlTagAttribute node, Object data);
   public Object visit(ASTHtmlTextBlock node, Object data);
   public Object visit(ASTHtmlComment node, Object data);
+  public Object visit(ASTJsBlock node, Object data);
 }
-/* JavaCC - OriginalChecksum=4d5d4d5efdbd3cb61d0d5779aee95e45 (do not edit this line) */
+/* JavaCC - OriginalChecksum=0709b24782cd5f6b51328c063181d386 (do not edit this line) */

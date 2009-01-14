@@ -96,6 +96,10 @@ public interface InternetApplicationConstants {
   int HTML_TEXT_BLOCK = 64;
   /** RegularExpression Id. */
   int HTML_COMMENT_START = 65;
+  /** RegularExpression Id. */
+  int HTML_SCRIPT_TAG = 68;
+  /** RegularExpression Id. */
+  int JS_SCRIPT = 69;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -111,6 +115,8 @@ public interface InternetApplicationConstants {
   int PHP_WITHIN_COMMENT_SINGLE = 5;
   /** Lexical state. */
   int HTML_WITHIN_COMMENT = 6;
+  /** Lexical state. */
+  int WITHIN_SCRIPT = 7;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -182,6 +188,8 @@ public interface InternetApplicationConstants {
     "\"<!--\"",
     "\"-->\"",
     "<token of kind 67>",
+    "<HTML_SCRIPT_TAG>",
+    "<JS_SCRIPT>",
     "\";\"",
     "\"(\"",
     "\")\"",
