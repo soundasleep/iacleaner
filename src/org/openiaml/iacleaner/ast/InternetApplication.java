@@ -112,6 +112,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case HTML_CLOSING_TAG:
         case HTML_TEXT_BLOCK:
         case HTML_COMMENT_START:
+        case HTML_SCRIPT_TAG:
           HtmlBlock();
           break;
         case PHP_BLOCK_BEGIN:
@@ -128,6 +129,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case HTML_CLOSING_TAG:
         case HTML_TEXT_BLOCK:
         case HTML_COMMENT_START:
+        case HTML_SCRIPT_TAG:
           ;
           break;
         default:
@@ -278,6 +280,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case HTML_CLOSING_TAG:
         case HTML_TEXT_BLOCK:
         case HTML_COMMENT_START:
+        case HTML_SCRIPT_TAG:
           ;
           break;
         default:
@@ -337,7 +340,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       case PHP_FUNCTION_NAME:
       case PHP_VARIABLE:
         PhpLanguageStatement();
-        jj_consume_token(68);
+        jj_consume_token(70);
         break;
       case PHP_IF_STATEMENT:
         PhpIfStatement();
@@ -422,7 +425,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpValuePossiblyWrapped();
           break;
         default:
@@ -432,7 +435,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         break;
       case PHP_FUNCTION_NAME:
         PhpFunctionCall();
-        jj_consume_token(69);
+        jj_consume_token(71);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -443,14 +446,14 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpArgumentList();
           break;
         default:
           jj_la1[10] = jj_gen;
           ;
         }
-        jj_consume_token(70);
+        jj_consume_token(72);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case OR_STATEMENT:
           PhpOrSomething();
@@ -472,7 +475,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpValuePossiblyWrapped();
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case OR_STATEMENT:
@@ -553,14 +556,14 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         }
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 76:
+      case 78:
         PhpSelectArray();
         break;
       default:
         jj_la1[17] = jj_gen;
         ;
       }
-      jj_consume_token(71);
+      jj_consume_token(73);
       PhpValuePossiblyWrapped();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OR_STATEMENT:
@@ -626,7 +629,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(OR_STATEMENT);
       jj_consume_token(PHP_FUNCTION_NAME);
-      jj_consume_token(69);
+      jj_consume_token(71);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NEW_STATEMENT:
       case STRING:
@@ -637,14 +640,14 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       case PHP_FUNCTION_NAME:
       case PHP_VARIABLE:
       case PHP_PREFIX_OPERATOR:
-      case 69:
+      case 71:
         PhpArgumentList();
         break;
       default:
         jj_la1[20] = jj_gen;
         ;
       }
-      jj_consume_token(70);
+      jj_consume_token(72);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -673,9 +676,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   jjtree.openNodeScope(jjtn000);
     try {
       jj_consume_token(PHP_TRY_STATEMENT);
-      jj_consume_token(72);
+      jj_consume_token(74);
       PhpBlock();
-      jj_consume_token(73);
+      jj_consume_token(75);
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -687,20 +690,20 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           break label_6;
         }
         jj_consume_token(PHP_CATCH_STATEMENT);
-        jj_consume_token(69);
+        jj_consume_token(71);
         jj_consume_token(PHP_FUNCTION_NAME);
         jj_consume_token(PHP_VARIABLE);
-        jj_consume_token(70);
         jj_consume_token(72);
+        jj_consume_token(74);
         PhpBlock();
-        jj_consume_token(73);
+        jj_consume_token(75);
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_FINALLY_STATEMENT:
         jj_consume_token(PHP_FINALLY_STATEMENT);
-        jj_consume_token(72);
+        jj_consume_token(74);
         PhpBlock();
-        jj_consume_token(73);
+        jj_consume_token(75);
         break;
       default:
         jj_la1[22] = jj_gen;
@@ -748,7 +751,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_FUNCTION_NAME:
         jj_consume_token(PHP_FUNCTION_NAME);
-        jj_consume_token(69);
+        jj_consume_token(71);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -759,19 +762,19 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpArgumentList();
           break;
         default:
           jj_la1[24] = jj_gen;
           ;
         }
-        jj_consume_token(70);
+        jj_consume_token(72);
         break;
       case NEW_STATEMENT:
         jj_consume_token(NEW_STATEMENT);
         jj_consume_token(PHP_FUNCTION_NAME);
-        jj_consume_token(69);
+        jj_consume_token(71);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -782,14 +785,14 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpArgumentList();
           break;
         default:
           jj_la1[25] = jj_gen;
           ;
         }
-        jj_consume_token(70);
+        jj_consume_token(72);
         break;
       case PHP_VARIABLE:
         jj_consume_token(PHP_VARIABLE);
@@ -807,7 +810,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         throw new ParseException();
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 76:
+      case 78:
         PhpSelectArray();
         break;
       default:
@@ -842,10 +845,10 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   jjtree.openNodeScope(jjtn000);
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 69:
-        jj_consume_token(69);
+      case 71:
+        jj_consume_token(71);
         PhpValuePossiblyWrapped();
-        jj_consume_token(70);
+        jj_consume_token(72);
         break;
       case NEW_STATEMENT:
       case STRING:
@@ -865,16 +868,16 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_OPERATOR:
-      case 74:
+      case 76:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PHP_OPERATOR:
           jj_consume_token(PHP_OPERATOR);
           PhpValuePossiblyWrapped();
           break;
-        case 74:
-          jj_consume_token(74);
+        case 76:
+          jj_consume_token(76);
           PhpValuePossiblyWrapped();
-          jj_consume_token(75);
+          jj_consume_token(77);
           PhpValuePossiblyWrapped();
           break;
         default:
@@ -948,11 +951,11 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
     try {
-      jj_consume_token(76);
+      jj_consume_token(78);
       PhpValuePossiblyWrapped();
-      jj_consume_token(77);
+      jj_consume_token(79);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 76:
+      case 78:
         PhpSelectArray();
         break;
       default:
@@ -989,8 +992,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       PhpValuePossiblyWrapped();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 78:
-        jj_consume_token(78);
+      case 80:
+        jj_consume_token(80);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case NEW_STATEMENT:
         case STRING:
@@ -1001,7 +1004,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case PHP_FUNCTION_NAME:
         case PHP_VARIABLE:
         case PHP_PREFIX_OPERATOR:
-        case 69:
+        case 71:
           PhpArgumentList();
           break;
         default:
@@ -1042,8 +1045,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_VARIABLE);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 78:
-        jj_consume_token(78);
+      case 80:
+        jj_consume_token(80);
         PhpVariableList();
         break;
       default:
@@ -1079,7 +1082,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(FUNCTION_STATEMENT);
       jj_consume_token(PHP_FUNCTION_NAME);
-      jj_consume_token(69);
+      jj_consume_token(71);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_VARIABLE:
         PhpFunctionArgumentList();
@@ -1088,10 +1091,10 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_la1[36] = jj_gen;
         ;
       }
-      jj_consume_token(70);
       jj_consume_token(72);
+      jj_consume_token(74);
       PhpBlock();
-      jj_consume_token(73);
+      jj_consume_token(75);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1121,8 +1124,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_VARIABLE);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 71:
-        jj_consume_token(71);
+      case 73:
+        jj_consume_token(73);
         PhpSimpleValue();
         break;
       default:
@@ -1130,8 +1133,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 78:
-        jj_consume_token(78);
+      case 80:
+        jj_consume_token(80);
         PhpFunctionArgumentList();
         break;
       default:
@@ -1166,18 +1169,18 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   jjtree.openNodeScope(jjtn000);
     try {
       jj_consume_token(PHP_IF_STATEMENT);
-      jj_consume_token(69);
+      jj_consume_token(71);
       PhpValuePossiblyWrapped();
-      jj_consume_token(70);
       jj_consume_token(72);
+      jj_consume_token(74);
       PhpBlock();
-      jj_consume_token(73);
+      jj_consume_token(75);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PHP_ELSE_STATEMENT:
         jj_consume_token(PHP_ELSE_STATEMENT);
-        jj_consume_token(72);
+        jj_consume_token(74);
         PhpBlock();
-        jj_consume_token(73);
+        jj_consume_token(75);
         break;
       default:
         jj_la1[39] = jj_gen;
@@ -1252,9 +1255,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_la1[43] = jj_gen;
         ;
       }
-      jj_consume_token(72);
+      jj_consume_token(74);
       PhpClassBlock();
-      jj_consume_token(73);
+      jj_consume_token(75);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1293,9 +1296,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         jj_la1[44] = jj_gen;
         ;
       }
-      jj_consume_token(72);
+      jj_consume_token(74);
       PhpInterfaceBlock();
-      jj_consume_token(73);
+      jj_consume_token(75);
     } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1325,8 +1328,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     try {
       jj_consume_token(PHP_FUNCTION_NAME);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 78:
-        jj_consume_token(78);
+      case 80:
+        jj_consume_token(80);
         PhpInterfaceList();
         break;
       default:
@@ -1384,7 +1387,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         case VAR_STATEMENT:
           jj_consume_token(VAR_STATEMENT);
           PhpFunctionArgumentList();
-          jj_consume_token(68);
+          jj_consume_token(70);
           break;
         case FUNCTION_STATEMENT:
           PhpFunctionDefinition();
@@ -1443,7 +1446,7 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
         }
         jj_consume_token(FUNCTION_STATEMENT);
         jj_consume_token(PHP_FUNCTION_NAME);
-        jj_consume_token(69);
+        jj_consume_token(71);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case PHP_VARIABLE:
           PhpFunctionArgumentList();
@@ -1452,8 +1455,8 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
           jj_la1[51] = jj_gen;
           ;
         }
+        jj_consume_token(72);
         jj_consume_token(70);
-        jj_consume_token(68);
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1483,6 +1486,9 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
   jjtree.openNodeScope(jjtn000);
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case HTML_SCRIPT_TAG:
+        HtmlScriptTag();
+        break;
       case HTML_OPEN_TAG:
         HtmlTag();
         break;
@@ -1521,14 +1527,46 @@ public class InternetApplication/*@bgen(jjtree)*/implements InternetApplicationT
     }
   }
 
-/*
-void HtmlScriptTag() : {}
-{
-	<HTML_SCRIPT_TAG>
-	JsBlock()
-	<HTML_SCRIPT_TAG_CLOSE>
-}
-*/
+  static final public void HtmlScriptTag() throws ParseException {
+                        /*@bgen(jjtree) HtmlScriptTag */
+  ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+    try {
+      jj_consume_token(HTML_SCRIPT_TAG);
+      label_10:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case JS_SCRIPT:
+          ;
+          break;
+        default:
+          jj_la1[53] = jj_gen;
+          break label_10;
+        }
+        JsBlock();
+      }
+    } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            {if (true) throw (RuntimeException)jjte000;}
+          }
+          if (jjte000 instanceof ParseException) {
+            {if (true) throw (ParseException)jjte000;}
+          }
+          {if (true) throw (Error)jjte000;}
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
   static final public void HtmlTag() throws ParseException {
                            /*@bgen(jjtree) HtmlTag */
                             ASTHtmlTag jjtn000 = new ASTHtmlTag(JJTHTMLTAG);
@@ -1538,15 +1576,15 @@ void HtmlScriptTag() : {}
       jj_consume_token(HTML_OPEN_TAG);
       t = jj_consume_token(HTML_TAG_NAME);
                 jjtn000.setName( t.image );
-      label_10:
+      label_11:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case HTML_ATTRIBUTE_NAME:
           ;
           break;
         default:
-          jj_la1[53] = jj_gen;
-          break label_10;
+          jj_la1[54] = jj_gen;
+          break label_11;
         }
         HtmlTagAttribute();
       }
@@ -1558,7 +1596,7 @@ void HtmlScriptTag() : {}
         jj_consume_token(HTML_CLOSE_TAG_XHTML);
         break;
       default:
-        jj_la1[54] = jj_gen;
+        jj_la1[55] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1651,6 +1689,23 @@ void HtmlScriptTag() : {}
     }
   }
 
+  static final public void JsBlock() throws ParseException {
+                  /*@bgen(jjtree) JsBlock */
+        ASTJsBlock jjtn000 = new ASTJsBlock(JJTJSBLOCK);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);Token t;
+    try {
+      t = jj_consume_token(JS_SCRIPT);
+                          jjtree.closeNodeScope(jjtn000, true);
+                          jjtc000 = false;
+                jjtn000.setScript(t.image);
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
   static private boolean jj_initialized_once = false;
   /** Generated Token Manager. */
   static public InternetApplicationTokenManager token_source;
@@ -1661,7 +1716,7 @@ void HtmlScriptTag() : {}
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[55];
+  static final private int[] jj_la1 = new int[56];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1671,13 +1726,13 @@ void HtmlScriptTag() : {}
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x0,0xc7800000,0xc7800000,0x0,0x1,0x0,0xc0000000,0xc7800000,0x8000000,0x8000000,0x10000000,0x10000000,0x8000000,0x6800000,0x0,0x0,0x0,0x10000000,0x0,0x8000000,0x0,0x0,0x0,0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x0,0x0,0x8000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x21000000,0x0,0x21000000,0x1000000,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x0,0x0,0xc7800000,0xc7800000,0x0,0x1,0x0,0xc0000000,0xc7800000,0x8000000,0x8000000,0x10000000,0x10000000,0x8000000,0x6800000,0x0,0x0,0x0,0x10000000,0x0,0x8000000,0x0,0x0,0x0,0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x0,0x0,0x8000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x21000000,0x0,0x21000000,0x1000000,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x4c00000,0x4c00000,0x2302ac,0x2302ac,0x4800000,0x400000,0x4,0x0,0x302ac,0x13f800,0x13f800,0x0,0x0,0x13f800,0x300a0,0x40000,0x30000,0x0,0x0,0x40000,0x13f800,0x10,0x40,0x100000,0x13f800,0x13f800,0x3f800,0x0,0x13f800,0x80000,0x80000,0xf800,0x0,0x13f800,0x0,0x0,0x20000,0x0,0x0,0x400,0x1,0x2,0x3,0x3,0x2,0x0,0x4,0x4,0x0,0x4,0x4,0x20000,0x4800000,0x20000000,0x3000000,};
+      jj_la1_1 = new int[] {0x4c00000,0x4c00000,0x2302ac,0x2302ac,0x4800000,0x400000,0x4,0x0,0x302ac,0x13f800,0x13f800,0x0,0x0,0x13f800,0x300a0,0x40000,0x30000,0x0,0x0,0x40000,0x13f800,0x10,0x40,0x100000,0x13f800,0x13f800,0x3f800,0x0,0x13f800,0x80000,0x80000,0xf800,0x0,0x13f800,0x0,0x0,0x20000,0x0,0x0,0x400,0x1,0x2,0x3,0x3,0x2,0x0,0x4,0x4,0x0,0x4,0x4,0x20000,0x4800000,0x0,0x20000000,0x3000000,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x3,0x3,0x0,0x0,0x3,0x0,0x0,0x0,0x0,0x20,0x20,0x0,0x0,0x20,0x0,0x0,0x0,0x1000,0x0,0x0,0x20,0x0,0x0,0x0,0x20,0x20,0x0,0x1000,0x20,0x400,0x400,0x0,0x1000,0x20,0x4000,0x4000,0x0,0x80,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x0,0x0,};
+      jj_la1_2 = new int[] {0x13,0x13,0x0,0x0,0x13,0x0,0x0,0x0,0x0,0x80,0x80,0x0,0x0,0x80,0x0,0x0,0x0,0x4000,0x0,0x0,0x80,0x0,0x0,0x0,0x80,0x80,0x0,0x4000,0x80,0x1000,0x1000,0x0,0x4000,0x80,0x10000,0x10000,0x0,0x200,0x10000,0x0,0x0,0x0,0x0,0x0,0x0,0x10000,0x0,0x0,0x0,0x0,0x0,0x0,0x13,0x20,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -1698,7 +1753,7 @@ void HtmlScriptTag() : {}
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1713,7 +1768,7 @@ void HtmlScriptTag() : {}
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -1730,7 +1785,7 @@ void HtmlScriptTag() : {}
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1741,7 +1796,7 @@ void HtmlScriptTag() : {}
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -1757,7 +1812,7 @@ void HtmlScriptTag() : {}
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1767,7 +1822,7 @@ void HtmlScriptTag() : {}
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 55; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 56; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -1818,12 +1873,12 @@ void HtmlScriptTag() : {}
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[79];
+    boolean[] la1tokens = new boolean[81];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 55; i++) {
+    for (int i = 0; i < 56; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1838,7 +1893,7 @@ void HtmlScriptTag() : {}
         }
       }
     }
-    for (int i = 0; i < 79; i++) {
+    for (int i = 0; i < 81; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

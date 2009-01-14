@@ -1,30 +1,30 @@
 package org.openiaml.iacleaner.ast;
 
-public class ASTHtmlClosingTag extends SimpleNode {
-  public ASTHtmlClosingTag(int id) {
+public class ASTJsBlock extends SimpleNode {
+  public ASTJsBlock(int id) {
     super(id);
   }
 
-  public ASTHtmlClosingTag(InternetApplication p, int id) {
+  public ASTJsBlock(InternetApplication p, int id) {
     super(p, id);
   }
-
 
   /** Accept the visitor. **/
   public Object jjtAccept(InternetApplicationVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
 
-  public String name = null;
+  public String script = null;
   
-  public void setName(String n) { this.name = n; }
-  public String getName() { return name; }
+  public void setScript(String n) { this.script = n; }
+  public String getScript() { return script; }
   
   /**
    * {@inheritDoc}
    * @see org.javacc.examples.jjtree.eg2.SimpleNode#toString()
    */
   public String toString() {
-    return "HtmlClosingTag: /" + name + " (parent=" + jjtGetParent() + ")";
+    return "JsBlock: " + script + " (parent=" + jjtGetParent() + ")";
   }
+  
 }
