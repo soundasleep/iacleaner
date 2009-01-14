@@ -714,6 +714,7 @@ void JsBlock() : {
 {
 	t = <JS_SCRIPT> {
 		jjtThis.setScript(t.image);
+		jjtThis.parseScript();
 	}
 }
 

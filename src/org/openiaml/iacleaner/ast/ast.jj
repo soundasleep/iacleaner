@@ -1492,6 +1492,7 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
                         }
 /*@egen*/ {
 		jjtn000.setScript(t.image);
+		jjtn000.parseScript();
 	}/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
