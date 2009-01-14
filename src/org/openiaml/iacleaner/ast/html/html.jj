@@ -107,6 +107,12 @@ SKIP :
 | "\r"
 }
 
+<WITHIN_SCRIPT2>
+SKIP:
+{
+	"</script>" : HTML_STATE
+}
+
 /** --- html --- */
 
 <HTML_STATE>
@@ -193,23 +199,52 @@ TOKEN:
 		: WITHIN_SCRIPT
 }
 
+/*
 <WITHIN_SCRIPT>
 TOKEN:
 {
-	< JS_SCRIPT : (~[])+ "</script>" > : HTML_STATE
+	< HTML_SCRIPT_TAG_END : "</script>" > : HTML_STATE
+}
+*/
+
+/**
+ * We use custom code to parse the input until we find the end of
+ * the script, through </script>
+ */
+<WITHIN_SCRIPT>
+TOKEN:
+{
+	< JS_SCRIPT : (~[]) > /*{
+		String end_script = "</script>"; 
+		System.out.println("image == " + image.toString().replace("\n", "").replace("\r", ""));
+		if (image.length() > end_script.length()) {
+			if (image.substring(image.length() - end_script.length()).equals(end_script)) {
+				// end of script
+				// remove end tag and assign token
+				// image = new StringBuffer(image.substring(0, image.length() - end_script.length()));
+				HtmlPageTokenManager.SwitchTo(HTML_STATE);
+			}
+		}
+	} */ : WITHIN_SCRIPT2
+}
+
+<WITHIN_SCRIPT2>
+MORE:
+{
+	< (~[]) >
 }
 
 <HTML_STATE>
 TOKEN :
 {
-	<PHP_BLOCK_BEGIN : 
+	< PHP_BLOCK_BEGIN : 
 		"<?php" > : DEFAULT
 }
 
 <DEFAULT>
 TOKEN :
 {
-	<PHP_SCRIPT : (~[])+ "?>" > : HTML_STATE
+	< PHP_SCRIPT : (~[])? ((~["?"]) (~[">"]))+ > : HTML_STATE
 }
 
 /** Main production. */
@@ -351,10 +386,12 @@ void HtmlPhpInlineBlock() : {/*@bgen(jjtree) HtmlPhpInlineBlock */
 }
 
 void HtmlScriptTag() : {/*@bgen(jjtree) HtmlScriptTag */
-  ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
+        ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);
+/*@egen*/
+	Token t;
+}
 {/*@bgen(jjtree) HtmlScriptTag */
         try {
 /*@egen*/
@@ -526,7 +563,6 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
                         }
 /*@egen*/ {
 		jjtn000.setScript(t.image);
-		jjtn000.parseScript();
 	}/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
@@ -553,7 +589,6 @@ void PhpBlock() : {/*@bgen(jjtree) PhpBlock */
                          }
 /*@egen*/ {
 		jjtn000.setScript(t.image);
-		//jjtThis.parseScript();
 	}/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {

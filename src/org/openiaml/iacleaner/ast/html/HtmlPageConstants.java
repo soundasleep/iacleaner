@@ -11,35 +11,35 @@ public interface HtmlPageConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int HTML_OPEN_TAG = 13;
+  int HTML_OPEN_TAG = 14;
   /** RegularExpression Id. */
-  int HTML_CLOSE_TAG = 14;
+  int HTML_CLOSE_TAG = 15;
   /** RegularExpression Id. */
-  int HTML_CLOSE_TAG_XHTML = 15;
+  int HTML_CLOSE_TAG_XHTML = 16;
   /** RegularExpression Id. */
-  int HTML_CLOSING_TAG = 16;
+  int HTML_CLOSING_TAG = 17;
   /** RegularExpression Id. */
-  int HTML_TAG_NAME = 17;
+  int HTML_TAG_NAME = 18;
   /** RegularExpression Id. */
-  int LETTER = 18;
+  int LETTER = 19;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_NAME = 19;
+  int HTML_ATTRIBUTE_NAME = 20;
   /** RegularExpression Id. */
-  int HTML_STRING = 20;
+  int HTML_STRING = 21;
   /** RegularExpression Id. */
-  int HTML_ATTRIBUTE_EQUALS = 21;
+  int HTML_ATTRIBUTE_EQUALS = 22;
   /** RegularExpression Id. */
-  int HTML_TEXT_BLOCK = 22;
+  int HTML_TEXT_BLOCK = 23;
   /** RegularExpression Id. */
-  int HTML_COMMENT_START = 23;
+  int HTML_COMMENT_START = 24;
   /** RegularExpression Id. */
-  int HTML_SCRIPT_TAG = 26;
+  int HTML_SCRIPT_TAG = 27;
   /** RegularExpression Id. */
-  int JS_SCRIPT = 27;
+  int JS_SCRIPT = 28;
   /** RegularExpression Id. */
-  int PHP_BLOCK_BEGIN = 28;
+  int PHP_BLOCK_BEGIN = 30;
   /** RegularExpression Id. */
-  int PHP_SCRIPT = 29;
+  int PHP_SCRIPT = 31;
 
   /** Lexical state. */
   int HTML_STATE = 0;
@@ -48,11 +48,13 @@ public interface HtmlPageConstants {
   /** Lexical state. */
   int HTML_OPENING_TAG = 2;
   /** Lexical state. */
-  int HTML_WITHIN_COMMENT = 3;
+  int WITHIN_SCRIPT2 = 3;
   /** Lexical state. */
-  int WITHIN_SCRIPT = 4;
+  int HTML_WITHIN_COMMENT = 4;
   /** Lexical state. */
-  int DEFAULT = 5;
+  int WITHIN_SCRIPT = 5;
+  /** Lexical state. */
+  int DEFAULT = 6;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -69,6 +71,7 @@ public interface HtmlPageConstants {
     "\"\\t\"",
     "\"\\n\"",
     "\"\\r\"",
+    "\"</script>\"",
     "\"<\"",
     "\">\"",
     "\"/>\"",
@@ -81,9 +84,10 @@ public interface HtmlPageConstants {
     "<HTML_TEXT_BLOCK>",
     "\"<!--\"",
     "\"-->\"",
-    "<token of kind 25>",
+    "<token of kind 26>",
     "<HTML_SCRIPT_TAG>",
     "<JS_SCRIPT>",
+    "<token of kind 29>",
     "\"<?php\"",
     "<PHP_SCRIPT>",
   };

@@ -6,32 +6,35 @@ public interface JavascriptTreeConstants
   public int JJTSTARTJS = 0;
   public int JJTJSBLOCK = 1;
   public int JJTJSSTATEMENT = 2;
-  public int JJTJSLANGUAGESTATEMENT = 3;
-  public int JJTJSTRAVERSEOBJECTS = 4;
-  public int JJTJSSELECTARRAY = 5;
-  public int JJTJSRETURNSTATEMENT = 6;
-  public int JJTJSNEWSTATEMENT = 7;
-  public int JJTJSVALUE = 8;
-  public int JJTJSVALUEPOSSIBLYWRAPPED = 9;
-  public int JJTJSSIMPLEVALUE = 10;
-  public int JJTJSARGUMENTLIST = 11;
-  public int JJTJSVARIABLELIST = 12;
-  public int JJTJSFUNCTIONDEFINITION = 13;
-  public int JJTJSFUNCTIONARGUMENTLIST = 14;
-  public int JJTJSANONYMOUSFUNCTION = 15;
-  public int JJTJSIFSTATEMENT = 16;
-  public int JJTJSFORSTATEMENT = 17;
-  public int JJTJSFORPARAMETERLIST = 18;
-  public int JJTJSFOREVALUATEPARAMETERLIST = 19;
-  public int JJTJSINLINEARRAY = 20;
-  public int JJTJSTHROWSTATEMENT = 21;
-  public int JJTJSTRYCATCHBLOCK = 22;
+  public int JJTJSPHPINLINEBLOCK = 3;
+  public int JJTJSLANGUAGESTATEMENT = 4;
+  public int JJTJSTRAVERSEOBJECTS = 5;
+  public int JJTJSSELECTARRAY = 6;
+  public int JJTJSRETURNSTATEMENT = 7;
+  public int JJTJSNEWSTATEMENT = 8;
+  public int JJTJSVALUE = 9;
+  public int JJTJSVALUEPOSSIBLYWRAPPED = 10;
+  public int JJTJSSIMPLEVALUE = 11;
+  public int JJTJSARGUMENTLIST = 12;
+  public int JJTJSVARIABLELIST = 13;
+  public int JJTJSFUNCTIONDEFINITION = 14;
+  public int JJTJSFUNCTIONARGUMENTLIST = 15;
+  public int JJTJSANONYMOUSFUNCTION = 16;
+  public int JJTJSIFSTATEMENT = 17;
+  public int JJTJSFORSTATEMENT = 18;
+  public int JJTJSFORPARAMETERLIST = 19;
+  public int JJTJSFOREVALUATEPARAMETERLIST = 20;
+  public int JJTJSINLINEARRAY = 21;
+  public int JJTJSTHROWSTATEMENT = 22;
+  public int JJTJSTRYCATCHBLOCK = 23;
+  public int JJTPHPBLOCK = 24;
 
 
   public String[] jjtNodeName = {
     "StartJs",
     "JsBlock",
     "JsStatement",
+    "JsPhpInlineBlock",
     "JsLanguageStatement",
     "JsTraverseObjects",
     "JsSelectArray",
@@ -52,6 +55,7 @@ public interface JavascriptTreeConstants
     "JsInlineArray",
     "JsThrowStatement",
     "JsTryCatchBlock",
+    "PhpBlock",
   };
 }
-/* JavaCC - OriginalChecksum=b5f7b2ca230f767c522cc88a70b4ae7e (do not edit this line) */
+/* JavaCC - OriginalChecksum=4c626838467a909b18750fe7f572b7a9 (do not edit this line) */

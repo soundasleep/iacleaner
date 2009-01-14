@@ -17,28 +17,6 @@ import org.openiaml.iacleaner.ast.html.ASTPhpBlock;
 import org.openiaml.iacleaner.ast.html.ASTStart;
 import org.openiaml.iacleaner.ast.html.HtmlPageVisitor;
 import org.openiaml.iacleaner.ast.html.SimpleNode;
-import org.openiaml.iacleaner.ast.php.ASTPhpArgumentList;
-import org.openiaml.iacleaner.ast.php.ASTPhpClassBlock;
-import org.openiaml.iacleaner.ast.php.ASTPhpClassDefinition;
-import org.openiaml.iacleaner.ast.php.ASTPhpFunctionArgumentList;
-import org.openiaml.iacleaner.ast.php.ASTPhpFunctionCall;
-import org.openiaml.iacleaner.ast.php.ASTPhpFunctionDefinition;
-import org.openiaml.iacleaner.ast.php.ASTPhpIfStatement;
-import org.openiaml.iacleaner.ast.php.ASTPhpInlineHtmlBlock;
-import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceBlock;
-import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceDefinition;
-import org.openiaml.iacleaner.ast.php.ASTPhpInterfaceList;
-import org.openiaml.iacleaner.ast.php.ASTPhpLanguageStatement;
-import org.openiaml.iacleaner.ast.php.ASTPhpOrSomething;
-import org.openiaml.iacleaner.ast.php.ASTPhpRootBlock;
-import org.openiaml.iacleaner.ast.php.ASTPhpSelectArray;
-import org.openiaml.iacleaner.ast.php.ASTPhpSimpleValue;
-import org.openiaml.iacleaner.ast.php.ASTPhpStatement;
-import org.openiaml.iacleaner.ast.php.ASTPhpTryCatchBlock;
-import org.openiaml.iacleaner.ast.php.ASTPhpValue;
-import org.openiaml.iacleaner.ast.php.ASTPhpValuePossiblyWrapped;
-import org.openiaml.iacleaner.ast.php.ASTPhpVariableAssignment;
-import org.openiaml.iacleaner.ast.php.ASTPhpVariableList;
 
 /**
  * A simple visitor that traverses the node tree and outputs

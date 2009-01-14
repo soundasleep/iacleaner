@@ -31,7 +31,7 @@ public class ASTJsBlock extends org.openiaml.iacleaner.ast.html.SimpleNode {
    * @see org.javacc.examples.jjtree.eg2.SimpleNode#toString()
    */
   public String toString() {
-    return "JsBlock (parent=" + jjtGetParent() + ")";
+    return "JsBlock: " + script.replace("\r","").replace("\n","") + " (parent=" + jjtGetParent() + ")";
   }
   
   public void dump(String prefix) {
@@ -62,11 +62,11 @@ public class ASTJsBlock extends org.openiaml.iacleaner.ast.html.SimpleNode {
 	  try {
 		node = Javascript.loadString(getScript(), "UTF8");
 	} catch (FileNotFoundException e) {
-		throw new InnerParseException(e);
+		throw new InnerParseException(e, getScript());
 	} catch (UnsupportedEncodingException e) {
-		throw new InnerParseException(e);
+		throw new InnerParseException(e, getScript());
 	} catch (org.openiaml.iacleaner.ast.js.ParseException e) {
-		throw new InnerParseException(e);
+		throw new InnerParseException(e, getScript());
 	}
   }
   
@@ -90,10 +90,35 @@ public class ASTJsBlock extends org.openiaml.iacleaner.ast.html.SimpleNode {
 		cause = e;
 	}
 	
+	/**
+	 * @param e
+	 * @param script
+	 */
+	public InnerParseException(Exception e, String script) {
+		this(e);
+		this.setSource(script);
+	}
+
 	public Throwable getCause() {
 		return cause;
 	}
+
+	public String getMessage() {
+		String retval = super.getMessage();
+		retval += (source != null) ? ("\nSource:\n" + source) : "(no source)";
+		return retval;
+	}
+    
 	  
+	  private String source = null;
+	  public void setSource(String source) {
+		  this.source = source;
+	  }
+	  public String getSource() {
+		  return this.source;
+	  }
+
+	
   }
   
 }

@@ -77,14 +77,6 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     try {
       JsBlock();
                     n = jjtn000;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case JS_SCRIPT_END:
-        jj_consume_token(JS_SCRIPT_END);
-        break;
-      default:
-        jj_la1[0] = jj_gen;
-        ;
-      }
       jj_consume_token(0);
           jjtree.closeNodeScope(jjtn000, true);
           jjtc000 = false;
@@ -119,6 +111,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     try {
       label_1:
       while (true) {
+        JsStatement();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case JS_FUNCTION_STATEMENT:
         case JS_RETURN_STATEMENT:
@@ -131,13 +124,14 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         case JS_BRACE_OPEN:
         case JS_END:
         case JS_VARIABLE:
+        case JS_SCRIPT_END:
+        case PHP_BLOCK_BEGIN:
           ;
           break;
         default:
-          jj_la1[1] = jj_gen;
+          jj_la1[0] = jj_gen;
           break label_1;
         }
-        JsStatement();
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -184,7 +178,26 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         break;
       case JS_BRACE_OPEN:
         jj_consume_token(JS_BRACE_OPEN);
-        JsBlock();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case JS_FUNCTION_STATEMENT:
+        case JS_RETURN_STATEMENT:
+        case JS_NEW_STATEMENT:
+        case JS_VAR_STATEMENT:
+        case JS_IF_STATEMENT:
+        case JS_FOR_STATEMENT:
+        case JS_TRY_STATEMENT:
+        case JS_THROW_STATEMENT:
+        case JS_BRACE_OPEN:
+        case JS_END:
+        case JS_VARIABLE:
+        case JS_SCRIPT_END:
+        case PHP_BLOCK_BEGIN:
+          JsBlock();
+          break;
+        default:
+          jj_la1[1] = jj_gen;
+          ;
+        }
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       case JS_TRY_STATEMENT:
@@ -193,6 +206,12 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_THROW_STATEMENT:
         JsThrowStatement();
         break;
+      case PHP_BLOCK_BEGIN:
+        JsPhpInlineBlock();
+        break;
+      case JS_SCRIPT_END:
+        jj_consume_token(JS_SCRIPT_END);
+        break;
       case JS_END:
         jj_consume_token(JS_END);
         break;
@@ -200,6 +219,42 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         jj_la1[2] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
+      }
+    } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            {if (true) throw (RuntimeException)jjte000;}
+          }
+          if (jjte000 instanceof ParseException) {
+            {if (true) throw (ParseException)jjte000;}
+          }
+          {if (true) throw (Error)jjte000;}
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
+  static final public void JsPhpInlineBlock() throws ParseException {
+                           /*@bgen(jjtree) JsPhpInlineBlock */
+  ASTJsPhpInlineBlock jjtn000 = new ASTJsPhpInlineBlock(JJTJSPHPINLINEBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+    try {
+      jj_consume_token(PHP_BLOCK_BEGIN);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PHP_SCRIPT:
+        PhpBlock();
+        break;
+      default:
+        jj_la1[3] = jj_gen;
+        ;
       }
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -241,7 +296,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsValuePossiblyWrapped();
           break;
         default:
-          jj_la1[3] = jj_gen;
+          jj_la1[4] = jj_gen;
           ;
         }
         break;
@@ -263,7 +318,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
               jj_consume_token(JS_ASSIGNMENT_OPERATOR);
               break;
             default:
-              jj_la1[4] = jj_gen;
+              jj_la1[5] = jj_gen;
               jj_consume_token(-1);
               throw new ParseException();
             }
@@ -273,13 +328,13 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
             jj_consume_token(JS_OPERATOR_SINGLE);
             break;
           default:
-            jj_la1[5] = jj_gen;
+            jj_la1[6] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[6] = jj_gen;
+          jj_la1[7] = jj_gen;
           ;
         }
         break;
@@ -288,7 +343,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsTraverseObjects();
         break;
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[8] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -328,7 +383,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[8] = jj_gen;
+          jj_la1[9] = jj_gen;
           break label_2;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -347,10 +402,11 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           case JS_PREFIX_OPERATOR:
           case JS_NUMBER_OPERATOR:
           case JS_VARIABLE:
+          case PHP_BLOCK_BEGIN:
             JsArgumentList();
             break;
           default:
-            jj_la1[9] = jj_gen;
+            jj_la1[10] = jj_gen;
             ;
           }
           jj_consume_token(JS_BRACKET_CLOSE);
@@ -363,7 +419,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsSelectArray();
           break;
         default:
-          jj_la1[10] = jj_gen;
+          jj_la1[11] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -439,10 +495,11 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_PREFIX_OPERATOR:
       case JS_NUMBER_OPERATOR:
       case JS_VARIABLE:
+      case PHP_BLOCK_BEGIN:
         JsValuePossiblyWrapped();
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[12] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -505,6 +562,9 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_NUMBER_OPERATOR:
         JsSimpleValue();
         break;
+      case PHP_BLOCK_BEGIN:
+        JsPhpInlineBlock();
+        break;
       case JS_BRACE_OPEN:
         jj_consume_token(JS_BRACE_OPEN);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -520,16 +580,17 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         case JS_PREFIX_OPERATOR:
         case JS_NUMBER_OPERATOR:
         case JS_VARIABLE:
+        case PHP_BLOCK_BEGIN:
           JsInlineArray();
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[13] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[14] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -568,7 +629,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[14] = jj_gen;
+          jj_la1[15] = jj_gen;
           break label_3;
         }
         jj_consume_token(JS_PREFIX_OPERATOR);
@@ -589,10 +650,11 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_BUILTIN:
       case JS_NUMBER_OPERATOR:
       case JS_VARIABLE:
+      case PHP_BLOCK_BEGIN:
         JsValue();
         break;
       default:
-        jj_la1[15] = jj_gen;
+        jj_la1[16] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -630,13 +692,13 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           jj_consume_token(JS_OPERATOR_SINGLE);
           break;
         default:
-          jj_la1[16] = jj_gen;
+          jj_la1[17] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[17] = jj_gen;
+        jj_la1[18] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -682,7 +744,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
             ;
             break;
           default:
-            jj_la1[18] = jj_gen;
+            jj_la1[19] = jj_gen;
             break label_4;
           }
           jj_consume_token(JS_NUMBER_OPERATOR);
@@ -696,7 +758,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         jj_consume_token(JS_BUILTIN);
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[20] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -720,7 +782,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsArgumentList();
         break;
       default:
-        jj_la1[20] = jj_gen;
+        jj_la1[21] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -757,7 +819,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsVariableList();
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[22] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -795,7 +857,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[23] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -836,7 +898,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsSimpleValue();
         break;
       default:
-        jj_la1[23] = jj_gen;
+        jj_la1[24] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -845,7 +907,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[24] = jj_gen;
+        jj_la1[25] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -882,7 +944,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsFunctionArgumentList();
         break;
       default:
-        jj_la1[25] = jj_gen;
+        jj_la1[26] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
@@ -920,10 +982,48 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       jj_consume_token(JS_BRACKET_OPEN);
       JsValuePossiblyWrapped();
       jj_consume_token(JS_BRACKET_CLOSE);
-      JsBlock();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case JS_FUNCTION_STATEMENT:
+      case JS_RETURN_STATEMENT:
+      case JS_NEW_STATEMENT:
+      case JS_VAR_STATEMENT:
+      case JS_IF_STATEMENT:
+      case JS_FOR_STATEMENT:
+      case JS_TRY_STATEMENT:
+      case JS_THROW_STATEMENT:
+      case JS_BRACE_OPEN:
+      case JS_END:
+      case JS_VARIABLE:
+      case JS_SCRIPT_END:
+      case PHP_BLOCK_BEGIN:
+        JsBlock();
+        break;
+      default:
+        jj_la1[27] = jj_gen;
+        ;
+      }
       if (jj_2_1(2)) {
         jj_consume_token(JS_ELSE_STATEMENT);
-        JsBlock();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case JS_FUNCTION_STATEMENT:
+        case JS_RETURN_STATEMENT:
+        case JS_NEW_STATEMENT:
+        case JS_VAR_STATEMENT:
+        case JS_IF_STATEMENT:
+        case JS_FOR_STATEMENT:
+        case JS_TRY_STATEMENT:
+        case JS_THROW_STATEMENT:
+        case JS_BRACE_OPEN:
+        case JS_END:
+        case JS_VARIABLE:
+        case JS_SCRIPT_END:
+        case PHP_BLOCK_BEGIN:
+          JsBlock();
+          break;
+        default:
+          jj_la1[28] = jj_gen;
+          ;
+        }
       } else {
         ;
       }
@@ -964,7 +1064,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForParameterList();
         break;
       default:
-        jj_la1[26] = jj_gen;
+        jj_la1[29] = jj_gen;
         ;
       }
       jj_consume_token(JS_END);
@@ -981,10 +1081,11 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_PREFIX_OPERATOR:
       case JS_NUMBER_OPERATOR:
       case JS_VARIABLE:
+      case PHP_BLOCK_BEGIN:
         JsForEvaluateParameterList();
         break;
       default:
-        jj_la1[27] = jj_gen;
+        jj_la1[30] = jj_gen;
         ;
       }
       jj_consume_token(JS_END);
@@ -1001,15 +1102,35 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       case JS_PREFIX_OPERATOR:
       case JS_NUMBER_OPERATOR:
       case JS_VARIABLE:
+      case PHP_BLOCK_BEGIN:
         JsForEvaluateParameterList();
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[31] = jj_gen;
         ;
       }
       jj_consume_token(JS_BRACKET_CLOSE);
       jj_consume_token(JS_BRACE_OPEN);
-      JsBlock();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case JS_FUNCTION_STATEMENT:
+      case JS_RETURN_STATEMENT:
+      case JS_NEW_STATEMENT:
+      case JS_VAR_STATEMENT:
+      case JS_IF_STATEMENT:
+      case JS_FOR_STATEMENT:
+      case JS_TRY_STATEMENT:
+      case JS_THROW_STATEMENT:
+      case JS_BRACE_OPEN:
+      case JS_END:
+      case JS_VARIABLE:
+      case JS_SCRIPT_END:
+      case PHP_BLOCK_BEGIN:
+        JsBlock();
+        break;
+      default:
+        jj_la1[32] = jj_gen;
+        ;
+      }
       jj_consume_token(JS_BRACE_CLOSE);
     } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1045,7 +1166,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForParameterList();
         break;
       default:
-        jj_la1[29] = jj_gen;
+        jj_la1[33] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1082,7 +1203,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         JsForEvaluateParameterList();
         break;
       default:
-        jj_la1[30] = jj_gen;
+        jj_la1[34] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1136,15 +1257,16 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         case JS_PREFIX_OPERATOR:
         case JS_NUMBER_OPERATOR:
         case JS_VARIABLE:
+        case PHP_BLOCK_BEGIN:
           JsInlineArray();
           break;
         default:
-          jj_la1[31] = jj_gen;
+          jj_la1[35] = jj_gen;
           ;
         }
         break;
       default:
-        jj_la1[32] = jj_gen;
+        jj_la1[36] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1205,7 +1327,26 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     try {
       jj_consume_token(JS_TRY_STATEMENT);
       jj_consume_token(JS_BRACE_OPEN);
-      JsBlock();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case JS_FUNCTION_STATEMENT:
+      case JS_RETURN_STATEMENT:
+      case JS_NEW_STATEMENT:
+      case JS_VAR_STATEMENT:
+      case JS_IF_STATEMENT:
+      case JS_FOR_STATEMENT:
+      case JS_TRY_STATEMENT:
+      case JS_THROW_STATEMENT:
+      case JS_BRACE_OPEN:
+      case JS_END:
+      case JS_VARIABLE:
+      case JS_SCRIPT_END:
+      case PHP_BLOCK_BEGIN:
+        JsBlock();
+        break;
+      default:
+        jj_la1[37] = jj_gen;
+        ;
+      }
       jj_consume_token(JS_BRACE_CLOSE);
       label_5:
       while (true) {
@@ -1214,7 +1355,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           ;
           break;
         default:
-          jj_la1[33] = jj_gen;
+          jj_la1[38] = jj_gen;
           break label_5;
         }
         jj_consume_token(JS_CATCH_STATEMENT);
@@ -1226,23 +1367,61 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
           JsValuePossiblyWrapped();
           break;
         default:
-          jj_la1[34] = jj_gen;
+          jj_la1[39] = jj_gen;
           ;
         }
         jj_consume_token(JS_BRACKET_CLOSE);
         jj_consume_token(JS_BRACE_OPEN);
-        JsBlock();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case JS_FUNCTION_STATEMENT:
+        case JS_RETURN_STATEMENT:
+        case JS_NEW_STATEMENT:
+        case JS_VAR_STATEMENT:
+        case JS_IF_STATEMENT:
+        case JS_FOR_STATEMENT:
+        case JS_TRY_STATEMENT:
+        case JS_THROW_STATEMENT:
+        case JS_BRACE_OPEN:
+        case JS_END:
+        case JS_VARIABLE:
+        case JS_SCRIPT_END:
+        case PHP_BLOCK_BEGIN:
+          JsBlock();
+          break;
+        default:
+          jj_la1[40] = jj_gen;
+          ;
+        }
         jj_consume_token(JS_BRACE_CLOSE);
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case JS_FINALLY_STATEMENT:
         jj_consume_token(JS_FINALLY_STATEMENT);
         jj_consume_token(JS_BRACE_OPEN);
-        JsBlock();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case JS_FUNCTION_STATEMENT:
+        case JS_RETURN_STATEMENT:
+        case JS_NEW_STATEMENT:
+        case JS_VAR_STATEMENT:
+        case JS_IF_STATEMENT:
+        case JS_FOR_STATEMENT:
+        case JS_TRY_STATEMENT:
+        case JS_THROW_STATEMENT:
+        case JS_BRACE_OPEN:
+        case JS_END:
+        case JS_VARIABLE:
+        case JS_SCRIPT_END:
+        case PHP_BLOCK_BEGIN:
+          JsBlock();
+          break;
+        default:
+          jj_la1[41] = jj_gen;
+          ;
+        }
         jj_consume_token(JS_BRACE_CLOSE);
         break;
       default:
-        jj_la1[35] = jj_gen;
+        jj_la1[42] = jj_gen;
         ;
       }
     } catch (Throwable jjte000) {
@@ -1266,6 +1445,25 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     }
   }
 
+  static final public void PhpBlock() throws ParseException {
+                   /*@bgen(jjtree) PhpBlock */
+        ASTPhpBlock jjtn000 = new ASTPhpBlock(JJTPHPBLOCK);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);Token t;
+    try {
+      t = jj_consume_token(PHP_SCRIPT);
+                           jjtree.closeNodeScope(jjtn000, true);
+                           jjtc000 = false;
+                jjtn000.setScript(t.image);
+                //jjtThis.parseScript();
+
+    } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+    }
+  }
+
   static private boolean jj_2_1(int xla) {
     jj_la = xla; jj_lastpos = jj_scanpos = token;
     try { return !jj_3_1(); }
@@ -1280,103 +1478,113 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     finally { jj_save(1, xla); }
   }
 
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(JS_THROW_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_2() {
-    if (jj_scan_token(JS_VARIABLE)) return true;
-    if (jj_scan_token(JS_TERNARY_2)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_25() {
-    if (jj_3R_27()) return true;
+    if (jj_3R_29()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_25()) {
+    jj_scanpos = xsp;
+    if (jj_3R_26()) {
+    jj_scanpos = xsp;
+    if (jj_3R_27()) {
+    jj_scanpos = xsp;
+    if (jj_3R_28()) return true;
+    }
+    }
+    }
+    return false;
+  }
+
+  static private boolean jj_3R_6() {
+    if (jj_3R_7()) return true;
     return false;
   }
 
   static private boolean jj_3R_24() {
-    if (jj_scan_token(JS_VARIABLE)) return true;
+    if (jj_scan_token(PHP_BLOCK_BEGIN)) return true;
     return false;
   }
 
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(JS_VAR_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_16() {
-    if (jj_scan_token(JS_FUNCTION_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_22() {
-    if (jj_3R_26()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_19() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_22()) {
-    jj_scanpos = xsp;
-    if (jj_3R_23()) {
-    jj_scanpos = xsp;
-    if (jj_3R_24()) {
-    jj_scanpos = xsp;
-    if (jj_3R_25()) return true;
-    }
-    }
-    }
-    return false;
-  }
-
-  static private boolean jj_3R_15() {
-    if (jj_3R_21()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_14() {
-    if (jj_3R_20()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_scan_token(JS_BRACE_OPEN)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_19()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_11() {
-    if (jj_3R_18()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_10() {
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_18() {
+  static private boolean jj_3R_20() {
     if (jj_scan_token(JS_FOR_STATEMENT)) return true;
     return false;
   }
 
-  static private boolean jj_3R_9() {
-    if (jj_3R_16()) return true;
+  static private boolean jj_3R_17() {
+    if (jj_3R_24()) return true;
     return false;
   }
 
-  static private boolean jj_3R_8() {
+  static private boolean jj_3R_16() {
+    if (jj_3R_23()) return true;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_scan_token(JS_ELSE_STATEMENT)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_9()) {
-    jj_scanpos = xsp;
+    if (jj_3R_6()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3R_15() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(JS_BRACE_OPEN)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_30() {
+    if (jj_scan_token(JS_NEW_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_21()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_12() {
+    if (jj_3R_20()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_11() {
+    if (jj_3R_19()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_19() {
+    if (jj_scan_token(JS_IF_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(JS_TRY_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_29() {
+    if (jj_scan_token(JS_RETURN_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_10() {
+    if (jj_3R_18()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_9() {
+    Token xsp;
+    xsp = jj_scanpos;
     if (jj_3R_10()) {
     jj_scanpos = xsp;
     if (jj_3R_11()) {
@@ -1389,6 +1597,12 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_scanpos = xsp;
     if (jj_3R_15()) {
     jj_scanpos = xsp;
+    if (jj_3R_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_17()) {
+    jj_scanpos = xsp;
+    if (jj_scan_token(45)) {
+    jj_scanpos = xsp;
     if (jj_scan_token(27)) return true;
     }
     }
@@ -1397,46 +1611,54 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     }
     }
     }
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_scan_token(JS_ELSE_STATEMENT)) return true;
-    if (jj_3R_6()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_7() {
-    if (jj_3R_8()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_27() {
-    if (jj_scan_token(JS_NEW_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_6() {
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_7()) { jj_scanpos = xsp; break; }
+    }
     }
     return false;
   }
 
-  static private boolean jj_3R_17() {
-    if (jj_scan_token(JS_IF_STATEMENT)) return true;
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(JS_THROW_STATEMENT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_8() {
+    if (jj_3R_9()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_7() {
+    Token xsp;
+    if (jj_3R_8()) return true;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_8()) { jj_scanpos = xsp; break; }
+    }
+    return false;
+  }
+
+  static private boolean jj_3_2() {
+    if (jj_scan_token(JS_VARIABLE)) return true;
+    if (jj_scan_token(JS_TERNARY_2)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_28() {
+    if (jj_3R_30()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_27() {
+    if (jj_scan_token(JS_VARIABLE)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_18() {
+    if (jj_scan_token(JS_FUNCTION_STATEMENT)) return true;
     return false;
   }
 
   static private boolean jj_3R_26() {
-    if (jj_scan_token(JS_RETURN_STATEMENT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(JS_TRY_STATEMENT)) return true;
+    if (jj_scan_token(JS_VAR_STATEMENT)) return true;
     return false;
   }
 
@@ -1452,7 +1674,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
   static private Token jj_scanpos, jj_lastpos;
   static private int jj_la;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[36];
+  static final private int[] jj_la1 = new int[43];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -1460,10 +1682,10 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x88bf800,0x88bf800,0x0,0x0,0x0,0x0,0x7000,0x2200000,0xc0a02800,0x2200000,0xc0a02800,0xc0a02800,0xc0802800,0x0,0xc0a02800,0x0,0x0,0x0,0xc0000000,0x10000000,0x10000000,0x0,0x0,0x10000000,0x0,0x7000,0xc0a02800,0xc0a02800,0x10000000,0x10000000,0xc0a02800,0x10000000,0x40000,0x8000,0x100000,};
+      jj_la1_0 = new int[] {0x88bf800,0x88bf800,0x88bf800,0x0,0x0,0x0,0x0,0x0,0x7000,0x2200000,0xc0a02800,0x2200000,0xc0a02800,0xc0a02800,0xc0802800,0x0,0xc0a02800,0x0,0x0,0x0,0xc0000000,0x10000000,0x10000000,0x0,0x0,0x10000000,0x0,0x88bf800,0x88bf800,0x7000,0xc0a02800,0xc0a02800,0x88bf800,0x10000000,0x10000000,0xc0a02800,0x10000000,0x88bf800,0x40000,0x8000,0x88bf800,0x88bf800,0x100000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x2000,0x1000,0x1000,0x200,0x280,0x380,0x380,0x1000,0x8,0x1037,0x8,0x1037,0x1037,0x1027,0x10,0x1027,0x7e0,0x7e0,0x20,0x27,0x0,0x0,0x1000,0x200,0x0,0x1000,0x1000,0x1037,0x1037,0x0,0x0,0x1037,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x7000,0x7000,0x7000,0x8000,0x200,0x280,0x380,0x380,0x1000,0x8,0x5037,0x8,0x5037,0x5037,0x5027,0x10,0x5027,0x7e0,0x7e0,0x20,0x27,0x0,0x0,0x1000,0x200,0x0,0x1000,0x7000,0x7000,0x1000,0x5037,0x5037,0x7000,0x0,0x0,0x5037,0x0,0x7000,0x0,0x0,0x7000,0x7000,0x0,};
    }
   static final private JJCalls[] jj_2_rtns = new JJCalls[2];
   static private boolean jj_rescan = false;
@@ -1487,7 +1709,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1503,7 +1725,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1521,7 +1743,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1533,7 +1755,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1550,7 +1772,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1561,7 +1783,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 43; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1673,12 +1895,12 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[46];
+    boolean[] la1tokens = new boolean[48];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 36; i++) {
+    for (int i = 0; i < 43; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1690,7 +1912,7 @@ public class Javascript/*@bgen(jjtree)*/implements JavascriptTreeConstants, Java
         }
       }
     }
-    for (int i = 0; i < 46; i++) {
+    for (int i = 0; i < 48; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

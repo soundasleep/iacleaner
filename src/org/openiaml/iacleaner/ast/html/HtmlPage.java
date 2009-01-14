@@ -232,9 +232,9 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
 
   static final public void HtmlScriptTag() throws ParseException {
                         /*@bgen(jjtree) HtmlScriptTag */
-  ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
+        ASTHtmlScriptTag jjtn000 = new ASTHtmlScriptTag(JJTHTMLSCRIPTTAG);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);Token t;
     try {
       jj_consume_token(HTML_SCRIPT_TAG);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -398,7 +398,6 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
                           jjtree.closeNodeScope(jjtn000, true);
                           jjtc000 = false;
                 jjtn000.setScript(t.image);
-                jjtn000.parseScript();
     } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
@@ -416,8 +415,6 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
                            jjtree.closeNodeScope(jjtn000, true);
                            jjtc000 = false;
                 jjtn000.setScript(t.image);
-                //jjtThis.parseScript();
-
     } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
@@ -441,7 +438,7 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x14c12000,0x14c12000,0x20000000,0x8000000,0x80000,0xc000,};
+      jj_la1_0 = new int[] {0x49824000,0x49824000,0x80000000,0x10000000,0x100000,0x18000,};
    }
 
   /** Constructor with InputStream. */
@@ -582,7 +579,7 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[30];
+    boolean[] la1tokens = new boolean[32];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -596,7 +593,7 @@ public class HtmlPage/*@bgen(jjtree)*/implements HtmlPageTreeConstants, HtmlPage
         }
       }
     }
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 32; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

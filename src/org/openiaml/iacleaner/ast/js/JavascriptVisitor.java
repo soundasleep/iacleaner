@@ -7,6 +7,7 @@ public interface JavascriptVisitor
   public Object visit(ASTStartJs node, Object data);
   public Object visit(ASTJsBlock node, Object data);
   public Object visit(ASTJsStatement node, Object data);
+  public Object visit(ASTJsPhpInlineBlock node, Object data);
   public Object visit(ASTJsLanguageStatement node, Object data);
   public Object visit(ASTJsTraverseObjects node, Object data);
   public Object visit(ASTJsSelectArray node, Object data);
@@ -27,5 +28,6 @@ public interface JavascriptVisitor
   public Object visit(ASTJsInlineArray node, Object data);
   public Object visit(ASTJsThrowStatement node, Object data);
   public Object visit(ASTJsTryCatchBlock node, Object data);
+  public Object visit(ASTPhpBlock node, Object data);
 }
-/* JavaCC - OriginalChecksum=5d12578751699e55dcb5e7ce4b2e55d9 (do not edit this line) */
+/* JavaCC - OriginalChecksum=8e47dc31f3865c98568f4f9f6fc5e985 (do not edit this line) */

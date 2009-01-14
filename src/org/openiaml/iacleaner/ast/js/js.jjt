@@ -310,20 +310,34 @@ TOKEN : /* Function name */
 	< JS_SCRIPT_END: "</script>" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	<PHP_BLOCK_BEGIN : 
+		"<?php" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<PHP_SCRIPT : (~[])? ((~["?"]) (~[">"]))+ > : JS_STATE
+}
+
 /* JS_VARIABLE === JS_FUNCTION_NAME */
 
 /** Main production. */
 SimpleNode StartJs() : { SimpleNode n; }
 {
 	JsBlock() { n = jjtThis; }
-	( <JS_SCRIPT_END> )?
 	<EOF>
 	{ return n; }
 }
 
 void JsBlock() : {}
 {
-	( LOOKAHEAD(1) JsStatement() )*
+	( JsStatement() )+
+	/*( <JS_SCRIPT_END> )?
+	*/
 }
 
 void JsStatement() : {}
@@ -332,10 +346,19 @@ void JsStatement() : {}
 	| JsIfStatement()
 	| JsForStatement()
 	| JsLanguageStatement()
-	| (<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>)
+	| (<JS_BRACE_OPEN> (JsBlock())? <JS_BRACE_CLOSE>)
 	| JsTryCatchBlock()
 	| JsThrowStatement()
+	| JsPhpInlineBlock()
+	| <JS_SCRIPT_END>
 	| <JS_END> /* ";" can be anywhere in js scripts */
+}
+
+void JsPhpInlineBlock() : {}
+{
+	<PHP_BLOCK_BEGIN>
+	(PhpBlock())?
+	/* ended as part of <PHP_SCRIPT> */
 }
 
 void JsLanguageStatement() : {}
@@ -381,6 +404,7 @@ void JsValue() : {}
 	  | JsNewStatement() 
 	  | JsAnonymousFunction()
 	  | JsSimpleValue()
+	  | JsPhpInlineBlock()	/* we can have inline values in php */
 	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
 
 	/* we can do crazy things, like "foo".indexOf() */
@@ -464,9 +488,9 @@ void JsIfStatement() : {}
 {
 	<JS_IF_STATEMENT> 
 		<JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE>		
-			JsBlock()
+			(JsBlock())?
 	( LOOKAHEAD(2) <JS_ELSE_STATEMENT> 
-		( JsBlock() ) ) ?
+		( (JsBlock())? ) ) ?
 }
 
 void JsForStatement() : {}
@@ -477,7 +501,7 @@ void JsForStatement() : {}
 	(JsForEvaluateParameterList())? <JS_END> 
 	(JsForEvaluateParameterList())?
 	<JS_BRACKET_CLOSE> 
-	<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>
+	<JS_BRACE_OPEN> (JsBlock())? <JS_BRACE_CLOSE>
 }
 
 void JsForParameterList() : {}
@@ -508,12 +532,22 @@ void JsThrowStatement() : {}
 void JsTryCatchBlock() : {}
 {
 	<JS_TRY_STATEMENT> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>
 	(<JS_CATCH_STATEMENT> <JS_BRACKET_OPEN> <JS_VARIABLE> (<JS_IF_STATEMENT> JsValuePossiblyWrapped())? <JS_BRACKET_CLOSE> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>)*
 	(<JS_FINALLY_STATEMENT> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>)?
+}
+
+void PhpBlock() : {
+	Token t;
+}
+{
+	t = <PHP_SCRIPT> {
+		jjtThis.setScript(t.image);
+		//jjtThis.parseScript();
+	}
 }

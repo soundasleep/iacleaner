@@ -80,6 +80,10 @@ public interface JavascriptConstants {
   int JS_VARIABLE = 44;
   /** RegularExpression Id. */
   int JS_SCRIPT_END = 45;
+  /** RegularExpression Id. */
+  int PHP_BLOCK_BEGIN = 46;
+  /** RegularExpression Id. */
+  int PHP_SCRIPT = 47;
 
   /** Lexical state. */
   int JS_STATE = 0;
@@ -138,6 +142,8 @@ public interface JavascriptConstants {
     "\":\"",
     "<JS_VARIABLE>",
     "\"</script>\"",
+    "\"<?php\"",
+    "<PHP_SCRIPT>",
   };
 
 }

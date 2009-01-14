@@ -314,6 +314,19 @@ TOKEN : /* Function name */
 	< JS_SCRIPT_END: "</script>" >
 }
 
+<JS_STATE>
+TOKEN :
+{
+	<PHP_BLOCK_BEGIN : 
+		"<?php" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+	<PHP_SCRIPT : (~[])? ((~["?"]) (~[">"]))+ > : JS_STATE
+}
+
 /* JS_VARIABLE === JS_FUNCTION_NAME */
 
 /** Main production. */
@@ -326,7 +339,6 @@ SimpleNode StartJs() : {/*@bgen(jjtree) StartJs */
         try {
 /*@egen*/
 	JsBlock() { n = jjtn000; }
-	( <JS_SCRIPT_END> )?
 	<EOF>/*@bgen(jjtree)*/
         {
           jjtree.closeNodeScope(jjtn000, true);
@@ -364,7 +376,7 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
 {/*@bgen(jjtree) JsBlock */
         try {
 /*@egen*/
-	( LOOKAHEAD(1) JsStatement() )*/*@bgen(jjtree)*/
+	( JsStatement() )+/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -385,6 +397,8 @@ void JsBlock() : {/*@bgen(jjtree) JsBlock */
           }
         }
 /*@egen*/
+	/*( <JS_SCRIPT_END> )?
+	*/
 }
 
 void JsStatement() : {/*@bgen(jjtree) JsStatement */
@@ -399,9 +413,11 @@ void JsStatement() : {/*@bgen(jjtree) JsStatement */
 	| JsIfStatement()
 	| JsForStatement()
 	| JsLanguageStatement()
-	| (<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>)
+	| (<JS_BRACE_OPEN> (JsBlock())? <JS_BRACE_CLOSE>)
 	| JsTryCatchBlock()
 	| JsThrowStatement()
+	| JsPhpInlineBlock()
+	| <JS_SCRIPT_END>
 	| <JS_END>/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -423,6 +439,39 @@ void JsStatement() : {/*@bgen(jjtree) JsStatement */
           }
         }
 /*@egen*/ /* ";" can be anywhere in js scripts */
+}
+
+void JsPhpInlineBlock() : {/*@bgen(jjtree) JsPhpInlineBlock */
+  ASTJsPhpInlineBlock jjtn000 = new ASTJsPhpInlineBlock(JJTJSPHPINLINEBLOCK);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) JsPhpInlineBlock */
+        try {
+/*@egen*/
+	<PHP_BLOCK_BEGIN>
+	(PhpBlock())?/*@bgen(jjtree)*/
+        } catch (Throwable jjte000) {
+          if (jjtc000) {
+            jjtree.clearNodeScope(jjtn000);
+            jjtc000 = false;
+          } else {
+            jjtree.popNode();
+          }
+          if (jjte000 instanceof RuntimeException) {
+            throw (RuntimeException)jjte000;
+          }
+          if (jjte000 instanceof ParseException) {
+            throw (ParseException)jjte000;
+          }
+          throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+	/* ended as part of <PHP_SCRIPT> */
 }
 
 void JsLanguageStatement() : {/*@bgen(jjtree) JsLanguageStatement */
@@ -590,6 +639,7 @@ void JsValue() : {/*@bgen(jjtree) JsValue */
 	  | JsNewStatement() 
 	  | JsAnonymousFunction()
 	  | JsSimpleValue()
+	  | JsPhpInlineBlock()	/* we can have inline values in php */
 	  | (<JS_BRACE_OPEN> (JsInlineArray())? <JS_BRACE_CLOSE>) )		/* inline arrays: foo{a:b, c:d} */
 
 	/* we can do crazy things, like "foo".indexOf() */
@@ -867,9 +917,9 @@ void JsIfStatement() : {/*@bgen(jjtree) JsIfStatement */
 /*@egen*/
 	<JS_IF_STATEMENT> 
 		<JS_BRACKET_OPEN> JsValuePossiblyWrapped() <JS_BRACKET_CLOSE>		
-			JsBlock()
+			(JsBlock())?
 	( LOOKAHEAD(2) <JS_ELSE_STATEMENT> 
-		( JsBlock() ) ) ?/*@bgen(jjtree)*/
+		( (JsBlock())? ) ) ?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -906,7 +956,7 @@ void JsForStatement() : {/*@bgen(jjtree) JsForStatement */
 	(JsForEvaluateParameterList())? <JS_END> 
 	(JsForEvaluateParameterList())?
 	<JS_BRACKET_CLOSE> 
-	<JS_BRACE_OPEN> JsBlock() <JS_BRACE_CLOSE>/*@bgen(jjtree)*/
+	<JS_BRACE_OPEN> (JsBlock())? <JS_BRACE_CLOSE>/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1067,13 +1117,13 @@ void JsTryCatchBlock() : {/*@bgen(jjtree) JsTryCatchBlock */
         try {
 /*@egen*/
 	<JS_TRY_STATEMENT> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>
 	(<JS_CATCH_STATEMENT> <JS_BRACKET_OPEN> <JS_VARIABLE> (<JS_IF_STATEMENT> JsValuePossiblyWrapped())? <JS_BRACKET_CLOSE> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>)*
 	(<JS_FINALLY_STATEMENT> <JS_BRACE_OPEN>
-		JsBlock()
+		(JsBlock())?
 	<JS_BRACE_CLOSE>)?/*@bgen(jjtree)*/
         } catch (Throwable jjte000) {
           if (jjtc000) {
@@ -1089,6 +1139,33 @@ void JsTryCatchBlock() : {/*@bgen(jjtree) JsTryCatchBlock */
             throw (ParseException)jjte000;
           }
           throw (Error)jjte000;
+        } finally {
+          if (jjtc000) {
+            jjtree.closeNodeScope(jjtn000, true);
+          }
+        }
+/*@egen*/
+}
+
+void PhpBlock() : {/*@bgen(jjtree) PhpBlock */
+        ASTPhpBlock jjtn000 = new ASTPhpBlock(JJTPHPBLOCK);
+        boolean jjtc000 = true;
+        jjtree.openNodeScope(jjtn000);
+/*@egen*/
+	Token t;
+}
+{/*@bgen(jjtree) PhpBlock */
+        try {
+/*@egen*/
+	t = <PHP_SCRIPT>/*@bgen(jjtree)*/
+                         {
+                           jjtree.closeNodeScope(jjtn000, true);
+                           jjtc000 = false;
+                         }
+/*@egen*/ {
+		jjtn000.setScript(t.image);
+		//jjtThis.parseScript();
+	}/*@bgen(jjtree)*/
         } finally {
           if (jjtc000) {
             jjtree.closeNodeScope(jjtn000, true);
