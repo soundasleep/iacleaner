@@ -8,35 +8,46 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-
-import sun.misc.Regexp;
 
 /**
  * A simple regular-expression based syntax formatter for Internet 
  * Applications: attempts to clean HTML, Javascript, CSS, PHP and other
  * languages.
  * 
+ * It struggles with:
+ * <ul>
+ *   <li>Regular expressions in Javascript, e.g. /"/g</li>
+ *   <li>Single quotes if they are not part of strings (unless preceded
+ *   and followed by a character in [A-Za-z]</li>
+ * </ul>
+ * 
  * @author Jevon
+ * @see http://code.google.com/p/iacleaner/
  *
  */
 public class IACleaner {
 	
-	public static final String KEY_QUOTE = "$hide_string_";
-	public static final String KEY_QUOTE_SQ = "$hide_string_sq_";
-	public static final String KEY_BLOCK = "$hide_block_";
-	public static final String KEY_LINE = "$hide_line_";
-	public static final String KEY_END = "$";
+	protected static final String KEY_QUOTE = "$hide_string_";
+	protected static final String KEY_QUOTE_SQ = "$hide_string_sq_";
+	protected static final String KEY_BLOCK = "$hide_block_";
+	protected static final String KEY_LINE = "$hide_line_";
+	protected static final String KEY_END = "$";
 	
-	public static final String REPLACE_QUOTE = "$replace_quote$";
-	public static final String REPLACE_QUOTE_SQ = "$replace_quote_sq$";
+	protected static final String REPLACE_QUOTE = "$replace_quote$";
+	protected static final String REPLACE_QUOTE_SQ = "$replace_quote_sq$";
 	
-	public static final String HTML_INDENT_TAGS = "(html|head|body|div|script)";
+	protected static final String HTML_INDENT_TAGS = "(html|head|body|div|script)";
 
+	/**
+	 * An exception to throw if something has gone wrong while trying to
+	 * format the code.
+	 * 
+	 * @author Jevon
+	 *
+	 */
 	public static class CleanerException extends Exception {
 		private static final long serialVersionUID = 1L;
 		
@@ -61,16 +72,21 @@ public class IACleaner {
 		}
 
 		/**
-		 * Get the source of the cleaned page
+		 * Get the source of the cleaned page, or null if it has
+		 * not been set.
 		 * 
-		 * @return the source of the cleaned page
+		 * @return the source of the cleaned page, or null
 		 */
 		public String getSource() {
 			return source;
 		}
 	}
 	
-	public List<String> warnings = new ArrayList<String>();
+	protected List<String> warnings = new ArrayList<String>();
+	protected Map<String, String> replaceBlockComments;
+	protected Map<String, String> replaceQuotes;
+	protected Map<String, String> replaceQuotesSq;
+	protected Map<String, String> replaceLineComments;
 	
 	/**
 	 * Get exceptions to the formatting: these strings are always
@@ -130,15 +146,14 @@ public class IACleaner {
 		script = script.replace("\\\"", REPLACE_QUOTE);
 		script = script.replace("\\'", REPLACE_QUOTE_SQ);
 
-
 		// find all block comments and replace them
-		Map<String,String> replaceBlockComments = new HashMap<String,String>();
+		replaceBlockComments = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
 			int start = script.indexOf("/*", i);
 			if (start != -1) {
 				int end = script.indexOf("*/", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i));
+					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i), script);
 				}
 				
 				String key = KEY_BLOCK + i + KEY_END;
@@ -157,13 +172,13 @@ public class IACleaner {
 
 		
 		// find all single strings and replace them
-		Map<String,String> replaceQuotes = new HashMap<String,String>();
+		replaceQuotes = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
 			int start = script.indexOf("\"", i);
 			if (start != -1) {
 				int end = script.indexOf("\"", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated \"\" string at character position " + i, getContext(script, i));
+					throw new CleanerException("Unterminated \"\" string at character position " + i, getContext(script, i), script);
 				}
 				
 				String key = KEY_QUOTE + i + KEY_END;
@@ -182,7 +197,7 @@ public class IACleaner {
 		}
 
 		// find all single strings and replace them (single quotes)
-		Map<String,String> replaceQuotesSq = new HashMap<String,String>();
+		replaceQuotesSq = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
 			int start = script.indexOf("'", i);
 			if (start != -1) {
@@ -195,7 +210,7 @@ public class IACleaner {
 				
 				int end = script.indexOf("'", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i));
+					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i), script);
 				}
 				
 				String key = KEY_QUOTE_SQ + i + KEY_END;
@@ -214,13 +229,13 @@ public class IACleaner {
 		}
 		
 		// find all line comments and replace them
-		Map<String,String> replaceLineComments = new HashMap<String,String>();
+		replaceLineComments = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
 			int start = script.indexOf("//", i);
 			if (start != -1) {
 				int end = script.indexOf("\n", start + 1);
 				if (end == -1) {
-					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i));
+					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i), script);
 				}
 				
 				String key = KEY_LINE + i + KEY_END;		// DONT add new line (will screw up key)
@@ -262,6 +277,51 @@ public class IACleaner {
 		// newlines at ends of html tags
 		script = script.replace("> ", ">\n");
 
+		// format indents
+		script = indentScript(script);
+		
+		// put all the strings back in
+		for (String key : replaceLineComments.keySet()) {
+			String value = replaceLineComments.get(key);
+			script = script.replace(key, value);
+		}
+		for (String key : replaceQuotesSq.keySet()) {
+			String value = replaceQuotesSq.get(key);
+			script = script.replace(key, value);
+		}
+		for (String key : replaceQuotes.keySet()) {
+			String value = replaceQuotes.get(key);
+			script = script.replace(key, value);
+		}
+		for (String key : replaceBlockComments.keySet()) {
+			String value = replaceBlockComments.get(key);
+			script = script.replace(key, value);
+		}
+		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
+		script = script.replace(REPLACE_QUOTE, "\\\"");
+		
+		// reinsert explicit exceptions
+		for (String key : getExceptions().keySet()) {
+			script = script.replace(getExceptions().get(key), key);
+		}
+		
+		return script;
+	}
+	
+	/**
+	 * Given a script, tries to indent it in such a way
+	 * that is meaningful.
+	 * 
+	 * It assumes that all whitespace-sensitive elements (e.g.
+	 * strings) have already been taken out.
+	 * 
+	 * This can be overridden if you find the default indenting
+	 * method does not satisfy your needs.
+	 * 
+	 * @param script
+	 * @return
+	 */
+	public String indentScript(String script) throws CleanerException {
 		// add indents to code blocks and php blocks
 		String[] lines = script.split("\n");
 		int brace_count = 0;
@@ -269,9 +329,7 @@ public class IACleaner {
 		String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
 		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
 		StringBuffer buf = new StringBuffer();
-		for (String line : lines) {
-			boolean nextBrace = false;
-			
+		for (String line : lines) {	
 			if (line.indexOf("}") != -1) {
 				// close the brace
 				brace_count--;
@@ -307,45 +365,13 @@ public class IACleaner {
 		}
 		
 		// implode it back together
-		script = buf.toString();
-		
-		// put all the strings back in
-		/*
-		for (String key : replaceElements.keySet()) {
-			String value = replaceElements.get(key);
-			script = script.replace(key, value);
-		}
-		*/
-		
-		for (String key : replaceLineComments.keySet()) {
-			String value = replaceLineComments.get(key);
-			script = script.replace(key, value);
-		}
-		for (String key : replaceQuotesSq.keySet()) {
-			String value = replaceQuotesSq.get(key);
-			script = script.replace(key, value);
-		}
-		for (String key : replaceQuotes.keySet()) {
-			String value = replaceQuotes.get(key);
-			script = script.replace(key, value);
-		}
-		for (String key : replaceBlockComments.keySet()) {
-			String value = replaceBlockComments.get(key);
-			script = script.replace(key, value);
-		}
-		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
-		script = script.replace(REPLACE_QUOTE, "\\\"");
-		
-		// return explicit exceptions
-		for (String key : getExceptions().keySet()) {
-			script = script.replace(getExceptions().get(key), key);
-		}
-		
-		return script;
+		return buf.toString();
 	}
 
 	/**
-	 * Get the string context at a given position.
+	 * Get the string context at a given position. 
+	 * This returns a substring of the current script around
+	 * the given position.
 	 * 
 	 * @param script
 	 * @param i
@@ -437,6 +463,24 @@ public class IACleaner {
 	 */
 	public List<String> getWarnings() {
 		return warnings;
+	}
+	
+	/**
+	 * When formatting the output, a number of substitutions
+	 * are made (e.g. taking out "strings" so they may be
+	 * formatted without losing whitespace). This returns
+	 * all the substitutions that have been made, in no
+	 * particular order. 
+	 * 
+	 * @return All substitutions made
+	 */
+	public Map<String,String> getAllSubstitutions() {
+		Map<String,String> r = new HashMap<String,String>();
+		r.putAll( replaceBlockComments );
+		r.putAll( replaceLineComments );
+		r.putAll( replaceQuotes );
+		r.putAll( replaceQuotesSq );
+		return r;
 	}
 
 }
