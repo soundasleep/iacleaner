@@ -38,7 +38,8 @@ public class IACleaner {
 	
 	protected static final String REPLACE_QUOTE = "$replace_quote$";
 	protected static final String REPLACE_QUOTE_SQ = "$replace_quote_sq$";
-	
+	protected static final String INDENT_NEWLINE = "$indent_newline$";
+
 	protected static final String HTML_INDENT_TAGS = "(html|head|body|div|script)";
 
 	/**
@@ -156,10 +157,10 @@ public class IACleaner {
 					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i), script);
 				}
 				
-				String key = KEY_BLOCK + i + KEY_END;
-				String value = script.substring(start, end + 1);
+				String key = KEY_BLOCK + i + KEY_END + INDENT_NEWLINE;
+				String value = script.substring(start, end + 2);		// +2
 				replaceBlockComments.put(key, value);
-				i = end + 1;
+				i = end + 2;		// +2 because the end token is 2 chars long
 			} else {
 				break;
 			}
@@ -236,7 +237,10 @@ public class IACleaner {
 					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i), script);
 				}
 				
-				String key = KEY_LINE + i + KEY_END;		// DONT add new line (will screw up key)
+				// skip replace the newline
+				end--;
+				
+				String key = KEY_LINE + i + KEY_END + INDENT_NEWLINE;		// DONT add new line (will screw up key)
 				String value = script.substring(start, end + 1);
 				replaceLineComments.put(key, value);
 				i = end + 1;
@@ -295,6 +299,7 @@ public class IACleaner {
 			String value = replaceBlockComments.get(key);
 			script = script.replace(key, value);
 		}
+		
 		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
 		script = script.replace(REPLACE_QUOTE, "\\\"");
 		
@@ -328,6 +333,7 @@ public class IACleaner {
 		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
 		StringBuffer buf = new StringBuffer();
 		int lineNum = 0;
+		String prevLine = "";
 		for (String line : lines) {	
 			lineNum++;
 			if (line.indexOf("}") != -1) {
@@ -357,15 +363,32 @@ public class IACleaner {
 				brace_count = 0;
 				next_brace_count = 0;
 			}
-			line = repeatString("  ", brace_count) + line;
-			
+			String indent = repeatString("  ", brace_count);
+			line = indent + line;
+			line = line.replace(INDENT_NEWLINE + " ", INDENT_NEWLINE + "\n" + indent); // fix issue 1
+
 			brace_count = next_brace_count;
 			
 			buf.append(line).append("\n");
+			
+			// additional lines after }, unless the previous line also includeded a }
+			if (line.contains("}") && !prevLine.contains("}")) {
+				buf.append("\n");
+			}
+			
+			prevLine = line;
 		}
 		
 		// implode it back together
-		return buf.toString();
+		String result = buf.toString();
+		
+		// simplify indentation of common structurs
+		result = result.replaceAll("}[\\s]+catch[\\s]+\\(", "} catch ");
+		result = result.replaceAll("}[\\s]+else[\\s]+\\{", "} else {");
+		result = result.replaceAll("}[\\s]+else[\\s]+if[\\s]+\\(", "} else if (");
+		result = result.replaceAll("}[\\s]+elseif[\\s]+\\(", "} elseif (");
+		
+		return result;
 	}
 
 	/**
