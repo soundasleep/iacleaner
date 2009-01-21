@@ -184,7 +184,6 @@ public class IACleaner {
 				String key = KEY_QUOTE + i + KEY_END;
 				String value = script.substring(start, end + 1);
 				replaceQuotes.put(key, value);
-				System.out.println("adding DQ key=" + key + " value=" + value);
 				i = end + 1;
 			} else {
 				break;
@@ -216,7 +215,6 @@ public class IACleaner {
 				String key = KEY_QUOTE_SQ + i + KEY_END;
 				String value = script.substring(start, end + 1);
 				replaceQuotesSq.put(key, value);
-				System.out.println("adding SQ key=" + key + " value=" + value);
 				i = end + 1;
 			} else {
 				break;
@@ -329,7 +327,9 @@ public class IACleaner {
 		String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
 		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
 		StringBuffer buf = new StringBuffer();
+		int lineNum = 0;
 		for (String line : lines) {	
+			lineNum++;
 			if (line.indexOf("}") != -1) {
 				// close the brace
 				brace_count--;
@@ -351,7 +351,7 @@ public class IACleaner {
 			if (brace_count < 0) {
 				if (next_brace_count < 0) {
 					// this means that the next line will definitely be out
-					throwWarning("Unbalanced braces as of line: " + line);
+					throwWarning("Unbalanced braces as of line: " + line + " (" + lineNum + "/" + lines.length + ")", getContext(lines, lineNum));
 				}
 				// otherwise, it could be a line like "{ }"
 				brace_count = 0;
@@ -370,6 +370,30 @@ public class IACleaner {
 
 	/**
 	 * Get the string context at a given position. 
+	 * This returns a few of the lines before and after the given
+	 * line number.
+	 * 
+	 * @param lines
+	 * @param lineNum
+	 * @return
+	 */
+	private String getContext(String[] lines, int lineNum) {
+		StringBuffer buf = new StringBuffer();
+		
+		for (int i = lineNum - 4; i < lineNum + 4; i++) {
+			if (i < 0 || i >= lines.length)
+				continue;
+			if (i == lineNum - 1)
+				buf.append(" >> ");
+			buf.append(lines[i]);
+			buf.append("\n");
+		}
+		
+		return buf.toString();
+	}
+
+	/**
+	 * Get the string context at a given position. 
 	 * This returns a substring of the current script around
 	 * the given position.
 	 * 
@@ -380,7 +404,7 @@ public class IACleaner {
 	private String getContext(String script, int i) {
 		return script.substring( i - 20, i + 20 );
 	}
-
+	
 	/**
 	 * Throw a warning. Prints it out to stderr and adds it to
 	 * {@link #getWarnings()}
@@ -388,8 +412,10 @@ public class IACleaner {
 	 * @see #getWarnings()
 	 * @param string
 	 */
-	private void throwWarning(String string) {
+	public void throwWarning(String string, String context) {
 		System.err.println("Warning: " + string);
+		System.err.println("Context:");
+		System.err.println(context);
 		warnings.add(string);
 	}
 
@@ -478,6 +504,19 @@ public class IACleaner {
 		Map<String,String> r = new HashMap<String,String>();
 		r.putAll( replaceBlockComments );
 		r.putAll( replaceLineComments );
+		r.putAll( replaceQuotes );
+		r.putAll( replaceQuotesSq );
+		return r;
+	}
+
+	/**
+	 * Returns all string substitutions only.
+	 * 
+	 * @see #getAllSubstitutions()
+	 * @return
+	 */
+	public Map<String,String> getStringSubstitutions() {
+		Map<String,String> r = new HashMap<String,String>();
 		r.putAll( replaceQuotes );
 		r.putAll( replaceQuotesSq );
 		return r;
