@@ -26,7 +26,7 @@ public class ManualPrototypeTest extends TestCase {
 		IACleaner clean = new IACleaner();
 		String output = clean.cleanScript(sourceFile);
 		
-		System.out.println(output);
+		// System.out.println(output);
 		
 		// write it to out.php
 		FileWriter fw = new FileWriter(targetFile);

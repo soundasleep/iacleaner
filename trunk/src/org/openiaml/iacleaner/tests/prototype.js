@@ -2545,24 +2545,35 @@ Element.Methods.Simulated = {
   }
 };
 
+// test here
 Element.Methods.ByTag = { };
-
+// test here
 Object.extend(Element, Element.Methods);
 
+// test here
 if (!Prototype.BrowserFeatures.ElementExtensions &&
-    document.createElement('div')['__proto__']) {
+// test here
+    //
+    // test here
   window.HTMLElement = { };
+  // test here
+  window.HTMLElement.prototype = document.createElement('div   ')   ['__proto__'];
+  window.HTMLElement.prototype = document.createElement('div  ')  ['__proto__'];
+  window.HTMLElement.prototype = document.createElement('div ') ['__proto__'];
   window.HTMLElement.prototype = document.createElement('div')['__proto__'];
   Prototype.BrowserFeatures.ElementExtensions = true;
 }
 
+// test here
 Element.extend = (function() {
   if (Prototype.BrowserFeatures.SpecificElementExtensions)
     return Prototype.K;
 
+// test here
   var Methods = { }, ByTag = Element.Methods.ByTag;
 
   var extend = Object.extend(function(element) {
+  // test here
     if (!element || element._extendedByPrototype ||
         element.nodeType != 1 || element == window) return element;
 
