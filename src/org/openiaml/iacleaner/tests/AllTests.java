@@ -18,6 +18,9 @@ public class AllTests {
 		TestSuite suite = new TestSuite("Test for org.openiaml.iacleaner.tests");
 		//$JUnit-BEGIN$
 		suite.addTestSuite(PrototypeJsTest.class);
+		suite.addTestSuite(DefaultCssTest.class);
+		suite.addTestSuite(StoreDbPhpTest.class);
+		suite.addTestSuite(ClearSessionPhpTest.class);
 		suite.addTestSuite(IndexTest.class);
 		suite.addTestSuite(ComplexPhpTest.class);
 		//$JUnit-END$
