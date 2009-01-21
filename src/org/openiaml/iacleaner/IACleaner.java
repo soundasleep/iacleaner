@@ -8,9 +8,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import sun.misc.Regexp;
 
 /**
  * A simple regular-expression based syntax formatter for Internet 
@@ -24,15 +28,19 @@ public class IACleaner {
 	
 	public static final String KEY_QUOTE = "$hide_string_";
 	public static final String KEY_QUOTE_SQ = "$hide_string_sq_";
+	public static final String KEY_BLOCK = "$hide_block_";
+	public static final String KEY_LINE = "$hide_line_";
 	public static final String KEY_END = "$";
 	
 	public static final String REPLACE_QUOTE = "$replace_quote$";
 	public static final String REPLACE_QUOTE_SQ = "$replace_quote_sq$";
 	
 	public static final String HTML_INDENT_TAGS = "(html|head|body|div|script)";
-	
+
 	public static class CleanerException extends Exception {
 		private static final long serialVersionUID = 1L;
+		
+		private String source = null;
 
 		public CleanerException(String message) {
 			super(message);
@@ -40,6 +48,25 @@ public class IACleaner {
 		
 		public CleanerException(String message, String context) {
 			super(message + " [context=\"" + context + "\"]");
+		}
+
+		/**
+		 * @param message
+		 * @param context
+		 * @param source
+		 */
+		public CleanerException(String message, String context, String source) {
+			this(message, context);
+			this.source = source;
+		}
+
+		/**
+		 * Get the source of the cleaned page
+		 * 
+		 * @return the source of the cleaned page
+		 */
+		public String getSource() {
+			return source;
 		}
 	}
 	
@@ -54,6 +81,9 @@ public class IACleaner {
 	 * 	<code>
 	 *   escapedString.replace(/"/g, '\\"')
 	 *  </code>
+	 *  
+	 * <b>NOTE</b> that these strings are not regular expressions
+	 * but explicit strings.
 	 */
 	public Map<String,String> getExceptions() {
 		Map<String,String> e = new HashMap<String,String>();
@@ -61,6 +91,20 @@ public class IACleaner {
 		// prototype.js exceptions
 		e.put( "/\"/g", "$exception_key_1$" );
 		e.put( "/\"[^\"\\\\\\n\\r]*\"/g", "$exception_key_2$" );
+		e.put( "http://", "$exception_key_3$" );
+		e.put( "https://", "$exception_key_4$" );
+		e.put( "ftp://", "$exception_key_5$" );
+		e.put( "'\\\\'", "$exception_key_6$");		// need to quote \s
+		e.put( "'\\\\\\\\'", "$exception_key_7$");
+		e.put( "src=//:", "$exception_key_8$");
+		e.put( "'.//*'", "$exception_key_9$");
+		e.put( "\"//*\"", "$exception_key_10$");
+		e.put( "\"/*\"", "$exception_key_11$");
+		e.put( "'\\\\\\''", "$exception_key_12$");
+		e.put( "/'/g", "$exception_key_13$" );
+		e.put( "'\\\\\"'", "$exception_key_14$" );
+		e.put( ", */*", "$exception_key_15$");
+		e.put( "/\\[((?:[\\w-]*:)?[\\w-]+)\\s*(?:([!^$*~|]?=)\\s*((['\"])([^\\4]*?)\\4|([^'\"][^\\]]*?)))?\\]/", "$exception_key_16$"); // ha, good luck debugging this one!
 		
 		return e;
 	}
@@ -73,166 +117,45 @@ public class IACleaner {
 	 * @throws CleanerException if an exception occurs
 	 */
 	public String cleanScript(String script) throws CleanerException {
+		// remove all unusual line endings
+		script = script.replace("\r\n", "\n");
+		script = script.replace("\r", "\n");
+		
 		// get rid of all explicit exceptions
 		for (String key : getExceptions().keySet()) {
 			script = script.replace(key, getExceptions().get(key));
 		}
 				
 		// replace all escaped quotes
-		/*
 		script = script.replace("\\\"", REPLACE_QUOTE);
 		script = script.replace("\\'", REPLACE_QUOTE_SQ);
-		*/
-		
-		// a new method: eat up characters in sequence and use these to work out 
-		// when to stop a line.
-		int MODE_STRING_DOUBLE = 1;
-		int MODE_STRING_SINGLE = 2;
-		int MODE_COMMENT_LINE = 3;
-		int MODE_COMMENT_MULTI = 4;
-		int MODE_REGEXP = 5;
-		int mode = 0;
-		StringBuffer buf = new StringBuffer();
-		StringBuffer cur = new StringBuffer();
-		int replace_count = 0;
-		Map<String,String> replaceElements = new HashMap<String,String>();
-		for (int i = 0; i < script.length(); i++) {
-			String s1 = script.substring(i, i + 1);
-			String s2 = null;
-			if (script.length() > i + 1) {		// lookahead of 2
-				s2 = script.substring(i, i + 2);
-			}
-			String s5 = null;
-			if (script.length() > i + 4) {		// lookahead of 5
-				s5 = script.substring(i, i + 5);
-			}
-			
-			if (mode == 0) {
-				// starting a new mode?
-				if (s1.equals("\"")) {
-					mode = MODE_STRING_DOUBLE;
-					cur.append(s1);
-				} else if (s1.equals("'")) {
-					mode = MODE_STRING_SINGLE;
-					cur.append(s1);
-				} else if ("//".equals(s2)) {
-					mode = MODE_COMMENT_LINE;
-					cur.append(s2);
-					i++;
-				} else if ("/*".equals(s2)) {
-					mode = MODE_COMMENT_MULTI;
-					cur.append(s2);
-					i++;
-				} else if ("/".equals(s1) && false) {
-					mode = MODE_REGEXP;
-					cur.append(s1);
-					i++;
-				} else {
-					buf.append(s1);
-				}
-			} else if (mode == MODE_STRING_DOUBLE) {
-				// in a "string"
-				if ("\\\"".equals(s2)) {
-					// escaping a " character
-					cur.append(s2);
-					i++;
-				} else if ("\"".equals(s1)) {
-					// end
-					cur.append(s1);
-					String key = "$replace_" + replace_count + "$";
-					buf.append(key);
-					replaceElements.put(key, cur.toString());
-					replace_count++;
-					cur = new StringBuffer();
-					mode = 0;
-				} else {
-					cur.append(s1);
-				}
-			} else if (mode == MODE_STRING_SINGLE) {
-				// in a 'string'
-				if ("\\'".equals(s2)) {
-					// escaping a ' character
-					cur.append(s2);
-					i++;
-				} else if ("\'".equals(s1)) {
-					// end
-					cur.append(s1);
-					String key = "$replace_" + replace_count + "$";
-					buf.append(key);
-					replaceElements.put(key, cur.toString());
-					replace_count++;
-					cur = new StringBuffer();
-					mode = 0;
-				} else {
-					cur.append(s1);
-				}
-			} else if (mode == MODE_COMMENT_LINE) {
-				// in a // comment
-				if ("\n".equals(s1)) {
-					// end
-					//	cur.append(s1); // ignore the newline
-					String key = "$replace_" + replace_count + "$";
-					buf.append(key).append("$line_break$");
-					replaceElements.put(key, cur.toString());
-					replace_count++;
-					cur = new StringBuffer();
-					mode = 0;
-				} else {
-					cur.append(s1);
-				}
-			} else if (mode == MODE_COMMENT_MULTI) {
-				// in a /* comment */
-				if ("*/".equals(s2)) {
-					// end
-					cur.append(s2);
-					i++;
-					String key = "$replace_" + replace_count + "$";
-					buf.append(key).append("$line_break$");
-					replaceElements.put(key, cur.toString());
-					replace_count++;
-					cur = new StringBuffer();
-					mode = 0;
-				} else {
-					cur.append(s1);
-				}
-			} else if (mode == MODE_REGEXP) {
-				// in a /regexp/
-				if ("\\/".equals(s2)) {
-					// escaping a / character
-					cur.append(s2);
-					i++;
-				} else if ("/".equals(s1)) {
-					// end
-					cur.append(s1);
-					String key = "$replace_" + replace_count + "$";
-					buf.append(key);
-					replaceElements.put(key, cur.toString());
-					replace_count++;
-					cur = new StringBuffer();
-					mode = 0;
-				} else {
-					cur.append(s1);
-				}
-			} else {
-				throw new CleanerException("unknown mode: " + mode);
-			}
-		}
-		
-		// if we are still in a mode, we have failed
-		if (mode != 0) {
-			System.out.println(buf);
-			String bufString = buf.toString();
-			throw new CleanerException("unexpectedly still in mode: " + mode, 
-					bufString.length() > 128 ? 
-						(bufString.substring(bufString.length() - 128, bufString.length())) : 
-						bufString);
-		}
-		
-		// get out the replaced version
-		script = buf.toString();
-		
-		/*
 
+
+		// find all block comments and replace them
+		Map<String,String> replaceBlockComments = new HashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("/*", i);
+			if (start != -1) {
+				int end = script.indexOf("*/", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i));
+				}
+				
+				String key = KEY_BLOCK + i + KEY_END;
+				String value = script.substring(start, end + 1);
+				replaceBlockComments.put(key, value);
+				i = end + 1;
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceBlockComments.keySet()) {
+			String value = replaceBlockComments.get(key);
+			script = script.replace(value, key);
+		}
+
+		
 		// find all single strings and replace them
 		Map<String,String> replaceQuotes = new HashMap<String,String>();
 		for (int i = 0; i < script.length(); ) {
@@ -246,6 +169,7 @@ public class IACleaner {
 				String key = KEY_QUOTE + i + KEY_END;
 				String value = script.substring(start, end + 1);
 				replaceQuotes.put(key, value);
+				System.out.println("adding DQ key=" + key + " value=" + value);
 				i = end + 1;
 			} else {
 				break;
@@ -262,6 +186,13 @@ public class IACleaner {
 		for (int i = 0; i < script.length(); ) {
 			int start = script.indexOf("'", i);
 			if (start != -1) {
+				// don't replace english words with 's in them
+				if (script.substring(start - 1, start).matches("[A-Za-z]") &&
+						script.substring(start + 1, start + 2).matches("[A-Za-z]")) {
+					i = start + 1;
+					continue;
+				}
+				
 				int end = script.indexOf("'", start + 1);
 				if (end == -1) {
 					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i));
@@ -270,6 +201,7 @@ public class IACleaner {
 				String key = KEY_QUOTE_SQ + i + KEY_END;
 				String value = script.substring(start, end + 1);
 				replaceQuotesSq.put(key, value);
+				System.out.println("adding SQ key=" + key + " value=" + value);
 				i = end + 1;
 			} else {
 				break;
@@ -280,12 +212,40 @@ public class IACleaner {
 			String value = replaceQuotesSq.get(key);
 			script = script.replace(value, key);
 		}
-
+		
+		// find all line comments and replace them
+		Map<String,String> replaceLineComments = new HashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("//", i);
+			if (start != -1) {
+				int end = script.indexOf("\n", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i));
+				}
+				
+				String key = KEY_LINE + i + KEY_END;		// DONT add new line (will screw up key)
+				String value = script.substring(start, end + 1);
+				replaceLineComments.put(key, value);
+				i = end + 1;
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceLineComments.keySet()) {
+			String value = replaceLineComments.get(key);
+			script = script.replace(value, key);
+		}
+		
 		// replace single-line comments with block comments
+		/*
 		script = script.replaceAll("([^:])//([^\r\n]+)[\r\n]", "$1/*$2 *
 		/\n");	// first char disables replacing http:// addresses" +
 				"*/
-
+		// not used anymore --
+		// script = script.replaceAll("//([^\r\n]*)[\r\n]", "/*$1*/\n");
+			// if this replaces http://, it's because it's in a comment
+		
 		// get rid of all newlines and tabs
 		script = script.replaceAll("[\r\n\t]", " ");
 
@@ -308,7 +268,7 @@ public class IACleaner {
 		
 		String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
 		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
-		buf = new StringBuffer();
+		StringBuffer buf = new StringBuffer();
 		for (String line : lines) {
 			boolean nextBrace = false;
 			
@@ -350,11 +310,17 @@ public class IACleaner {
 		script = buf.toString();
 		
 		// put all the strings back in
+		/*
 		for (String key : replaceElements.keySet()) {
 			String value = replaceElements.get(key);
 			script = script.replace(key, value);
 		}
-		/*
+		*/
+		
+		for (String key : replaceLineComments.keySet()) {
+			String value = replaceLineComments.get(key);
+			script = script.replace(key, value);
+		}
 		for (String key : replaceQuotesSq.keySet()) {
 			String value = replaceQuotesSq.get(key);
 			script = script.replace(key, value);
@@ -363,9 +329,12 @@ public class IACleaner {
 			String value = replaceQuotes.get(key);
 			script = script.replace(key, value);
 		}
+		for (String key : replaceBlockComments.keySet()) {
+			String value = replaceBlockComments.get(key);
+			script = script.replace(key, value);
+		}
 		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
 		script = script.replace(REPLACE_QUOTE, "\\\"");
-		*/
 		
 		// return explicit exceptions
 		for (String key : getExceptions().keySet()) {
@@ -469,5 +438,5 @@ public class IACleaner {
 	public List<String> getWarnings() {
 		return warnings;
 	}
-	
+
 }
