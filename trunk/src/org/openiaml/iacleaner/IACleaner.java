@@ -9,8 +9,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A simple regular-expression based syntax formatter for Internet 
@@ -89,6 +91,8 @@ public class IACleaner {
 	protected Map<String, String> replaceQuotesSq;
 	protected Map<String, String> replaceLineComments;
 	
+	private Map<String, String> exceptions;
+	
 	/**
 	 * Get exceptions to the formatting: these strings are always
 	 * explicitly taken out at the start of formatting.
@@ -103,27 +107,29 @@ public class IACleaner {
 	 * but explicit strings.
 	 */
 	public Map<String,String> getExceptions() {
-		Map<String,String> e = new HashMap<String,String>();
+		if (exceptions == null) {
+			exceptions = new HashMap<String,String>();
+			
+			// prototype.js exceptions
+			exceptions.put( "/\"/g", "$exception_key_1$" );
+			exceptions.put( "/\"[^\"\\\\\\n\\r]*\"/g", "$exception_key_2$" );
+			exceptions.put( "http://", "$exception_key_3$" );
+			exceptions.put( "https://", "$exception_key_4$" );
+			exceptions.put( "ftp://", "$exception_key_5$" );
+			exceptions.put( "'\\\\'", "$exception_key_6$");		// need to quote \s
+			exceptions.put( "'\\\\\\\\'", "$exception_key_7$");
+			exceptions.put( "src=//:", "$exception_key_8$");
+			exceptions.put( "'.//*'", "$exception_key_9$");
+			exceptions.put( "\"//*\"", "$exception_key_10$");
+			exceptions.put( "\"/*\"", "$exception_key_11$");
+			exceptions.put( "'\\\\\\''", "$exception_key_12$");
+			exceptions.put( "/'/g", "$exception_key_13$" );
+			exceptions.put( "'\\\\\"'", "$exception_key_14$" );
+			exceptions.put( ", */*", "$exception_key_15$");
+			exceptions.put( "/\\[((?:[\\w-]*:)?[\\w-]+)\\s*(?:([!^$*~|]?=)\\s*((['\"])([^\\4]*?)\\4|([^'\"][^\\]]*?)))?\\]/", "$exception_key_16$"); // ha, good luck debugging this one!
+		}
 		
-		// prototype.js exceptions
-		e.put( "/\"/g", "$exception_key_1$" );
-		e.put( "/\"[^\"\\\\\\n\\r]*\"/g", "$exception_key_2$" );
-		e.put( "http://", "$exception_key_3$" );
-		e.put( "https://", "$exception_key_4$" );
-		e.put( "ftp://", "$exception_key_5$" );
-		e.put( "'\\\\'", "$exception_key_6$");		// need to quote \s
-		e.put( "'\\\\\\\\'", "$exception_key_7$");
-		e.put( "src=//:", "$exception_key_8$");
-		e.put( "'.//*'", "$exception_key_9$");
-		e.put( "\"//*\"", "$exception_key_10$");
-		e.put( "\"/*\"", "$exception_key_11$");
-		e.put( "'\\\\\\''", "$exception_key_12$");
-		e.put( "/'/g", "$exception_key_13$" );
-		e.put( "'\\\\\"'", "$exception_key_14$" );
-		e.put( ", */*", "$exception_key_15$");
-		e.put( "/\\[((?:[\\w-]*:)?[\\w-]+)\\s*(?:([!^$*~|]?=)\\s*((['\"])([^\\4]*?)\\4|([^'\"][^\\]]*?)))?\\]/", "$exception_key_16$"); // ha, good luck debugging this one!
-		
-		return e;
+		return exceptions;
 	}
 	
 	/**
@@ -134,125 +140,28 @@ public class IACleaner {
 	 * @throws CleanerException if an exception occurs
 	 */
 	public String cleanScript(String script) throws CleanerException {
-		// remove all unusual line endings
-		script = script.replace("\r\n", "\n");
-		script = script.replace("\r", "\n");
+		script = removeUnusualLineEndings(script);
 		
 		// get rid of all explicit exceptions
 		for (String key : getExceptions().keySet()) {
 			script = script.replace(key, getExceptions().get(key));
 		}
-				
+		
 		// replace all escaped quotes
 		script = script.replace("\\\"", REPLACE_QUOTE);
 		script = script.replace("\\'", REPLACE_QUOTE_SQ);
 
 		// find all block comments and replace them
-		replaceBlockComments = new HashMap<String,String>();
-		for (int i = 0; i < script.length(); ) {
-			int start = script.indexOf("/*", i);
-			if (start != -1) {
-				int end = script.indexOf("*/", start + 1);
-				if (end == -1) {
-					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i), script);
-				}
-				
-				String key = KEY_BLOCK + i + KEY_END + INDENT_NEWLINE;
-				String value = script.substring(start, end + 2);		// +2
-				replaceBlockComments.put(key, value);
-				i = end + 2;		// +2 because the end token is 2 chars long
-			} else {
-				break;
-			}
-		}
+		script = extractBlockComments(script);
 		
-		for (String key : replaceBlockComments.keySet()) {
-			String value = replaceBlockComments.get(key);
-			script = script.replace(value, key);
-		}
-
-		
-		// find all single strings and replace them
-		replaceQuotes = new HashMap<String,String>();
-		for (int i = 0; i < script.length(); ) {
-			int start = script.indexOf("\"", i);
-			if (start != -1) {
-				int end = script.indexOf("\"", start + 1);
-				if (end == -1) {
-					throw new CleanerException("Unterminated \"\" string at character position " + i, getContext(script, i), script);
-				}
-				
-				String key = KEY_QUOTE + i + KEY_END;
-				String value = script.substring(start, end + 1);
-				replaceQuotes.put(key, value);
-				i = end + 1;
-			} else {
-				break;
-			}
-		}
-		
-		for (String key : replaceQuotes.keySet()) {
-			String value = replaceQuotes.get(key);
-			script = script.replace(value, key);
-		}
+		// find all strings and replace them
+		script = extractStrings(script);
 
 		// find all single strings and replace them (single quotes)
-		replaceQuotesSq = new HashMap<String,String>();
-		for (int i = 0; i < script.length(); ) {
-			int start = script.indexOf("'", i);
-			if (start != -1) {
-				// don't replace english words with 's in them
-				if (script.substring(start - 1, start).matches("[A-Za-z]") &&
-						script.substring(start + 1, start + 2).matches("[A-Za-z]")) {
-					i = start + 1;
-					continue;
-				}
-				
-				int end = script.indexOf("'", start + 1);
-				if (end == -1) {
-					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i), script);
-				}
-				
-				String key = KEY_QUOTE_SQ + i + KEY_END;
-				String value = script.substring(start, end + 1);
-				replaceQuotesSq.put(key, value);
-				i = end + 1;
-			} else {
-				break;
-			}
-		}
-		
-		for (String key : replaceQuotesSq.keySet()) {
-			String value = replaceQuotesSq.get(key);
-			script = script.replace(value, key);
-		}
+		script = extractSingleStrings(script);
 		
 		// find all line comments and replace them
-		replaceLineComments = new HashMap<String,String>();
-		for (int i = 0; i < script.length(); ) {
-			int start = script.indexOf("//", i);
-			if (start != -1) {
-				int end = script.indexOf("\n", start + 1);
-				if (end == -1) {
-					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i), script);
-				}
-				
-				// skip replace the newline
-				end--;
-				
-				String key = KEY_LINE + i + KEY_END + INDENT_NEWLINE;		// DONT add new line (will screw up key)
-				String value = script.substring(start, end + 1);
-				replaceLineComments.put(key, value);
-				i = end + 1;
-			} else {
-				break;
-			}
-		}
-		
-		for (String key : replaceLineComments.keySet()) {
-			String value = replaceLineComments.get(key);
-			script = script.replace(value, key);
-		}
+		script = extractLineComments(script);
 		
 		// replace single-line comments with block comments
 		/*
@@ -283,6 +192,24 @@ public class IACleaner {
 		script = indentScript(script);
 		
 		// put all the strings back in
+		script = replaceExtractedElements(script);
+		
+		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
+		script = script.replace(REPLACE_QUOTE, "\\\"");
+		
+		// reinsert explicit exceptions
+		for (String key : getExceptions().keySet()) {
+			script = script.replace(getExceptions().get(key), key);
+		}
+		
+		return script;
+	}
+
+	/**
+	 * @param script
+	 * @return
+	 */
+	private String replaceExtractedElements(String script) {
 		for (String key : replaceLineComments.keySet()) {
 			String value = replaceLineComments.get(key);
 			script = script.replace(key, value);
@@ -299,15 +226,182 @@ public class IACleaner {
 			String value = replaceBlockComments.get(key);
 			script = script.replace(key, value);
 		}
+		return script;
+	}
+	
+	/**
+	 * Extend the {@link HashMap} to also ensure that the
+	 * value set is unique.
+	 * 
+	 * @author Jevon
+	 *
+	 * @param <A>
+	 * @param <B>
+	 */
+	public class DoubleHashMap<A,B> extends HashMap<A,B> {
+
+		private static final long serialVersionUID = 1L;
 		
-		script = script.replace(REPLACE_QUOTE_SQ, "\\'");
-		script = script.replace(REPLACE_QUOTE, "\\\"");
-		
-		// reinsert explicit exceptions
-		for (String key : getExceptions().keySet()) {
-			script = script.replace(getExceptions().get(key), key);
+		private Set<B> valueSet = new HashSet<B>();
+
+		/* (non-Javadoc)
+		 * @see java.util.HashMap#put(java.lang.Object, java.lang.Object)
+		 */
+		@Override
+		public B put(A key, B value) {
+			if (valueSet.contains(value))
+				return super.get(key);
+			
+			valueSet.add(value);
+
+			return super.put(key, value);
 		}
 		
+	}
+
+	/**
+	 * @param script
+	 * @return
+	 * @throws CleanerException
+	 */
+	private String extractLineComments(String script) throws CleanerException {
+		replaceLineComments = new DoubleHashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("//", i);
+			if (start != -1) {
+				int end = script.indexOf("\n", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated // string at character position " + i, getContext(script, i), script);
+				}
+				
+				// skip replace the newline
+				end--;
+				
+				String key = KEY_LINE + i + KEY_END + INDENT_NEWLINE;		// DONT add new line (will screw up key)
+				String value = script.substring(start, end + 1);				
+				replaceLineComments.put(key, value);
+				i = end + 1;
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceLineComments.keySet()) {
+			String value = replaceLineComments.get(key);
+			script = script.replace(value, key);
+		}
+		return script;
+	}
+
+	/**
+	 * @param script
+	 * @return
+	 * @throws CleanerException
+	 */
+	private String extractSingleStrings(String script) throws CleanerException {
+		replaceQuotesSq = new DoubleHashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("'", i);
+			if (start != -1) {
+				// don't replace english words with 's in them
+				if (script.substring(start - 1, start).matches("[A-Za-z]") &&
+						script.substring(start + 1, start + 2).matches("[A-Za-z]")) {
+					i = start + 1;
+					continue;
+				}
+				
+				int end = script.indexOf("'", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated '' string at character position " + i, getContext(script, i), script);
+				}
+				
+				String key = KEY_QUOTE_SQ + i + KEY_END;
+				String value = script.substring(start, end + 1);
+				replaceQuotesSq.put(key, value);
+				i = end + 1;
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceQuotesSq.keySet()) {
+			String value = replaceQuotesSq.get(key);
+			script = script.replace(value, key);
+		}
+		return script;
+	}
+
+	/**
+	 * @param script
+	 * @return
+	 * @throws CleanerException
+	 */
+	private String extractStrings(String script) throws CleanerException {
+		replaceQuotes = new DoubleHashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("\"", i);
+			if (start != -1) {
+				int end = script.indexOf("\"", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated \"\" string at character position " + i, getContext(script, i), script);
+				}
+				
+				String key = KEY_QUOTE + i + KEY_END;
+				String value = script.substring(start, end + 1);
+				replaceQuotes.put(key, value);
+				i = end + 1;
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceQuotes.keySet()) {
+			String value = replaceQuotes.get(key);
+			script = script.replace(value, key);
+		}
+		return script;
+	}
+
+	/**
+	 * @param script
+	 * @return
+	 * @throws CleanerException
+	 */
+	private String extractBlockComments(String script) throws CleanerException {
+		replaceBlockComments = new DoubleHashMap<String,String>();
+		for (int i = 0; i < script.length(); ) {
+			int start = script.indexOf("/*", i);
+			if (start != -1) {
+				int end = script.indexOf("*/", start + 1);
+				if (end == -1) {
+					throw new CleanerException("Unterminated /* */ string at character position " + i, getContext(script, i), script);
+				}
+				
+				String key = KEY_BLOCK + i + KEY_END + INDENT_NEWLINE;
+				String value = script.substring(start, end + 2);		// +2
+				replaceBlockComments.put(key, value);
+				i = end + 2;		// +2 because the end token is 2 chars long
+			} else {
+				break;
+			}
+		}
+		
+		for (String key : replaceBlockComments.keySet()) {
+			String value = replaceBlockComments.get(key);
+			script = script.replace(value, key);
+		}
+		return script;
+	}
+
+	/**
+	 * Remove all unusual line endings.
+	 * 
+	 * @param script
+	 * @return
+	 */
+	private String removeUnusualLineEndings(String script) {
+		script = script.replace("\r\n", "\n");
+		script = script.replace("\r", "\n");
 		return script;
 	}
 	
@@ -382,7 +476,7 @@ public class IACleaner {
 		// implode it back together
 		String result = buf.toString();
 		
-		// simplify indentation of common structurs
+		// simplify indentation of common structures
 		result = result.replaceAll("}[\\s]+catch[\\s]+\\(", "} catch (");
 		result = result.replaceAll("}[\\s]+else[\\s]+\\{", "} else {");
 		result = result.replaceAll("}[\\s]+else[\\s]+if[\\s]+\\(", "} else if (");
