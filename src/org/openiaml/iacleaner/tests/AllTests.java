@@ -25,6 +25,7 @@ public class AllTests {
 		suite.addTestSuite(ClearSessionPhpTest.class);
 		suite.addTestSuite(IndexTest.class);
 		suite.addTestSuite(ComplexPhpTest.class);
+		suite.addTestSuite(SitemapHtmlTest.class);
 		//$JUnit-END$
 		return suite;
 	}
