@@ -182,7 +182,6 @@ public class IACleaner {
 		script = script.replace("; ", ";\n");
 		script = script.replace("{ ", "{\n");
 		script = script.replace("} ", "}\n");
-		script = script.replace("$line_break$ ", "\n");
 		script = script.replace("*/ ", "*/\n");
 
 		// newlines at ends of html tags
@@ -304,8 +303,8 @@ public class IACleaner {
 			int start = script.indexOf("'", i);
 			if (start != -1) {
 				// don't replace english words with 's in them
-				if (script.substring(start - 1, start).matches("[A-Za-z]") &&
-						script.substring(start + 1, start + 2).matches("[A-Za-z]")) {
+				// matches [A-Za-z]
+				if (alphaNumeric(script.charAt(start-1)) && alphaNumeric(script.charAt(start+1))) {
 					i = start + 1;
 					continue;
 				}
@@ -329,6 +328,16 @@ public class IACleaner {
 			script = script.replace(value, key);
 		}
 		return script;
+	}
+
+	/**
+	 * Does this character match [A-Za-z]?
+	 * 
+	 * @param charAt
+	 * @return
+	 */
+	private boolean alphaNumeric(char c) {
+		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	}
 
 	/**
@@ -423,8 +432,8 @@ public class IACleaner {
 		String[] lines = script.split("\n");
 		int brace_count = 0;
 		
-		String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
-		String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
+		final String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
+		final String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
 		StringBuffer buf = new StringBuffer();
 		int lineNum = 0;
 		String prevLine = "";
