@@ -104,7 +104,7 @@ function do_model_11e47202c05_19( $model_11e47202c05_1a) {
     // continue chained operations
     // continue chained operations
     // ignoring fail wire
-    } catch IamlRuntimeException $e) {
+    } catch (IamlRuntimeException $e) {
       log_message("Caught exception $e");
       // we need to navigate to the fail page
       $url = "visual_11e47202c63_4.php?fail=" . urlencode($e->getMessage());
@@ -379,7 +379,7 @@ function do_model_11e47202c05_20() {
               // expanding inline event trigger edit
               // should we still run the chained functions?
               if (!function_queue_queued) function_queue();
-            } catch e if e instanceof IamlJavascriptException) {
+            } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
             }
@@ -439,7 +439,7 @@ function do_model_11e47202c05_20() {
 
                 // should we still run the chained functions?
                 if (!function_queue_queued) function_queue();
-              } catch e if e instanceof IamlJavascriptException) {
+              } catch (e if e instanceof IamlJavascriptException) {
                 // unexpected exception
                 alert("Unexpected exception: " + e);
               }
@@ -467,7 +467,7 @@ function do_model_11e47202c05_20() {
             }
 
             try_catch_depth--;
-          } catch e if e instanceof IamlJavascriptException) {
+          } catch (e if e instanceof IamlJavascriptException) {
             debug("Caught exception " + e);
             // we need to navigate to the fail page
             var url = "visual_11e47202c63_4.php?fail=" + e;
@@ -513,7 +513,7 @@ function do_model_11e47202c05_20() {
               // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@cedf4e (isGenerated: true, id: operations.11e47202c63.c)		
               // should we still run the chained functions?
               if (!function_queue_queued) function_queue();
-            } catch e if e instanceof IamlJavascriptException) {
+            } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
             }
