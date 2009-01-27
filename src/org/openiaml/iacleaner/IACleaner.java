@@ -432,18 +432,23 @@ public class IACleaner {
 		String[] lines = script.split("\n");
 		int brace_count = 0;
 		
-		final String match_indent_open = "(?i)<" + HTML_INDENT_TAGS + "[^>]*>";
-		final String match_indent_close = "(?i)</" + HTML_INDENT_TAGS + "[^>]*>";
+		final String match_indent_open = "\\s*<" + HTML_INDENT_TAGS + "[^>]*>\\s*";
+		final String match_indent_close = "\\s*</" + HTML_INDENT_TAGS + "[^>]*>\\s*";
+		final String match_indent_open_close = "\\s*<" + HTML_INDENT_TAGS + "[^>]*/>\\s*";
 		StringBuffer buf = new StringBuffer();
 		int lineNum = 0;
 		String prevLine = "";
 		for (String line : lines) {	
 			lineNum++;
+			String lineToLower = line.toLowerCase();
 			if (line.indexOf("}") != -1) {
 				// close the brace
 				brace_count--;
-			} else if (line.matches(match_indent_close)) {
+			} else if (lineToLower.matches(match_indent_close)) {
 				// close the tag
+				brace_count--;
+			} else if (lineToLower.matches(match_indent_open_close)) {
+				// close the tag (both an opening and closing tag on the same line)
 				brace_count--;
 			}
 			
@@ -451,20 +456,20 @@ public class IACleaner {
 			if (line.indexOf("{") != -1) {
 				// open the brace for next lines
 				next_brace_count++;
-			} else if (line.matches(match_indent_open)) {
+			} else if (lineToLower.matches(match_indent_open)) {
 				// open the tag for next lines
 				next_brace_count++;
-			}
+			} 
 			
 			// indent the line
 			if (brace_count < 0) {
 				if (next_brace_count < 0) {
 					// this means that the next line will definitely be out
 					throwWarning("Unbalanced braces as of line: " + line + " (" + lineNum + "/" + lines.length + ")", getContext(lines, lineNum));
+					next_brace_count = 0;
 				}
 				// otherwise, it could be a line like "{ }"
 				brace_count = 0;
-				next_brace_count = 0;
 			}
 			String indent = repeatString("  ", brace_count);
 			line = indent + line;
@@ -474,7 +479,7 @@ public class IACleaner {
 			
 			buf.append(line).append("\n");
 			
-			// additional lines after }, unless the previous line also includeded a }
+			// additional lines after }, unless the previous line also included a }
 			if (line.contains("}") && !prevLine.contains("}")) {
 				buf.append("\n");
 			}
