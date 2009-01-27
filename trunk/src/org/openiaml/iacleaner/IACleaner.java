@@ -383,7 +383,7 @@ public class IACleaner {
 		String result = buf.toString();
 		
 		// simplify indentation of common structurs
-		result = result.replaceAll("}[\\s]+catch[\\s]+\\(", "} catch ");
+		result = result.replaceAll("}[\\s]+catch[\\s]+\\(", "} catch (");
 		result = result.replaceAll("}[\\s]+else[\\s]+\\{", "} else {");
 		result = result.replaceAll("}[\\s]+else[\\s]+if[\\s]+\\(", "} else if (");
 		result = result.replaceAll("}[\\s]+elseif[\\s]+\\(", "} elseif (");
