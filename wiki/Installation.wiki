@@ -1,0 +1,8 @@
+#summary Installing and using iacleaner.
+#labels Featured,Phase-Deploy
+
+=Installation=
+
+Installing _iacleaner_ is as easy as checking out the current revision from SVN trunk. It's recommended you check out the trunk into a new Eclipse project, and use this project as a requirement of your existing code; but you can use _iacleaner_ in any way.
+
+In the future, _iacleaner_ will be [http://code.google.com/p/iacleaner/issues/detail?id=4 available as an Eclipse plugin], that can be updated through the normal update site mechanisms.
