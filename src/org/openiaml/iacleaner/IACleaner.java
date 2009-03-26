@@ -274,7 +274,7 @@ public class IACleaner {
 				}
 				
 				// skip replace the newline
-				end--;
+				end--; 
 				
 				String key = KEY_LINE + i + KEY_END + INDENT_NEWLINE;		// DONT add new line (will screw up key)
 				String value = script.substring(start, end + 1);				
@@ -287,7 +287,8 @@ public class IACleaner {
 		
 		for (String key : replaceLineComments.keySet()) {
 			String value = replaceLineComments.get(key);
-			script = script.replace(value, key);
+			// we must make sure we find the entire line (so //a doesn't match //ab)
+			script = script.replace(value + "\n", key + "\n");
 		}
 		return script;
 	}
