@@ -3,6 +3,15 @@
 
 =Installation=
 
-Installing _iacleaner_ is as easy as [http://code.google.com/p/iacleaner/source/checkout checking out the current revision] from SVN trunk. It's recommended you check out the trunk into a new Eclipse project, and use this project as a requirement of your existing code; but you can use _iacleaner_ in any way.
+  # In Eclipse, select _Help_ > _Software Updates_ > _Find and Install..._
+  # Add the following remote site:
+{{{
+    Name: iacleaner
+    URL:  http://iacleaner.googlecode.com/svn/trunk/org.openiaml.iacleaner.update/
+}}}
+  # Select the _Internet Application Cleaner/Formatter_ feature to install
+  # Once it has been installed, restart Eclipse
 
-In the future, _iacleaner_ will be [http://code.google.com/p/iacleaner/issues/detail?id=4 available as an Eclipse plugin], that can be updated through the normal update site mechanisms.
+You may also need to have the JUnit feature installed in your Eclipse environment, but this usually comes pre-installed in an Eclipse environment.
+
+Installing the _iacleaner_ source code is as easy as [http://code.google.com/p/iacleaner/source/checkout checking out the current revision] from SVN trunk.
