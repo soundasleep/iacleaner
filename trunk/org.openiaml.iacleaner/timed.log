@@ -1,0 +1,9 @@
+org.openiaml.iacleaner.tests.DefaultCssTest: 62 ms
+org.openiaml.iacleaner.tests.PrototypeJsTest: 20985 ms
+org.openiaml.iacleaner.tests.StoreDbPhpTest: 47 ms
+org.openiaml.iacleaner.tests.ClearSessionPhpTest: 31 ms
+org.openiaml.iacleaner.tests.IndexTest: 16 ms
+org.openiaml.iacleaner.tests.ComplexPhpTest: 546 ms
+org.openiaml.iacleaner.tests.SitemapHtmlTest: 16 ms
+Expected output tests: 31 ms
+Total elapsed time: 21734 ms

@@ -3,6 +3,10 @@
  */
 package org.openiaml.iacleaner.tests;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
@@ -19,13 +23,17 @@ import junit.framework.TestSuite;
  */
 public abstract class TimedTestSuite extends TestSuite {
 
+	private FileWriter timedWriter;
+	
 	/**
 	 * Default constructor.
 	 * 
 	 * @param title
+	 * @throws IOException 
 	 */
-	public TimedTestSuite(String title) {
+	public TimedTestSuite(String title, String file) throws IOException {
 		super(title);
+		timedWriter = new FileWriter(new File(file));
 	}
 
 	/**
@@ -40,6 +48,12 @@ public abstract class TimedTestSuite extends TestSuite {
 		super.run(result);
 		long finishTime = System.currentTimeMillis();
 		System.out.println("Total elapsed time: " + (finishTime - startTime) + " ms");
+		try {
+			timedWriter.write("Total elapsed time: " + (finishTime - startTime) + " ms\n");
+			timedWriter.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -54,6 +68,11 @@ public abstract class TimedTestSuite extends TestSuite {
 		super.runTest(test, result);
 		long finishTime = System.currentTimeMillis();
 		System.out.println(test + ": " + (finishTime - startTime) + " ms");
+		try {
+			timedWriter.write(test + ": " + (finishTime - startTime) + " ms\n");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 }
