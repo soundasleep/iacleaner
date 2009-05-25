@@ -3,6 +3,11 @@
  */
 package org.openiaml.iacleaner.tests;
 
+import java.io.IOException;
+
+import org.openiaml.iacleaner.IACleaner;
+import org.openiaml.iacleaner.tests.expected.AllExpectedTests;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -14,9 +19,10 @@ import junit.framework.TestSuite;
  */
 public class AllTests {
 
-	public static Test suite() {
+	public static Test suite() throws IOException {
 		TestSuite suite = new TimedTestSuite(
-				"Test for org.openiaml.iacleaner.tests") {
+				"All tests",
+				"timed.log") {
 		};
 		//$JUnit-BEGIN$
 		suite.addTestSuite(DefaultCssTest.class);
@@ -26,8 +32,16 @@ public class AllTests {
 		suite.addTestSuite(IndexTest.class);
 		suite.addTestSuite(ComplexPhpTest.class);
 		suite.addTestSuite(SitemapHtmlTest.class);
+		suite.addTest(AllExpectedTests.suite());
 		//$JUnit-END$
 		return suite;
+	}
+	
+	/**
+	 * Get the iacleaner to test with.
+	 */
+	public static IACleaner getCleaner() {
+		return new IACleaner();
 	}
 
 }
