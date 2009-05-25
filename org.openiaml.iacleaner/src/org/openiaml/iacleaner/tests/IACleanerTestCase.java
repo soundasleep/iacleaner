@@ -9,8 +9,9 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
+import org.openiaml.iacleaner.CleanerException;
 import org.openiaml.iacleaner.IACleaner;
-import org.openiaml.iacleaner.IACleaner.CleanerException;
+import org.openiaml.iacleaner.IARegexpCleaner;
 
 /**
  * Abstract class defining common tests and loading methods
@@ -32,7 +33,7 @@ public abstract class IACleanerTestCase extends TestCase {
 	 * @return the cleaned output
 	 */
 	public String clean(File sourceFile, File targetFile) throws IOException, CleanerException {
-		clean = new IACleaner();
+		clean = AllTests.getCleaner();
 		String output = clean.cleanScript(sourceFile);
 	
 		// write it to out.php
@@ -59,14 +60,18 @@ public abstract class IACleanerTestCase extends TestCase {
 	 * often single quotes in words like 'don't').
 	 */
 	public void testSubstitutions() {
-		for (String key : clean.getStringSubstitutions().keySet()) {
-			String value = clean.getStringSubstitutions().get(key);
-			assertNotNull(value);	// sanity check
-			
-			int nlCount = value.split("\n").length;
-			assertTrue("String substitution " + key + " was too long: " + value,
-					nlCount < 10);
+		if (clean instanceof IARegexpCleaner) {
+			IARegexpCleaner rx = (IARegexpCleaner) clean;
+			for (String key : rx.getStringSubstitutions().keySet()) {
+				String value = rx.getStringSubstitutions().get(key);
+				assertNotNull(value);	// sanity check
+				
+				int nlCount = value.split("\n").length;
+				assertTrue("String substitution " + key + " was too long: " + value,
+						nlCount < 10);
+			}
 		}
+		
 	}
 
 	/**
