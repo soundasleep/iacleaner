@@ -29,6 +29,11 @@ public class CleanerException extends Exception {
 		this(message, context);
 		this.source = source;
 	}
+	
+	public CleanerException(Throwable e, String source) {
+		super(e.getMessage(), e);
+		this.source = source;
+	}
 
 	/**
 	 * Get the source of the cleaned page, or null if it has
