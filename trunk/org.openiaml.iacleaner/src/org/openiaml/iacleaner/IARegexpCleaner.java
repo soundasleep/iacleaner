@@ -3,9 +3,7 @@
  */
 package org.openiaml.iacleaner;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +26,7 @@ import java.util.Set;
  * @see http://code.google.com/p/iacleaner/
  *
  */
-public class IARegexpCleaner extends IACleanerWithWarnings implements IACleaner {
+public class IARegexpCleaner extends DefaultIACleaner implements IACleaner {
 	
 	protected static final String KEY_QUOTE = "$hide_string_";
 	protected static final String KEY_QUOTE_SQ = "$hide_string_sq_";
@@ -499,33 +497,6 @@ public class IARegexpCleaner extends IACleanerWithWarnings implements IACleaner 
 		return buf.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.File)
-	 */
-	public String cleanScript(File sourceFile) throws IOException, CleanerException {
-		return cleanScript(readFile(sourceFile));
-	}
-	
-	/**
-	 * Read in a file into a string.
-	 * 
-	 * @throws IOException if an IO exception occurs
-	 */
-	public static String readFile(File sourceFile) throws IOException {
-		int bufSize = 128;
-		StringBuffer sb = new StringBuffer(bufSize);
-		BufferedReader reader = new BufferedReader(new FileReader(sourceFile), bufSize);
-				
-		char[] chars = new char[bufSize];
-		int numRead = 0;
-		while ((numRead = reader.read(chars)) > -1) {
-			sb.append(String.valueOf(chars).substring(0, numRead));	
-		}
-		
-		reader.close();
-		return sb.toString();
-	}
-	
 	/**
 	 * When formatting the output, a number of substitutions
 	 * are made (e.g. taking out "strings" so they may be
