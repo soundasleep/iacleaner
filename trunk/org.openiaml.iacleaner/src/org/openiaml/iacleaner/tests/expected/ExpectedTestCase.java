@@ -5,6 +5,8 @@ import java.io.File;
 import junit.framework.TestCase;
 
 import org.openiaml.iacleaner.IACleaner;
+import org.openiaml.iacleaner.IARegexpCleaner;
+import org.openiaml.iacleaner.tests.AllTests;
 
 /**
  * For testing the expected results of different input files, we extend this abstract class.
@@ -63,12 +65,12 @@ public abstract class ExpectedTestCase extends TestCase {
 	 */
 	public void testExpected() throws Exception {
 	
-		String inputText = IACleaner.readFile(getInputFile());
+		String inputText = IARegexpCleaner.readFile(getInputFile());
 		assertNotNull(inputText);
-		String outputText = IACleaner.readFile(getExpectedFile());
+		String outputText = IARegexpCleaner.readFile(getExpectedFile());
 		assertNotNull(outputText);
 
-		IACleaner c = new IACleaner();
+		IACleaner c = AllTests.getCleaner();
 		assertEquals(outputText, c.cleanScript(inputText));
 
 	}
@@ -80,10 +82,10 @@ public abstract class ExpectedTestCase extends TestCase {
 	 */
 	public void testStable() throws Exception {
 		
-		String inputText = IACleaner.readFile(getExpectedFile());
+		String inputText = IARegexpCleaner.readFile(getExpectedFile());
 		assertNotNull(inputText);
 
-		IACleaner c = new IACleaner();
+		IACleaner c = AllTests.getCleaner();
 		assertEquals(inputText, c.cleanScript(inputText));
 		
 	}

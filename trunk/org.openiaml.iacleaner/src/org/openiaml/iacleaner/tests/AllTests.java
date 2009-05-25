@@ -5,11 +5,12 @@ package org.openiaml.iacleaner.tests;
 
 import java.io.IOException;
 
-import org.openiaml.iacleaner.IACleaner;
-import org.openiaml.iacleaner.tests.expected.AllExpectedTests;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.openiaml.iacleaner.IACleaner;
+import org.openiaml.iacleaner.IARegexpCleaner;
+import org.openiaml.iacleaner.tests.expected.AllExpectedTests;
 
 /**
  * Run all automated tests.
@@ -41,7 +42,7 @@ public class AllTests {
 	 * Get the iacleaner to test with.
 	 */
 	public static IACleaner getCleaner() {
-		return new IACleaner();
+		return new IARegexpCleaner();
 	}
 
 }
