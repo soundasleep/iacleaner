@@ -75,10 +75,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				return;	// permanent change
 			} else if (next5.equals("<?php")) {
 				// php mode!
-				throw new RuntimeException("PHP mode!");
+				cleanPhpBlock(reader, writer);
+				// we may continue with html mode
 			} else if (next5.substring(0, 4).equals("<!--")) {
 				// comment mode!
 				cleanHtmlComment(reader, writer);
+				// we may continue with html mode
 			} else {
 				// tag mode!
 				cleanHtmlTag(reader, writer).toLowerCase();
@@ -96,6 +98,131 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 	
 	/**
+	 * Should we ignore whitespace after the given character? Called from PHP mode.
+	 * 
+	 * @param prev
+	 * @return
+	 */
+	private boolean ignoreWhitespaceAfterPhp(int prev) {
+		return Character.isWhitespace(prev) || prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'';
+	}
+	
+	/**
+	 * We need to read in a PHP script and output it as appropriate.
+	 * Reader starts with "&lt;?php'. 
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void cleanPhpBlock(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		// write in the php header as-is
+		writer.write(reader.read(5));
+		// add a space
+		writer.write(' ');
+		// following php code will be indented
+		writer.indentIncrease();
+		int cur = -1;
+		int prev = ' ';
+		int prevNonWhitespace = -1;
+		while ((cur = reader.read()) != -1) {
+			if (cur == '?' && reader.readAhead() == '>') {
+				// end of php mode
+				if (ignoreWhitespaceAfterPhp(prev)) {
+					// add a space
+					writer.write(' ');
+				}
+				writer.write(cur); // ?
+				writer.write(reader.read()); // >
+				writer.indentDecrease();	// end indent
+				return;	// stop
+			}
+			
+			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
+				// skip multiple whitespace
+			} else {
+				// put a newline before?
+				if (prevNonWhitespace == ';') {
+					writer.newLine();
+				}
+				
+				// write like normal
+				writer.write(cur);
+				
+				// switch into strings mode?
+				if (cur == '"') {
+					jumpOverPhpString(reader, writer);
+				} else if (cur == '\'') {
+					jumpOverPhpSingleString(reader, writer);
+				}
+				prevNonWhitespace = cur;
+			}
+			prev = cur;
+		}
+		// it's ok to fall out of PHP mode
+		writer.indentDecrease(); // end indent
+	}
+
+	/**
+	 * The last character we read in PHP mode was '"'; skip through the string
+	 * until we find the end of the string.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	private void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		int cur = -1;
+		while ((cur = reader.read()) != -1) {
+			if (cur == '"') {
+				// at the end of the string
+				writer.write(cur);
+				return;
+			}
+			
+			// write the character as normal
+			writer.write(cur);
+
+			if (cur == '\\' && reader.readAhead() == '"') {
+				// escaping the next string character
+				writer.write(reader.read());
+			}
+		}
+		throw new CleanerException("PHP string did not terminate");
+	}
+
+	/**
+	 * The last character we read in PHP mode was "'"; skip through the string
+	 * until we find the end of the string.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	private void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		int cur = -1;
+		while ((cur = reader.read()) != -1) {
+			if (cur == '\'') {
+				// at the end of the string
+				writer.write(cur);
+				return;
+			}
+			
+			// write the character as normal
+			writer.write(cur);
+
+			if (cur == '\\' && reader.readAhead() == '\'') {
+				// escaping the next string character
+				writer.write(reader.read());
+			}
+		}
+		throw new CleanerException("PHP single-quoted string did not terminate");
+	}
+
+	/**
 	 * We need to read in a comment and output it as appropriate.
 	 * Reader starts with '&lt;!--'.
 	 * 
@@ -104,10 +231,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private void cleanHtmlComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanHtmlComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		// read until we find the end
 		int cur = -1;
-		int prev = -1;
 		boolean isNewline = false;
 		boolean startedComment = false;
 		boolean commentLine = false;
@@ -122,7 +248,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			
 			cur = reader.read();
 			if (cur == -1)
-				break;	//bail
+				break;	// bail
 			
 			if (cur != '\n' && Character.isWhitespace(cur) && isNewline) {
 				// don't double indent
@@ -146,7 +272,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				return;
 			}
 			
-			prev = cur;
 			if (cur == '\n') {
 				isNewline = true;
 			}

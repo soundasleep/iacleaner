@@ -109,8 +109,8 @@ public abstract class ExpectedTestCase extends TestCase {
 		try {
 			TestCase.assertEquals(a, b);
 		} catch (AssertionFailedError e) {
-			System.out.println("a: " + Arrays.toString(a.toCharArray()));
-			System.out.println("b: " + Arrays.toString(b.toCharArray()));
+			System.out.println("result: " + Arrays.toString(b.toCharArray()));
+			System.out.println("wanted: " + Arrays.toString(a.toCharArray()));
 			throw e;
 		}
 	}
