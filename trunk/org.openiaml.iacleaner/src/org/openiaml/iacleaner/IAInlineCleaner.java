@@ -72,27 +72,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void cleanHtmlScript(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
-		
-		/*
-		 * text = removeDoubleSpacing(trim(readUntil('<')));
-		 * read next 4 chars;
-		 * if (text == "<?xml")
-		 *   switch to xml mode(<?xml ...) permanently
-		 * if (text == "<?php")
-		 *   switch to php mode(<?php ... ending ?> [excluding "strings" 'strings'])
-		 *   resume html
-		 * if (text == "<!--")
-		 *   switch to comment mode(<!-- ... ending -->)
-		 *   resume html
-		 * else
-		 *   tag = switch to tag mode(<... ending > [excluding "strings" 'strings'])
-		 *   echo <tag>;
-		 *   if (need to indent)
-		 *     indent++;
-		 *     
-		 * iterate;
-		 */
-		
+
 		while (removeHtmlTextSpacingUntil(reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
@@ -166,6 +146,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			
 			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
 				// skip multiple whitespace
+			} else if (Character.isWhitespace(cur)) {
+				// ignore all whitespace
 			} else {
 				// put a newline before?
 				if (prevNonWhitespace == ';') {
@@ -335,7 +317,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected boolean htmlTagNeedsTrailingNewLine(String tag) {
 		return tag.equals("/h1") || tag.equals("/li") || tag.equals("/title") || tag.equals("/link") || 
-			tag.equals("/head") || tag.equals("/body") || tag.equals("/ol") || tag.equals("/ul");
+			tag.equals("/head") || tag.equals("/body") || tag.equals("/ol") || tag.equals("/ul") ||
+			tag.equals("/script");
 	}
 
 
@@ -376,7 +359,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		writer.write(first);
 
 		int cur;
-		int prev = -1;
 		boolean doneTag = false;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '>') {
@@ -394,6 +376,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.newLine();
 				}
 				
+				// should we step into any special modes?
+				if (tagName.toLowerCase().equals("script")) {
+					// javascript mode!
+					cleanHtmlJavascript(reader, writer);
+					// will continue when </script>
+				}
+				
 				return tagName;
 			} else if (Character.isWhitespace(cur)) {
 				// end of tag name or attribute
@@ -402,16 +391,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else {
 					// we now want to clean attributes
 					// put whitespace back on stack
-					//writer.write("@");
 					reader.unread(cur);
 					cleanHtmlTagAttributes(reader, writer);
 				}
-				/*
-				if (!Character.isWhitespace(prev)) {
-					// skip multiple whitespace
-					writer.write(' ');
-				}
-				*/
 			} else {
 				// character data
 				writer.write(cur);
@@ -419,12 +401,84 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					doneTag = true;		// we've done at least one character of the tag
 				}
 			}
-			prev = cur;
 		}
 		
 		// we never found the end of the tag >
 		throwWarning("We never found the end of HTML tag", tagName.toString());
 		return tagName.toString();
+	}
+
+	/**
+	 * We are in HTML and we have just processed a tag
+	 * '&lt;script ...&gt;'. We need to parse the inline Javascript until
+	 * we are about to hit '&lt;/script&gt;'.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void cleanHtmlJavascript(MyStringReader reader,
+			MyStringWriter writer) throws IOException, CleanerException {
+		// is it immediately </script>?
+		if (readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
+			// we don't need to do anything
+			return;
+		}
+		
+		// following script code will be indented
+		writer.indentIncrease();
+		
+		// always start with a newline (but let <script></script> remain as one line)
+		boolean needsNewLine = true;
+		
+		int cur = -1;
+		int prev = ' ';
+		int prevNonWhitespace = -1;
+		while ((cur = reader.read()) != -1) {
+			// is the next tag </script>?
+			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
+			if (nextTag.toLowerCase().equals("/script")) {
+				// we want to go back to html mode
+				writer.indentDecrease(); // end indent
+				// always end with a newline
+				if (!needsNewLine) {
+					// dont write a new line if we haven't actually written anything in here
+					writer.newLineMaybe();
+				}
+				return;
+			}
+			
+			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
+				// skip multiple whitespace
+			} else if (Character.isWhitespace(cur)) {
+				// ignore all whitespace
+			} else {
+				// put a newline before?
+				if (prevNonWhitespace == ';') {
+					writer.newLine();
+				} else if (needsNewLine) {
+					writer.newLineMaybe();
+					needsNewLine = false;
+				}
+				
+				// write like normal
+				writer.write(cur);
+				
+				// switch into strings mode?
+				if (cur == '"') {
+					jumpOverPhpString(reader, writer);
+				} else if (cur == '\'') {
+					jumpOverPhpSingleString(reader, writer);
+				}
+				prevNonWhitespace = cur;
+			}
+			prev = cur;
+		}
+		
+		// it's NOT ok to fall out of script mode; this means we never
+		// found a </script>.
+		throw new InlineCleanerException("Unexpectedly terminated out of Javascript mode", reader);
 	}
 
 	/**
@@ -557,17 +611,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (addWhitespace) {
 					// read ahead to find the next tag
 					// eat the <
-					int oldChar = reader.getLastChar();
-					if (cur != reader.read())
-						throw new InlineCleanerException("The unread buffer somehow changed", reader);	// sanity check
-					String nextTag = readAheadUntilEndHtmlTag(reader);
+					String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
 					if (nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!')) {
 						writer.write(' ');
 						addWhitespace = false;
 					}
-					// put the < back
-					reader.unread(cur);
-					reader.setLastChar(oldChar);
 				}
 				return true;
 			}
@@ -600,6 +648,25 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		return false;		
 	}
 	
+	/**
+	 * Same as {@link #readAheadUntilEndHtmlTag(org.openiaml.iacleaner.IAInlineCleaner.MyStringReader)},
+	 * except this skips over a '<' in front.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @return
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected String readAheadUntilEndHtmlTagWithOpenBrace(MyStringReader reader,
+			MyStringWriter writer) throws IOException, CleanerException {
+		int oldChar = reader.getLastChar();
+		int cur = reader.read();	// consume <
+		String nextTag = readAheadUntilEndHtmlTag(reader);
+		reader.unread(cur); 		// put the < back
+		reader.setLastChar(oldChar);
+		return nextTag;
+	}
 
 	/**
 	 * We want to read ahead, and see what the next HTML tag is.
@@ -613,7 +680,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	public String readAheadUntilEndHtmlTag(MyStringReader reader) throws IOException, CleanerException {
+	protected String readAheadUntilEndHtmlTag(MyStringReader reader) throws IOException, CleanerException {
 		int oldLast = reader.getLastChar();
 		char[] buffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to unread back to reader
 		char[] retBuffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to return
@@ -640,7 +707,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			}
 		}
 		// return the entire buffer
-		throw new CleanerException("Could not read until end of HTML tag; never found end tag. Buffer = " + String.valueOf(buffer));
+		if (i > 0) {
+			throw new InlineCleanerException("Could not read until end of HTML tag; never found end tag. Buffer = " + String.valueOf(buffer).substring(0, i - 1), reader);
+		} else {
+			throw new InlineCleanerException("Could not read until end of HTML tag; never found end tag. Buffer is empty", reader);
+		}
 	}
 	
 	public class MyStringReader extends PushbackReader {
@@ -690,17 +761,23 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 * If EOF is reached, returns the remaining read-ahead.
 		 * 
 		 * @param n number of characters to read ahead
-		 * @return
+		 * @return the characters read, or null if we are EOF
 		 * @throws IOException
 		 */
 		public String readAhead(int n) throws IOException {
 			int oldLast = lastChar;
 			char[] c = new char[n];
 			int found = read(c);
-			unread(c, 0, found); // push these characters back on
+			if (found != -1) {				
+				unread(c, 0, found); // push these characters back on
+			}
 			 
 			lastChar = oldLast; // reset
-			return String.valueOf(c).substring(0, found);
+			if (found == -1) {
+				return null;
+			} else {
+				return String.valueOf(c).substring(0, found);
+			}
 		}
 		
 		/**
