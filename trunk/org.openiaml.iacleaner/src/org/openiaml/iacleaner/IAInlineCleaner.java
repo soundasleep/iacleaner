@@ -122,7 +122,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		if (tag.charAt(0) == '/')
 			return htmlTagIndented(tag.substring(1));
 		return tag.equals("html") || tag.equals("body") || tag.equals("ol") || tag.equals("ul") ||
-			tag.equals("head");
+			tag.equals("head") || tag.equals("p");
 	}
 	
 	/**
@@ -131,12 +131,23 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	protected boolean htmlTagNeedsNewLine(String tag) {
-		return tag.equals("h1") || tag.equals("li") || tag.equals("title") || tag.equals("link") || tag.equals("head") || tag.equals("body")
-		|| tag.equals("ol") || tag.equals("ul") || tag.equals("head") || tag.equals("body");
+		return tag.equals("h1") || tag.equals("li") || tag.equals("title") || tag.equals("link") || 
+			tag.equals("head") || tag.equals("body") || tag.equals("ol") || tag.equals("ul");
+	}
+	
+	/**
+	 * Does a new line need to be added at the end of this tag?
+	 * @param tag
+	 * @return
+	 */
+	protected boolean htmlTagNeedsTrailingNewLine(String tag) {
+		return tag.equals("/h1") || tag.equals("/li") || tag.equals("/title") || tag.equals("/link") || 
+			tag.equals("/head") || tag.equals("/body") || tag.equals("/ol") || tag.equals("/ul");
 	}
 
+
 	/**
-	 * We have just started an <htmlTag attr...>. Clean the tag up, and return
+	 * We have just started an &lt;htmlTag attr...&gt;. Clean the tag up, and return
 	 * the 'htmlTag'.
 	 * 
 	 * @param reader
@@ -155,7 +166,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		if (tagName.charAt(0) == '/' && htmlTagIndented(tagName)) {
 			// need to un-indent before
 			writer.indentDecrease();
-			writer.newLine();
+			writer.newLineMaybe();
 		}
 
 		// does this tag need to be placed on a new line?
@@ -176,6 +187,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (tagName.charAt(0) != '/' && htmlTagIndented(tagName)) {
 					// need to indent afterwards
 					writer.indentIncrease();
+					writer.newLine();
+				}
+				
+				// trailing newline?
+				if (htmlTagNeedsTrailingNewLine(tagName)) {
 					writer.newLine();
 				}
 				
@@ -213,6 +229,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * Remove space around HTML text until we find the character '<'
 	 * (don't include this in the output)
 	 * 
+	 * This also controls the formatting of the output text.
+	 * 
 	 * @param reader
 	 * @param writer
 	 * @param c
@@ -224,21 +242,37 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		int cur;
 		int prev = -1;
+		boolean addWhitespace = false;
 		while ((cur = reader.readAhead()) != -1) {
 			if (cur == '<') {
 				// we're done
+				// do we need to add previous whitespace?
+				if (addWhitespace && reader.readAhead(2).charAt(1) != '/') {
+					writer.write(' ');
+					addWhitespace = false;
+				}
 				return true;
 			}
 			
 			// skip multiple whitespace
 			reader.read();	// eat a char
-			if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
-				// ignore multiple whitespace inline
-			} else if (prev == -1 && Character.isWhitespace(cur)) {
-				// ignore initial whitespace
-			} else if (Character.isWhitespace(cur) && reader.readAhead() == '<') {
-				// ignore trailing whitespace
+			if (Character.isWhitespace(cur)) {
+				if (Character.isWhitespace(prev)) {
+					// ignore multiple whitespace inline
+				} else if (prev == -1) {
+					// ignore initial whitespace
+				} else if (reader.readAhead() == '<' && reader.readAhead(2).charAt(1) == '/') {
+					// ignore trailing whitespace at end of tags
+				} else {
+					// write only a space character (newlines aren't copied)
+					addWhitespace = true;	// add the whitespace later
+				}
 			} else {
+				// add previous whitespace?
+				if (addWhitespace) {
+					writer.write(' ');
+					addWhitespace = false;
+				}
 				// write as normal
 				writer.write(cur);
 			}
@@ -315,16 +349,33 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 
 		private int indent = 0;
 		private static final String indentString = "  ";
+		private boolean canWordWrap = true;
+		private int col = 0;
+		
+		/**
+		 * Columns after this long will be wordwrapped when {@link #canWordWrap} is true.
+		 */
+		private static final int wordWrapCol = 79;	
 		
 		public MyStringWriter() {
 			super();
+		}
+		
+		/**
+		 * Can this writer do word wrap automatically?
+		 * Should be turned off when outputting strings, etc.
+		 * 
+		 * @return
+		 */
+		public boolean canWordWrap() {
+			return canWordWrap;
 		}
 
 		/**
 		 * Only write a new line if the previous line wasn't one.
 		 */
 		public void newLineMaybe() {
-			if (previousChar != '\n')
+			if (previousChar != '\n' && !wordwrapOnNext)
 				newLine();
 		}
 
@@ -355,18 +406,42 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 		
 		int previousChar = -1;
+		boolean wordwrapOnNext = false;
 
 		/* (non-Javadoc)
 		 * @see java.io.StringWriter#write(int)
 		 */
 		@Override
 		public void write(int c) {
-			// indent?
-			if (previousChar == '\n') {
-				write(getIndent());
+			if (canWordWrap() && wordwrapOnNext && c != ' ') {
+				// need to do wordwrap indent now!
+				wordwrapOnNext = false;
+				newLine();	// will also do indent
+				previousChar = -1;	// don't double indent
+				write(getIndent());	// will update col
+				// continue like normal
 			}
+			if (previousChar == '\n') {
+				// indent?		
+				previousChar = c;
+				write(getIndent());	// will update col
+			}
+			if (canWordWrap()) {
+				if (c == ' ' && col >= wordWrapCol) {				
+					// start wordwrap
+					wordwrapOnNext = true;	// write the indent next time
+					previousChar = c;
+					// don't write ' '
+					return;
+				}
+			} 
+			
 			super.write(c);
+			col++;
 			previousChar = c;
+			if (c == '\n') {
+				col = 0;	// reset column
+			}
 		}
 
 		/**
@@ -387,7 +462,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		public void write(char[] cbuf, int off, int len) {
 			// TODO optimize
 			for (int i = 0; i < len; i++) {
-				super.write(cbuf[i + off]);
+				write(cbuf[i + off]);
 			}
 		}
 
@@ -398,7 +473,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		public void write(String str, int off, int len) {
 			// TODO optimize
 			for (int i = 0; i < len; i++) {
-				super.write(str.charAt(i + off));
+				write(str.charAt(i + off));
 			}
 		}
 
