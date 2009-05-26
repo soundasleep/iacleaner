@@ -109,7 +109,32 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean ignoreWhitespaceAfterPhp(int prev) {
-		return Character.isWhitespace(prev) || prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'';
+		return prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'';
+	}
+	
+	/**
+	 * Do we require whitespace after for the given character?
+	 * 
+	 * @param prev
+	 * @return
+	 */
+	private boolean needsWhitespaceCharacterPhp(int prev) {
+		return prev == ',';
+	}
+	
+	/**
+	 * Even though we've been told we need whitespace before this character,
+	 * do we actually need it?
+	 * 
+	 * @param prev
+	 * @return
+	 */
+	private boolean doesntActuallyNeedWhitespaceBefore(int prev) {
+		return prev == '(' || prev == ')' || prev == '}' || prev == ';';
+	}
+	
+	private boolean needsWhitespaceBetween(int a, int b) {
+		return (a == ')' && b == '{');
 	}
 	
 	/**
@@ -128,30 +153,60 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		writer.write(' ');
 		// following php code will be indented
 		writer.indentIncrease();
+		
 		int cur = -1;
 		int prev = ' ';
 		int prevNonWhitespace = -1;
+		boolean needsWhitespace = false;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '?' && reader.readAhead() == '>') {
 				// end of php mode
-				if (ignoreWhitespaceAfterPhp(prev)) {
-					// add a space
-					writer.write(' ');
-				}
-				writer.write(cur); // ?
-				writer.write(reader.read()); // >
+				// add a space
+				writer.write(' ');
+				writer.write(cur); // write '?'
+				writer.write(reader.read()); // write '>'
 				writer.indentDecrease();	// end indent
 				return;	// stop
 			}
 			
 			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
+				// print just a space if necessary
+				if (needsWhitespaceCharacterPhp(prev)) {
+					needsWhitespace = true;
+				}
+			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
 				// skip multiple whitespace
+			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
+				// we actually need this whitespace
+				needsWhitespace = true;
 			} else if (Character.isWhitespace(cur)) {
-				// ignore all whitespace
+				// ignore whitespace otherwise
 			} else {
 				// put a newline before?
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
+				} else if (prevNonWhitespace == '{') {
+					// open a new block
+					writer.newLineMaybe();
+					writer.indentIncrease();
+				} else if (prevNonWhitespace == '}') {
+					// a new statement (like ;)
+					writer.newLine();
+				} else if (needsWhitespace) {
+					// needs whitespace from a previous separator character
+					if (!doesntActuallyNeedWhitespaceBefore(cur)) {
+						writer.write(' ');
+					}
+					needsWhitespace = false;
+				} else if (needsWhitespaceBetween(prevNonWhitespace, cur)) {
+					writer.write(' ');
+					needsWhitespace = false;
+				}
+				
+				if (cur == '}') {
+					// close an existing block
+					writer.indentDecrease();
+					writer.newLineMaybe();
 				}
 				
 				// write like normal
@@ -163,10 +218,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else if (cur == '\'') {
 					jumpOverPhpSingleString(reader, writer);
 				}
-				prevNonWhitespace = cur;
+				if (!Character.isWhitespace(cur)) {
+					prevNonWhitespace = cur;
+				}
 			}
 			prev = cur;
 		}
+		
 		// it's ok to fall out of PHP mode
 		writer.indentDecrease(); // end indent
 	}
@@ -435,6 +493,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		int cur = -1;
 		int prev = ' ';
 		int prevNonWhitespace = -1;
+		boolean needsWhitespace = false;
 		while ((cur = reader.read()) != -1) {
 			// is the next tag </script>?
 			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
@@ -450,16 +509,46 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			}
 			
 			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
+				// print just a space if necessary
+				if (needsWhitespaceCharacterPhp(prev)) {
+					needsWhitespace = true;
+				}
+			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
 				// skip multiple whitespace
+			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
+				// we actually need this whitespace
+				needsWhitespace = true;
 			} else if (Character.isWhitespace(cur)) {
-				// ignore all whitespace
+				// ignore whitespace otherwise
 			} else {
 				// put a newline before?
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
+				} else if (prevNonWhitespace == '{') {
+					// open a new block
+					writer.newLineMaybe();
+					writer.indentIncrease();
+				} else if (prevNonWhitespace == '}') {
+					// a new statement (like ;)
+					writer.newLine();
 				} else if (needsNewLine) {
 					writer.newLineMaybe();
 					needsNewLine = false;
+				} else if (needsWhitespace) {
+					// needs whitespace from a previous separator character
+					if (!doesntActuallyNeedWhitespaceBefore(cur)) {
+						writer.write(' ');
+					}
+					needsWhitespace = false;
+				} else if (needsWhitespaceBetween(prevNonWhitespace, cur)) {
+					writer.write(' ');
+					needsWhitespace = false;
+				}
+				
+				if (cur == '}') {
+					// close an existing block
+					writer.indentDecrease();
+					writer.newLineMaybe();
 				}
 				
 				// write like normal
@@ -471,7 +560,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else if (cur == '\'') {
 					jumpOverPhpSingleString(reader, writer);
 				}
-				prevNonWhitespace = cur;
+				if (!Character.isWhitespace(cur)) {
+					prevNonWhitespace = cur;
+				}
 			}
 			prev = cur;
 		}
