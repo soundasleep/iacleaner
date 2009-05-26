@@ -13,10 +13,12 @@ import junit.framework.TestSuite;
 public class AllExpectedTests {
 
 	public static Test suite() {
-		TestSuite suite = new TestSuite(
-				"Expected output tests");
+		TestSuite suite = new TestSuite("Expected output tests");
 		//$JUnit-BEGIN$
 		suite.addTestSuite(Basic_Html.class);
+		suite.addTestSuite(Inline2_Html.class);
+		suite.addTestSuite(Inline_Html.class);
+		suite.addTestSuite(Inline3_Html.class);
 		//$JUnit-END$
 		return suite;
 	}
