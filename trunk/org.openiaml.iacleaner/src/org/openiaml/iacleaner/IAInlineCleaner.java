@@ -15,6 +15,31 @@ import java.io.StringWriter;
  */
 public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 
+	/**
+	 * Try to add additional information about the state based on
+	 * the custom classes we use.
+	 * 
+	 * @author Jevon
+	 *
+	 */
+	public class InlineCleanerException extends CleanerException {
+
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * Try to add additional knowledge to the exception from the 
+		 * given reader.
+		 * 
+		 * @param string
+		 * @param reader
+		 * @throws IOException 
+		 */
+		public InlineCleanerException(String string, MyStringReader reader) throws IOException {
+			super(string + " [last='" + (char) reader.getLastChar() + "' following='" + reader.readAhead(32) + "']");
+		}
+
+	}
+
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String)
 	 */
@@ -68,7 +93,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 * iterate;
 		 */
 		
-		while (removeHtmlTextSpacingUntil(reader, writer, '<')) {
+		while (removeHtmlTextSpacingUntil(reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
 				// xml mode!
@@ -173,7 +198,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		int cur = -1;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '"') {
@@ -202,7 +227,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		int cur = -1;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '\'') {
@@ -239,8 +264,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean commentLine = false;
 		while (true) {
 			// is the last character we read before this non-whitespace?
+			//writer.write(reader.getLastChar());
+			//writer.write('!');
 			if (!startedComment && Character.isWhitespace(reader.getLastChar())) {
-				// this comment is on a new line
+				// this comment is on a new line				
 				writer.newLineMaybe();
 				commentLine = true;
 			}
@@ -285,7 +312,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	protected boolean htmlTagIndented(String tag) {
-		if (tag.charAt(0) == '/')
+		if (tag.charAt(0) == '/' && tag.length() > 1)
 			return htmlTagIndented(tag.substring(1));
 		return tag.equals("html") || tag.equals("body") || tag.equals("ol") || tag.equals("ul") ||
 			tag.equals("head") || tag.equals("p");
@@ -320,14 +347,19 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param writer
 	 * @return
 	 * @throws IOException 
+	 * @throws CleanerException if we hit EOF unexpectedly
 	 */
-	protected String cleanHtmlTag(MyStringReader reader, MyStringWriter writer) throws IOException {
+	protected String cleanHtmlTag(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		// get the first char <
 		int first = reader.read();
 		
 		// first, find out what the tag name actually is, so we know whether to indent back
 		// or not
 		String tagName = findHtmlTagName(reader);
+		if (tagName.isEmpty()) {
+			// EOF
+			throw new InlineCleanerException("Unexpectedly hit an invalid HTML tag while searching for HTML tags [first='" + (char)first + "']", reader);
+		}
 		
 		if (tagName.charAt(0) == '/' && htmlTagIndented(tagName)) {
 			// need to un-indent before
@@ -345,6 +377,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 
 		int cur;
 		int prev = -1;
+		boolean doneTag = false;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '>') {
 				// end of tag
@@ -364,13 +397,27 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				return tagName;
 			} else if (Character.isWhitespace(cur)) {
 				// end of tag name or attribute
+				if (!doneTag) {
+					// ignore all initial whitespace
+				} else {
+					// we now want to clean attributes
+					// put whitespace back on stack
+					//writer.write("@");
+					reader.unread(cur);
+					cleanHtmlTagAttributes(reader, writer);
+				}
+				/*
 				if (!Character.isWhitespace(prev)) {
 					// skip multiple whitespace
 					writer.write(' ');
 				}
+				*/
 			} else {
 				// character data
 				writer.write(cur);
+				if (Character.isLetterOrDigit(cur) || cur == '_') {
+					doneTag = true;		// we've done at least one character of the tag
+				}
 			}
 			prev = cur;
 		}
@@ -381,14 +428,107 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 
 	/**
-	 * Read ahead in the stream 'html...>...' and find the current HTML tag.
+	 * We are in an HTML tag and we have just written
+	 * '&lt;a'; we now want to parse and clean any attributes.
 	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void cleanHtmlTagAttributes(MyStringReader reader,
+			MyStringWriter writer) throws IOException, CleanerException {
+		
+		int cur = -1;
+		int prev = -1;
+		boolean needWhitespace = false;
+		boolean ignoreWhitespaceAfter = false;
+		while ((cur = reader.read()) != -1) {
+			if (Character.isWhitespace(cur)) {
+				if (prev == -1) {
+					// write initial whitespace
+					needWhitespace = true;
+				} else if (Character.isWhitespace(prev)) {
+					// ignore multiple whitespace
+				} else if (ignoreWhitespaceAfter) {
+					// ignore whitespace after =
+				} else {
+					// write whitespace between attributes
+					needWhitespace = true;
+				}
+			} else if (cur == '=') {
+				writer.write(cur);
+				// ignore any whitespace before and after this =
+				needWhitespace = false;
+				ignoreWhitespaceAfter = true;
+			} else if (cur == '"' || cur == '\'') {
+				// parse until end of string
+				writer.write(cur);
+				jumpOverHtmlAttributeString(reader, writer, cur);
+				ignoreWhitespaceAfter = false;
+				needWhitespace = true;		// any further attributes needs whitespace
+			} else {
+				// we are reading an attribute "foo" or "foo=bar" or "foo=\"bar\""
+				// do we need whitespace before?
+				if (needWhitespace) {
+					writer.write(' ');
+					needWhitespace = false;
+				}
+				ignoreWhitespaceAfter = false;	// turn off
+				writer.write(cur);
+			}
+			prev = cur;
+			
+			// is the next character >? if so, bail (the previous method is expecting it)
+			if (reader.readAhead() == '>') {
+				return;
+			}
+		}
+		throw new InlineCleanerException("Expected > to end HTML tag while parsing for attributes", reader);
+		
+	}
+
+	/**
+	 * We are in an HTML tag, and we have hit a [stringCharacter]. We need to process
+	 * until we find the end of the string.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @param stringCharacter either " or '
+	 */
+	protected void jumpOverHtmlAttributeString(MyStringReader reader,
+			MyStringWriter writer, int stringCharacter) throws IOException, CleanerException {
+		int cur = -1;
+		while ((cur = reader.read()) != -1) {
+			if (cur == stringCharacter) {
+				// at the end of the string
+				writer.write(cur);
+				return;
+			}
+			
+			// write the character as normal
+			writer.write(cur);
+
+			// there is no escaping in HTML
+		}
+		throw new InlineCleanerException("HTML Attribute string did not terminate", reader);
+	}
+
+	/**
+	 * Read ahead in the stream 'html...>...' and find the current HTML tag.
+	 * Also includes formatted attributes. TODO link
+	 * 
+	 * If this returns an empty string, it may mean EOF, or the stream
+	 * begins with [A-Za-z0-9_\-/].
+	 * 
+	 * @see MyStringReader#readAheadUntilEndHtmlTag()
 	 * @param reader
 	 * @return
 	 * @throws IOException 
+	 * @throws CleanerException 
 	 */
-	private String findHtmlTagName(MyStringReader reader) throws IOException {
-		return reader.readAheadUntilEndHtmlTag();
+	private String findHtmlTagName(MyStringReader reader) throws IOException, CleanerException {
+		return readAheadUntilEndHtmlTag(reader);
 	}
 
 	/**
@@ -402,9 +542,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param c
 	 * @return true if there is more text to go, or false at EOF
 	 * @throws IOException 
+	 * @throws CleanerException 
 	 */
 	private boolean removeHtmlTextSpacingUntil(MyStringReader reader,
-			MyStringWriter writer, char c) throws IOException {
+			MyStringWriter writer, char c) throws IOException, CleanerException {
 		
 		int cur;
 		int prev = -1;
@@ -413,9 +554,20 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '<') {
 				// we're done
 				// do we need to add previous whitespace?
-				if (addWhitespace && reader.readAhead(2).charAt(1) != '/' && reader.readAhead(2).charAt(1) != '!') {
-					writer.write(' ');
-					addWhitespace = false;
+				if (addWhitespace) {
+					// read ahead to find the next tag
+					// eat the <
+					int oldChar = reader.getLastChar();
+					if (cur != reader.read())
+						throw new InlineCleanerException("The unread buffer somehow changed", reader);	// sanity check
+					String nextTag = readAheadUntilEndHtmlTag(reader);
+					if (nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!')) {
+						writer.write(' ');
+						addWhitespace = false;
+					}
+					// put the < back
+					reader.unread(cur);
+					reader.setLastChar(oldChar);
 				}
 				return true;
 			}
@@ -448,6 +600,49 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		return false;		
 	}
 	
+
+	/**
+	 * We want to read ahead, and see what the next HTML tag is.
+	 * 
+	 * Read ahead until we find something outside [A-Za-z0-9_\-/!], ignoring
+	 * leading whitespace.
+	 * 
+	 * Return the text found, or throws an exception.
+	 * 
+	 * @return
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	public String readAheadUntilEndHtmlTag(MyStringReader reader) throws IOException, CleanerException {
+		int oldLast = reader.getLastChar();
+		char[] buffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to unread back to reader
+		char[] retBuffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to return
+
+		int i = -1;	// pos in buffer
+		int j = -1;	// pos in retBuffer
+		int cur;
+		
+		while ((cur = reader.read()) != -1) {
+			i++;
+			buffer[i] = (char) cur;
+			if (Character.isWhitespace(cur) && j == -1) {
+				// leading whitespace: skip
+				continue;
+			}
+			
+			j++;
+			retBuffer[j] = (char) cur;
+			if (!(Character.isLetterOrDigit(cur) || cur == '_' || cur == '-' || cur == '/' || cur == '!')) {
+				// we found it
+				reader.unread(buffer, 0, i + 1);
+				reader.setLastChar(oldLast); // reset
+				return new String(retBuffer, 0, j /* don't include the last */);
+			}
+		}
+		// return the entire buffer
+		throw new CleanerException("Could not read until end of HTML tag; never found end tag. Buffer = " + String.valueOf(buffer));
+	}
+	
 	public class MyStringReader extends PushbackReader {
 
 		private static final int PUSHBACK_BUFFER_SIZE = 1024;
@@ -457,6 +652,16 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
 		}
 		
+		/**
+		 * Set the last character to a given character.
+		 * This should ONLY be called if an external method implements readAhead manually.
+		 * 
+		 * @param oldLast
+		 */
+		public void setLastChar(int oldLast) {
+			lastChar = oldLast;
+		}
+
 		/**
 		 * Read the given number of characters into a String. Will return
 		 * a shorter string if EOF is found.
@@ -481,33 +686,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 
 		/**
-		 * Read ahead until we find something outside [A-Za-z0-9_\-/]. Return the text found, or 
-		 * the whole buffer if no end was found. Searches up to PUSHBACK_BUFFER_SIZE chars.
-		 * 
-		 * @return
-		 * @throws IOException 
-		 */
-		public String readAheadUntilEndHtmlTag() throws IOException {
-			int oldLast = lastChar;
-			char[] buffer = new char[PUSHBACK_BUFFER_SIZE];
-			int i = -1;
-			int cur;
-			while ((cur = read()) != -1) {
-				i++;
-				buffer[i] = (char) cur;
-				if (!(Character.isLetterOrDigit(cur) || cur == '_' || cur == '-' || cur == '/')) {
-					// we found it
-					unread(buffer, 0, i + 1);
-					return new String(buffer, 0, i);
-				}
-			}
-			lastChar = oldLast;	// reset
-			// return the entire buffer
-			return new String(buffer, 0, i + 1);
-		}
-
-		/**
-		 * "Read ahead" N characters, so we can see what is coming up.
+		 * "Read ahead" up to N characters, so we can see what is coming up.
+		 * If EOF is reached, returns the remaining read-ahead.
 		 * 
 		 * @param n number of characters to read ahead
 		 * @return
