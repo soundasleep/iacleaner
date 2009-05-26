@@ -17,7 +17,10 @@ public class AllExpectedTests {
 		//$JUnit-BEGIN$
 		suite.addTestSuite(Basic_Html.class);
 		suite.addTestSuite(Inline2_Html.class);
+		suite.addTestSuite(Comments_Html.class);
+		suite.addTestSuite(PhpBlock_Php.class);
 		suite.addTestSuite(Inline_Html.class);
+		suite.addTestSuite(Basic_Php.class);
 		suite.addTestSuite(Inline3_Html.class);
 		//$JUnit-END$
 		return suite;

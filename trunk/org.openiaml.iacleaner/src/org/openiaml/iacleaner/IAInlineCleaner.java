@@ -44,8 +44,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param reader
 	 * @param writer
 	 * @throws IOException 
+	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlScript(MyStringReader reader, MyStringWriter writer) throws IOException {
+	protected void cleanHtmlScript(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		
 		/*
 		 * text = removeDoubleSpacing(trim(readUntil('<')));
@@ -68,17 +69,19 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 */
 		
 		while (removeHtmlTextSpacingUntil(reader, writer, '<')) {
-			String next5 = reader.readAhead(4);
+			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
 				// xml mode!
 				return;	// permanent change
 			} else if (next5.equals("<?php")) {
 				// php mode!
+				throw new RuntimeException("PHP mode!");
 			} else if (next5.substring(0, 4).equals("<!--")) {
 				// comment mode!
+				cleanHtmlComment(reader, writer);
 			} else {
 				// tag mode!
-				String htmlTag = cleanHtmlTag(reader, writer).toLowerCase();
+				cleanHtmlTag(reader, writer).toLowerCase();
 				if (reader.readAhead() != -1) {
 					/*
 					if (htmlTag.equals("/h1") || htmlTag.equals("/title") ||
@@ -89,30 +92,68 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				}
 			}
 		}
-
-		/*
-		// write out until we find a <
-		int cur;
-		while ((cur = reader.read()) != '<') {
-			writer.write(cur);
-		}
-		
-		// get the next character
-		reader.mark(5);
-		int next = reader.read();
-		if (next == '?') {
-			// its php or xml
-			
-			return;
-		} else {
-			// its an html tag
-			// read until we find the end of the tag
-			
-		}
-		*/
 		
 	}
 	
+	/**
+	 * We need to read in a comment and output it as appropriate.
+	 * Reader starts with '&lt;!--'.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	private void cleanHtmlComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		// read until we find the end
+		int cur = -1;
+		int prev = -1;
+		boolean isNewline = false;
+		boolean startedComment = false;
+		boolean commentLine = false;
+		while (true) {
+			// is the last character we read before this non-whitespace?
+			if (!startedComment && Character.isWhitespace(reader.getLastChar())) {
+				// this comment is on a new line
+				writer.newLineMaybe();
+				commentLine = true;
+			}
+			startedComment = true;
+			
+			cur = reader.read();
+			if (cur == -1)
+				break;	//bail
+			
+			if (cur != '\n' && Character.isWhitespace(cur) && isNewline) {
+				// don't double indent
+			} else if (cur == '\r') {
+				// ignore \rs
+			} else if (cur == '\n') {
+				// don't include newlines manually, allow indenting
+				writer.newLine();
+			} else {
+				writer.write(cur);
+				isNewline = false;
+			}
+			
+			// do we now end a comment?
+			if (reader.readAhead(3).equals("-->")) {
+				// we've found the end of the comment
+				writer.write(reader.read(3));
+				// end the newline we started?
+				if (commentLine)
+					writer.newLine();
+				return;
+			}
+			
+			prev = cur;
+			if (cur == '\n') {
+				isNewline = true;
+			}
+		}
+		throw new CleanerException("At end of file before found end of comment");
+	}
+
 	/**
 	 * Should the given HTML tag be intented?
 	 * @param tag
@@ -247,7 +288,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '<') {
 				// we're done
 				// do we need to add previous whitespace?
-				if (addWhitespace && reader.readAhead(2).charAt(1) != '/') {
+				if (addWhitespace && reader.readAhead(2).charAt(1) != '/' && reader.readAhead(2).charAt(1) != '!') {
 					writer.write(' ');
 					addWhitespace = false;
 				}
@@ -261,7 +302,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					// ignore multiple whitespace inline
 				} else if (prev == -1) {
 					// ignore initial whitespace
-				} else if (reader.readAhead() == '<' && reader.readAhead(2).charAt(1) == '/') {
+				} else if (reader.readAhead() == '<' && (reader.readAhead(2).charAt(1) == '/' || reader.readAhead(2).charAt(1) == '!')) {
 					// ignore trailing whitespace at end of tags
 				} else {
 					// write only a space character (newlines aren't copied)
@@ -281,23 +322,48 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		return false;		
 	}
-
+	
 	public class MyStringReader extends PushbackReader {
 
 		private static final int PUSHBACK_BUFFER_SIZE = 1024;
+		private int lastChar = -1;
 		
 		public MyStringReader(String s) {
 			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
 		}
 		
 		/**
+		 * Read the given number of characters into a String. Will return
+		 * a shorter string if EOF is found.
+		 * 
+		 * @param i
+		 * @return
+		 * @throws IOException 
+		 */
+		public String read(int i) throws IOException {
+			char[] result = new char[i];
+			int read = read(result);
+			return String.valueOf(result, 0, read);
+		}
+
+		/**
+		 * What was the last character we read?
+		 * 
+		 * @return e.g. a newline, or 'a' etc
+		 */
+		public int getLastChar() {
+			return lastChar;
+		}
+
+		/**
 		 * Read ahead until we find something outside [A-Za-z0-9_\-/]. Return the text found, or 
-		 * the whole buffer if no end was found.
+		 * the whole buffer if no end was found. Searches up to PUSHBACK_BUFFER_SIZE chars.
 		 * 
 		 * @return
 		 * @throws IOException 
 		 */
 		public String readAheadUntilEndHtmlTag() throws IOException {
+			int oldLast = lastChar;
 			char[] buffer = new char[PUSHBACK_BUFFER_SIZE];
 			int i = -1;
 			int cur;
@@ -310,6 +376,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					return new String(buffer, 0, i);
 				}
 			}
+			lastChar = oldLast;	// reset
 			// return the entire buffer
 			return new String(buffer, 0, i + 1);
 		}
@@ -322,10 +389,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 * @throws IOException
 		 */
 		public String readAhead(int n) throws IOException {
+			int oldLast = lastChar;
 			char[] c = new char[n];
 			int found = read(c);
 			unread(c, 0, found); // push these characters back on
 			 
+			lastChar = oldLast; // reset
 			return String.valueOf(c).substring(0, found);
 		}
 		
@@ -336,16 +405,104 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 * @throws IOException
 		 */
 		public int readAhead() throws IOException {
+			int oldLast = lastChar;
 			int found = read();
 			if (found != -1)
 				unread(found);
+			lastChar = oldLast;	// reset
 			return found;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.io.PushbackReader#read()
+		 */
+		@Override
+		public int read() throws IOException {
+			int c = super.read();
+			lastChar = c;
+			return c;
 		}
 		
 	}
 	
+	/**
+	 * This extends a StringWriter so that if we try to write something like 
+	 * 's a \n s s s \n s b' (s = space), we actually write
+	 * 's a \n \n s b' (so we don't write lines of just spaces).
+	 * 
+	 * Any spaces at the end of the file will also be trimmed (but not newlines).
+	 *  
+	 * @author Jevon
+	 *
+	 */
+	public class DontWriteLinesOfJustSpaces extends StringWriter {
 
-	public class MyStringWriter extends StringWriter {
+		/**
+		 * The longest buffer we will store in until we will be forced
+		 * to flush it all to the writer.
+		 */
+		private static final int BUFFER_SIZE = 4096;
+		
+		private char[] buffer = new char[BUFFER_SIZE];
+		private int pointer = 0;
+		private boolean startBuffer = false;
+		
+		/* (non-Javadoc)
+		 * @see java.io.StringWriter#write(int)
+		 */
+		@Override
+		public void write(int c) {
+			if (c == '\n') {
+				// ignore any buffer, just print a newline
+				super.write(c);
+				startBuffer = true;
+				pointer = 0;
+			} else if (c == ' ' && startBuffer) {
+				// add to buffer
+				buffer[pointer] = (char) c;
+				pointer++;
+			} else {
+				// write out any buffer
+				super.write(buffer, 0, pointer);
+				startBuffer = false;
+				pointer = 0;
+				// write the actual character
+				super.write(c);
+			}
+		}
+		
+		/* (non-Javadoc)
+		 * @see java.io.StringWriter#write(char[], int, int)
+		 */
+		@Override
+		public void write(char[] cbuf, int off, int len) {
+			// TODO optimize
+			for (int i = 0; i < len; i++) {
+				write(cbuf[i + off]);
+			}
+		}
+
+		/* (non-Javadoc)
+		 * @see java.io.StringWriter#write(java.lang.String, int, int)
+		 */
+		@Override
+		public void write(String str, int off, int len) {
+			// TODO optimize
+			write(str.toCharArray(), off, len);
+		}
+
+		/* (non-Javadoc)
+		 * @see java.io.StringWriter#write(java.lang.String)
+		 */
+		@Override
+		public void write(String str) {
+			// TODO optimize
+			write(str.toCharArray(), 0, str.length());
+		}
+		
+	}
+	
+	public class MyStringWriter extends DontWriteLinesOfJustSpaces {
 
 		private int indent = 0;
 		private static final String indentString = "  ";
@@ -360,7 +517,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		public MyStringWriter() {
 			super();
 		}
-		
+
 		/**
 		 * Can this writer do word wrap automatically?
 		 * Should be turned off when outputting strings, etc.
