@@ -133,8 +133,14 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		return prev == '(' || prev == ')' || prev == '}' || prev == ';';
 	}
 	
+	/**
+	 * 
+	 * @param a previous character
+	 * @param b current character
+	 * @return
+	 */
 	private boolean needsWhitespaceBetween(int a, int b) {
-		return (a == ')' && b == '{');
+		return (a == ')' && b == '{') || (a == ',') || (b == '=') || (a == '=');
 	}
 	
 	/**
@@ -499,6 +505,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
 			if (nextTag.toLowerCase().equals("/script")) {
 				// we want to go back to html mode
+				// print the current character (if not whitespace)
+				if (!Character.isWhitespace(cur)) {
+					writer.write(cur);
+				}
+				
 				writer.indentDecrease(); // end indent
 				// always end with a newline
 				if (!needsNewLine) {
@@ -531,7 +542,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
 					writer.newLine();
-				} else if (needsNewLine) {
+				} 
+					
+				if (needsNewLine) {
 					writer.newLineMaybe();
 					needsNewLine = false;
 				} else if (needsWhitespace) {
