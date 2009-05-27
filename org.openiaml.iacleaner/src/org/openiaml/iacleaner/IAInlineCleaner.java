@@ -109,7 +109,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean ignoreWhitespaceAfterPhp(int prev) {
-		return prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'';
+		return prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'' || prev == '.';
 	}
 	
 	/**
@@ -130,7 +130,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean doesntActuallyNeedWhitespaceBefore(int prev) {
-		return prev == '(' || prev == ')' || prev == '}' || prev == ';';
+		return prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '.';
 	}
 	
 	/**
@@ -160,6 +160,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		if (!next2.equals("//") && !next2.equals("/*")) {
 			writer.write(' ');
 		}
+		
 		// following php code will be indented
 		writer.indentIncrease();
 		
@@ -638,10 +639,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		// always start with a newline (but let <script></script> remain as one line)
 		boolean needsNewLine = true;
 		
+		boolean needsLineBefore = false;
+		
 		int cur = -1;
 		int prev = ' ';
 		int prevNonWhitespace = -1;
 		boolean needsWhitespace = false;
+		boolean isOnBlankLine = false;	// is the current character the first character on a new line? the first line is "part" of <script>
 		while ((cur = reader.read()) != -1) {
 			// is the next tag </script>?
 			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
@@ -661,6 +665,52 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				return;
 			}
 			
+			if (cur == '/' && reader.readAhead() == '/') {
+				// a single-line comment
+				if (!isOnBlankLine && (prevNonWhitespace == ';')) {
+					writer.write(' ');
+					needsWhitespace = false;
+				}
+				if (prevNonWhitespace == '{') {
+					// put this comment on a new line
+					writer.newLine();
+					writer.indentIncrease();
+				} else if (prevNonWhitespace == -1) {
+					// the first comment of the php block needs to be on a new line
+					writer.newLine();
+				} else if (isOnBlankLine) {
+					// put this comment on a new line
+					writer.newLineMaybe();
+					isOnBlankLine = false;
+				}
+				writer.write(cur);	// write '/'
+				writer.write(reader.read());	// write '/'
+				jumpOverPhpInlineComment(reader, writer); 
+				needsLineBefore = true; // we need a new line next line
+				prevNonWhitespace = -3;	// reset to "did an inline comment"
+				continue;
+			}
+			
+			if (cur == '/' && reader.readAhead() == '*') {
+				// a multi-line comment
+				// write a whitespace before
+				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -3) {
+					writer.write(' ');
+				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -2) {
+					writer.newLine();
+				}
+				writer.write(cur);	// write '/'
+				writer.write(reader.read());	// write '*'
+				jumpOverPhpBlockComment(reader, writer);
+				needsWhitespace = true;	// put a space before the next statement if necessary
+				prevNonWhitespace = -2;	// reset to "did a comment block"
+				continue;
+			}
+			
+			if (cur == '\n' || cur == '\r') {
+				isOnBlankLine = true;
+			}
+			
 			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
 				// print just a space if necessary
 				if (needsWhitespaceCharacterPhp(prev)) {
@@ -675,6 +725,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// ignore whitespace otherwise
 			} else {
 				// put a newline before?
+				if (needsLineBefore) {
+					writer.newLineMaybe();
+					needsLineBefore = false;
+				}
+
+				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
 				} else if (prevNonWhitespace == '{') {
