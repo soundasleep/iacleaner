@@ -155,15 +155,21 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected void cleanPhpBlock(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		// write in the php header as-is
 		writer.write(reader.read(5));
-		// add a space
-		writer.write(' ');
+		// add a space (unless we start with an inline comment)
+		String next2 = reader.readAheadSkipWhitespace(2);
+		if (!next2.equals("//") && !next2.equals("/*")) {
+			writer.write(' ');
+		}
 		// following php code will be indented
 		writer.indentIncrease();
+		
+		boolean needsLineBefore = false;
 		
 		int cur = -1;
 		int prev = ' ';
 		int prevNonWhitespace = -1;
 		boolean needsWhitespace = false;
+		boolean isOnBlankLine = false;	// is the current character the first character on a new line? the first line is "part" of <?php
 		while ((cur = reader.read()) != -1) {
 			if (cur == '?' && reader.readAhead() == '>') {
 				// end of php mode
@@ -173,6 +179,52 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				writer.write(reader.read()); // write '>'
 				writer.indentDecrease();	// end indent
 				return;	// stop
+			}
+			
+			if (cur == '/' && reader.readAhead() == '/') {
+				// a single-line comment
+				if (!isOnBlankLine && (prevNonWhitespace == ';')) {
+					writer.write(' ');
+					needsWhitespace = false;
+				}
+				if (prevNonWhitespace == '{') {
+					// put this comment on a new line
+					writer.newLine();
+					writer.indentIncrease();
+				} else if (prevNonWhitespace == -1) {
+					// the first comment of the php block needs to be on a new line
+					writer.newLine();
+				} else if (isOnBlankLine) {
+					// put this comment on a new line
+					writer.newLineMaybe();
+					isOnBlankLine = false;
+				}
+				writer.write(cur);	// write '/'
+				writer.write(reader.read());	// write '/'
+				jumpOverPhpInlineComment(reader, writer); 
+				needsLineBefore = true; // we need a new line next line
+				prevNonWhitespace = -3;	// reset to "did an inline comment"
+				continue;
+			}
+			
+			if (cur == '/' && reader.readAhead() == '*') {
+				// a multi-line comment
+				// write a whitespace before
+				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -3) {
+					writer.write(' ');
+				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -2) {
+					writer.newLine();
+				}
+				writer.write(cur);	// write '/'
+				writer.write(reader.read());	// write '*'
+				jumpOverPhpBlockComment(reader, writer);
+				needsWhitespace = true;	// put a space before the next statement if necessary
+				prevNonWhitespace = -2;	// reset to "did a comment block"
+				continue;
+			}
+			
+			if (cur == '\n' || cur == '\r') {
+				isOnBlankLine = true;
 			}
 			
 			if (Character.isWhitespace(cur) && ignoreWhitespaceAfterPhp(prev)) {
@@ -189,6 +241,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// ignore whitespace otherwise
 			} else {
 				// put a newline before?
+				if (needsLineBefore) {
+					writer.newLineMaybe();
+					needsLineBefore = false;
+				} 
+				
+				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
 				} else if (prevNonWhitespace == '{') {
@@ -293,6 +351,90 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		throw new CleanerException("PHP single-quoted string did not terminate");
 	}
 
+	/**
+	 * We have just hit an inline comment '//'; skip through until the end of the comment
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void jumpOverPhpInlineComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		int cur = -1;
+		while ((cur = reader.read()) != -1) {
+			if (cur == '\r') {
+				// ignore
+				continue;
+			}
+			if (cur == '\n') {
+				// at the end of the string
+				writer.newLine();
+				return;
+			}
+			
+			// write the character as normal
+			writer.write(cur);
+		}
+		// it's ok if this is the end of the file
+	}
+	
+
+	/**
+	 * We have just hit an inline comment '/*'; skip through until the end of the comment
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void jumpOverPhpBlockComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+		int cur = -1;
+		boolean isBlankLine = false;
+		boolean isJavadoc = (reader.readAhead() == '*');
+		while ((cur = reader.read()) != -1) {
+			if (cur == '*' && reader.readAhead() == '/') {
+				// if this is a javadoc character, and it is the first one, and this is a
+				// javadoc comment, write an extra space to properly pad out the comment
+				if (cur == '*' && isBlankLine && isJavadoc) {
+					writer.write(' ');
+				}
+				
+				// at end of comment
+				writer.write(cur);	// write '*'
+				writer.write(reader.read());	// write '/'
+				return;
+			}
+			// ignore \rs
+			if (cur == '\r') {
+				continue;
+			}
+			
+			if (Character.isWhitespace(cur) && isBlankLine) {
+				// don't write extra padding for comments indented
+				// ignore
+			} else {
+				// if this is a javadoc character, and it is the first one, and this is a
+				// javadoc comment, write an extra space to properly pad out the comment
+				if (cur == '*' && isBlankLine && isJavadoc) {
+					writer.write(' ');
+				}
+				
+				// write the character as normal
+				writer.write(cur);
+
+				if (cur == '\n') {
+					isBlankLine = true;
+				} else {
+					isBlankLine = false;
+				}
+
+			}
+
+		}
+		// its NOT ok if this is end of file
+		throw new CleanerException("At end of file before found end of PHP block comment");
+	}
+	
 	/**
 	 * We need to read in a comment and output it as appropriate.
 	 * Reader starts with '&lt;!--'.
@@ -827,6 +969,41 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
 		}
 		
+		/**
+		 * Read ahead for the next two characters, excluding <b>leading</b>
+		 * Reads up to PUSHBACK_BUFFER_SIZE characters.
+		 * 
+		 * @param i
+		 * @return
+		 * @throws IOException 
+		 */
+		public String readAheadSkipWhitespace(int i) throws IOException {
+			char[] buf = new char[PUSHBACK_BUFFER_SIZE];
+			char[] result = new char[i];
+			boolean startCounting = false;
+			int j, k;
+			for (j = 0, k = 0; j < buf.length; j++) {
+				buf[j] = (char) read();
+				if (!startCounting && !Character.isWhitespace(buf[j])) {
+					startCounting = true;
+				}
+				if (startCounting) {
+					result[k] = buf[j];
+					k++;
+					if (k == i) {
+						// we found it
+						// put back what we read
+						unread(buf, 0, j + 1);
+						return String.valueOf(result);
+					}
+				}
+			}
+			// return back what we had read back so far
+			unread(buf, 0, j);
+			// return whatever we found
+			return String.valueOf(buf, 0, k);
+		}
+
 		/**
 		 * Set the last character to a given character.
 		 * This should ONLY be called if an external method implements readAhead manually.

@@ -20,6 +20,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(PhpBlock_Php.class);
 		suite.addTestSuite(Strings_Php.class);
 		suite.addTestSuite(Basic_Php.class);
+		suite.addTestSuite(Comments_Php.class);
 		suite.addTestSuite(Functions_Php.class);
 		suite.addTestSuite(Attributes_Html.class);
 		suite.addTestSuite(Basic_Html.class);
