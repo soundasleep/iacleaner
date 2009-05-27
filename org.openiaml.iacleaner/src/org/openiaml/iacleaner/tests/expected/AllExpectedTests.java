@@ -27,6 +27,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(Attributes_Html.class);
 		suite.addTestSuite(Basic_Html.class);
 		suite.addTestSuite(Inline2_Html.class);
+		suite.addTestSuite(Example2_Php.class);
 		suite.addTestSuite(JsLanguage_Html.class);
 		suite.addTestSuite(Inline3_Html.class);
 		suite.addTestSuite(Inline_Html.class);
