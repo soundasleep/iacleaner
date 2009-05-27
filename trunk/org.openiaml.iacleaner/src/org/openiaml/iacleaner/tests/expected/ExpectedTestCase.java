@@ -91,7 +91,7 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertEquals(outputText, result);
+		assertStringEquals(outputText, result);
 
 	}
 	
@@ -109,7 +109,7 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertEquals(inputText, result);
+		assertStringEquals(inputText, result);
 		
 	}
 	
@@ -130,8 +130,19 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertEquals(outputText, result);
+		assertStringEquals(outputText, result);
 		
+	}
+	
+	/**
+	 * This is like {@link #assertEquals(String, String)}, except we ignore any
+	 * differences in line endings (\r, \n)
+	 * 
+	 * @param a
+	 * @param b
+	 */
+	public static void assertStringEquals(String a, String b) {
+		assertEquals(a.replace("\r", ""), b.replace("\r", ""));
 	}
 	
 	/**

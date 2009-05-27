@@ -10,7 +10,10 @@
     echo(' ');
     echo(" ");
     echo("<?php    ?>");
-    echo('<?php    ?>'); ?>
+    echo('<?php    ?>');
+    echo "a
+        multi line string
+         should keep formatting"; ?>
   <body>
     <h1>Hello, world!</h1>
   </body>

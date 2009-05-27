@@ -26,6 +26,11 @@
     echo( "<?php    ?>" );
     echo( '<?php    ?>' );
 
+
+    echo "a
+        multi line string
+         should keep formatting";
+
 ?><body>
 
 

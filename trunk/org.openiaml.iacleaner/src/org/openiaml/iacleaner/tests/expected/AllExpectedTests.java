@@ -18,6 +18,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(JsFunctions_Html.class);
 		suite.addTestSuite(Comments_Html.class);
 		suite.addTestSuite(PhpBlock_Php.class);
+		suite.addTestSuite(Example1_Php.class);
 		suite.addTestSuite(Strings_Php.class);
 		suite.addTestSuite(Basic_Php.class);
 		suite.addTestSuite(Comments_Php.class);
