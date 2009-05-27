@@ -55,7 +55,22 @@ public abstract class ExpectedTestCase extends TestCase {
 		String resultFile = inputFile.substring(0, inputFile.lastIndexOf(".")) + ".expected." + inputFile.substring(inputFile.lastIndexOf(".") + 1);
 		
 		File f = new File(ROOT + resultFile);
-		assertTrue("File '" + inputFile + "' doesn't exist", f.exists());
+		assertTrue("File '" + resultFile + "' doesn't exist", f.exists());
+		
+		return f;
+	}
+	
+	/**
+	 * Another input, with most whitespace removed.
+	 * 
+	 * @return
+	 */
+	protected File getWhitespaceInputFile() {
+		String inputFile = getInputFilename();
+		String resultFile = inputFile.substring(0, inputFile.lastIndexOf(".")) + ".compact." + inputFile.substring(inputFile.lastIndexOf(".") + 1);
+		
+		File f = new File(ROOT + resultFile);
+		assertTrue("File '" + resultFile + "' doesn't exist", f.exists());
 		
 		return f;
 	}
@@ -95,6 +110,27 @@ public abstract class ExpectedTestCase extends TestCase {
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
 		assertEquals(inputText, result);
+		
+	}
+	
+	/**
+	 * This is the same file, except all whitespace has been removed. 
+	 * iacleaner should properly indent the code as well.
+	 * 
+	 * @throws Exception
+	 */
+	public void testWhitespace() throws Exception {
+		
+		String inputText = DefaultIACleaner.readFile(getWhitespaceInputFile());
+		assertNotNull(inputText);
+		String outputText = DefaultIACleaner.readFile(getExpectedFile());
+		assertNotNull(outputText);
+		// replace \r\n with \n
+		outputText = outputText.replace("\r\n", "\n");
+
+		IACleaner c = AllTests.getCleaner();
+		String result = c.cleanScript(inputText);
+		assertEquals(outputText, result);
 		
 	}
 	
