@@ -125,12 +125,28 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	/**
 	 * Even though we've been told we need whitespace before this character,
 	 * do we actually need it?
+	 * @param writer 
+	 * @param reader 
 	 * 
-	 * @param prev
+	 * @param cur current character
+	 * @return
+	 * @throws IOException 
+	 */
+	private boolean doesntActuallyNeedWhitespaceBeforePhp(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
+		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' ||
+			(writer.getLastWritten(2).equals("::")) /* :: operator */ ||
+			(cur == '-' && reader.readAhead() == '>') /* -> operator */ ||
+			(writer.getLastWritten(2).equals("->")) /* -> operator */;
+	}	
+	/**
+	 * Even though we've been told we need whitespace before this character,
+	 * do we actually need it?
+	 * 
+	 * @param cur current character
 	 * @return
 	 */
-	private boolean doesntActuallyNeedWhitespaceBefore(int prev) {
-		return prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '.';
+	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(int cur) {
+		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.';
 	}
 	
 	/**
@@ -138,8 +154,60 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param a previous character
 	 * @param b current character
 	 * @return
+	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetween(int a, int b) {
+	private boolean needsWhitespaceBetweenPhp(MyStringWriter writer, int a, int b) throws IOException {
+		return (a == ')' && b == '{') || (a == ',') || (b == '=') || (a == '=' && b != '>') || 
+			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
+			(b == '{') || 
+			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
+			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
+			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
+			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
+			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
+			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ );
+	}
+
+	private String[] reservedWordsPhp = new String[] {
+		"if",
+		"for",
+		"foreach",
+		"=>",
+	};
+	
+	/**
+	 * @param reader
+	 * @return
+	 * @throws IOException 
+	 */
+	private boolean previousWordIsReservedWordPhp(MyStringWriter writer) throws IOException {
+		// get maximum number of chars to go backwards
+		int backwards = reservedWordsPhp[0].length();
+		for (String s : reservedWordsPhp) {
+			if (s.length() > backwards)
+				backwards = s.length();
+		}
+		String previous = writer.getLastWritten(backwards + 1);
+		for (String s : reservedWordsPhp) {
+			// must be at least 1 character longer than the word
+			if (previous.length() > s.length()) {
+				int prev = previous.charAt(backwards - s.length());
+				if (previous.endsWith(s) && (Character.isWhitespace(prev) || prev == 0)) {
+					// the last thing we wrote was this reserved word
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param a previous character
+	 * @param b current character
+	 * @return
+	 */
+	private boolean needsWhitespaceBetweenJavascript(int a, int b) {
 		return (a == ')' && b == '{') || (a == ',') || (b == '=') || (a == '=');
 	}
 	
@@ -191,9 +259,14 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (prevNonWhitespace == '{') {
 					// put this comment on a new line
 					writer.newLine();
+					// increase the indent because we're starting a new block
+					// (and the code later won't be executed)
 					writer.indentIncrease();
 				} else if (prevNonWhitespace == -1) {
 					// the first comment of the php block needs to be on a new line
+					writer.newLine();
+				} else if (prevNonWhitespace == '}') {
+					// inline comment should be on a new line
 					writer.newLine();
 				} else if (isOnBlankLine) {
 					// put this comment on a new line
@@ -211,9 +284,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -3) {
+				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
-				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -2) {
+				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1) {
 					writer.newLine();
 				}
 				writer.write(cur);	// write '/'
@@ -236,8 +309,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
 				// skip multiple whitespace
 			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
-				// we actually need this whitespace
-				needsWhitespace = true;
+				// we _may_ actually need this whitespace
+				if (prev != '[') {
+					needsWhitespace = true;
+				}
 			} else if (Character.isWhitespace(cur)) {
 				// ignore whitespace otherwise
 			} else {
@@ -257,16 +332,18 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
 					writer.newLine();
+				} else if (prevNonWhitespace == ']' && (cur == ')')) {
+					// do nothing
+				} else if (needsWhitespaceBetweenPhp(writer, prevNonWhitespace, cur)) {
+					writer.write(' ');
+					needsWhitespace = false;
 				} else if (needsWhitespace) {
 					// needs whitespace from a previous separator character
-					if (!doesntActuallyNeedWhitespaceBefore(cur)) {
+					if (!doesntActuallyNeedWhitespaceBeforePhp(reader, writer, cur) && prevNonWhitespace != -3) {
 						writer.write(' ');
 					}
 					needsWhitespace = false;
-				} else if (needsWhitespaceBetween(prevNonWhitespace, cur)) {
-					writer.write(' ');
-					needsWhitespace = false;
-				}
+				} 
 				
 				if (cur == '}') {
 					// close an existing block
@@ -304,23 +381,28 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
-		int cur = -1;
-		while ((cur = reader.read()) != -1) {
-			if (cur == '"') {
-				// at the end of the string
+		try {
+			writer.enableIndent(false);		// we don't want to indent the strings by accident
+			int cur = -1;
+			while ((cur = reader.read()) != -1) {
+				if (cur == '"') {
+					// at the end of the string
+					writer.write(cur);
+					return;
+				}
+				
+				// write the character as normal
 				writer.write(cur);
-				return;
+	
+				if (cur == '\\' && reader.readAhead() == '"') {
+					// escaping the next string character
+					writer.write(reader.read());
+				}
 			}
-			
-			// write the character as normal
-			writer.write(cur);
-
-			if (cur == '\\' && reader.readAhead() == '"') {
-				// escaping the next string character
-				writer.write(reader.read());
-			}
+			throw new CleanerException("PHP string did not terminate");
+		} finally {
+			writer.enableIndent(true);
 		}
-		throw new CleanerException("PHP string did not terminate");
 	}
 
 	/**
@@ -333,23 +415,28 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
-		int cur = -1;
-		while ((cur = reader.read()) != -1) {
-			if (cur == '\'') {
-				// at the end of the string
+		try {
+			writer.enableIndent(false);		// we don't want to indent the strings by accident
+			int cur = -1;
+			while ((cur = reader.read()) != -1) {
+				if (cur == '\'') {
+					// at the end of the string
+					writer.write(cur);
+					return;
+				}
+				
+				// write the character as normal
 				writer.write(cur);
-				return;
+	
+				if (cur == '\\' && reader.readAhead() == '\'') {
+					// escaping the next string character
+					writer.write(reader.read());
+				}
 			}
-			
-			// write the character as normal
-			writer.write(cur);
-
-			if (cur == '\\' && reader.readAhead() == '\'') {
-				// escaping the next string character
-				writer.write(reader.read());
-			}
+			throw new CleanerException("PHP single-quoted string did not terminate");
+		} finally {
+			writer.enableIndent(true);
 		}
-		throw new CleanerException("PHP single-quoted string did not terminate");
 	}
 
 	/**
@@ -361,22 +448,27 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void jumpOverPhpInlineComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
-		int cur = -1;
-		while ((cur = reader.read()) != -1) {
-			if (cur == '\r') {
-				// ignore
-				continue;
+		try {
+			writer.enableWordwrap(false);	// don't wordwrap this comment!
+			int cur = -1;
+			while ((cur = reader.read()) != -1) {
+				if (cur == '\r') {
+					// ignore
+					continue;
+				}
+				if (cur == '\n') {
+					// at the end of the string
+					writer.newLine();
+					return;
+				}
+				
+				// write the character as normal
+				writer.write(cur);
 			}
-			if (cur == '\n') {
-				// at the end of the string
-				writer.newLine();
-				return;
-			}
-			
-			// write the character as normal
-			writer.write(cur);
+			// it's ok if this is the end of the file
+		} finally {
+			writer.enableWordwrap(true);
 		}
-		// it's ok if this is the end of the file
 	}
 	
 
@@ -389,51 +481,56 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void jumpOverPhpBlockComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
-		int cur = -1;
-		boolean isBlankLine = false;
-		boolean isJavadoc = (reader.readAhead() == '*');
-		while ((cur = reader.read()) != -1) {
-			if (cur == '*' && reader.readAhead() == '/') {
-				// if this is a javadoc character, and it is the first one, and this is a
-				// javadoc comment, write an extra space to properly pad out the comment
-				if (cur == '*' && isBlankLine && isJavadoc) {
-					writer.write(' ');
+		try {
+			writer.enableWordwrap(false);	// don't wordwrap this comment!
+			int cur = -1;
+			boolean isBlankLine = false;
+			boolean isJavadoc = (reader.readAhead() == '*');
+			while ((cur = reader.read()) != -1) {
+				if (cur == '*' && reader.readAhead() == '/') {
+					// if this is a javadoc character, and it is the first one, and this is a
+					// javadoc comment, write an extra space to properly pad out the comment
+					if (cur == '*' && isBlankLine && isJavadoc) {
+						writer.write(' ');
+					}
+					
+					// at end of comment
+					writer.write(cur);	// write '*'
+					writer.write(reader.read());	// write '/'
+					return;
+				}
+				// ignore \rs
+				if (cur == '\r') {
+					continue;
 				}
 				
-				// at end of comment
-				writer.write(cur);	// write '*'
-				writer.write(reader.read());	// write '/'
-				return;
-			}
-			// ignore \rs
-			if (cur == '\r') {
-				continue;
-			}
-			
-			if (Character.isWhitespace(cur) && isBlankLine) {
-				// don't write extra padding for comments indented
-				// ignore
-			} else {
-				// if this is a javadoc character, and it is the first one, and this is a
-				// javadoc comment, write an extra space to properly pad out the comment
-				if (cur == '*' && isBlankLine && isJavadoc) {
-					writer.write(' ');
-				}
-				
-				// write the character as normal
-				writer.write(cur);
-
-				if (cur == '\n') {
-					isBlankLine = true;
+				if (Character.isWhitespace(cur) && isBlankLine) {
+					// don't write extra padding for comments indented
+					// ignore
 				} else {
-					isBlankLine = false;
+					// if this is a javadoc character, and it is the first one, and this is a
+					// javadoc comment, write an extra space to properly pad out the comment
+					if (cur == '*' && isBlankLine && isJavadoc) {
+						writer.write(' ');
+					}
+					
+					// write the character as normal
+					writer.write(cur);
+	
+					if (cur == '\n') {
+						isBlankLine = true;
+					} else {
+						isBlankLine = false;
+					}
+	
 				}
-
+	
 			}
-
+			// its NOT ok if this is end of file
+			throw new CleanerException("At end of file before found end of PHP block comment");
+		} finally {
+			writer.enableWordwrap(true);
 		}
-		// its NOT ok if this is end of file
-		throw new CleanerException("At end of file before found end of PHP block comment");
 	}
 	
 	/**
@@ -747,11 +844,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					needsNewLine = false;
 				} else if (needsWhitespace) {
 					// needs whitespace from a previous separator character
-					if (!doesntActuallyNeedWhitespaceBefore(cur)) {
+					if (!doesntActuallyNeedWhitespaceBeforeJavascript(cur)) {
 						writer.write(' ');
 					}
 					needsWhitespace = false;
-				} else if (needsWhitespaceBetween(prevNonWhitespace, cur)) {
+				} else if (needsWhitespaceBetweenJavascript(prevNonWhitespace, cur)) {
 					writer.write(' ');
 					needsWhitespace = false;
 				}
@@ -1228,6 +1325,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		private boolean canWordWrap = true;
 		private int col = 0;
 		
+		private static final int WRITE_BUFFER_SIZE = 1024;
+		private int[] writeBuffer = new int[WRITE_BUFFER_SIZE];
+		private int writeBufferPos = -1;	// last position written
+		
+		private boolean indentEnabled = true;		// turn off indenting
+		
 		/**
 		 * Columns after this long will be wordwrapped when {@link #canWordWrap} is true.
 		 */
@@ -1235,6 +1338,59 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		public MyStringWriter() {
 			super();
+		}
+
+		/**
+		 * Get the last written character, or \0 if no characters have been written yet
+		 * 
+		 * @return
+		 */
+		public int previous() {
+			if (writeBufferPos == -1)
+				return 0;
+			return writeBuffer[writeBufferPos];
+		}
+
+		/**
+		 * Enable/disable wordwrap where appropriate.
+		 * 
+		 * @param b
+		 */
+		public void enableWordwrap(boolean b) {
+			canWordWrap = b;
+		}
+
+		public void enableIndent(boolean enabled) {
+			indentEnabled = enabled;
+		}
+
+		/**
+		 * Get the last i written characters. Up to WRITE_BUFFER_SIZE written 
+		 * characters are stored in writeBuffer. If i characters haven't been written
+		 * yet, will prefix the string with \0
+		 * 
+		 * @param i
+		 * @return
+		 * @throws IOException 
+		 */
+		public String getLastWritten(int i) throws IOException {
+			if (i > WRITE_BUFFER_SIZE) {
+				throw new IOException("Cannot go back further than WRITE_BUFFER_SIZE=" + WRITE_BUFFER_SIZE + " bytes");
+			}
+			char[] result = new char[i];
+			int p = writeBufferPos - i + 1;
+			if (p < 0) {
+				p += WRITE_BUFFER_SIZE; // wrap around
+			}
+			for (int j = 0; j < i; j++) {
+				result[j] = (char) writeBuffer[p];
+				p++;
+				if (p == WRITE_BUFFER_SIZE) {
+					p = 0;		// go back to the start
+				}
+			}
+			// return the result
+			return String.valueOf(result);
 		}
 
 		/**
@@ -1318,12 +1474,24 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (c == '\n') {
 				col = 0;	// reset column
 			}
+			// save to written buffer
+			writeBufferPos++;
+			if (writeBufferPos >= WRITE_BUFFER_SIZE)
+				writeBufferPos = 0;		// wrap
+			writeBuffer[writeBufferPos] = c;
 		}
 
 		/**
+		 * Create the indent text, and return it.
+		 * 
+		 * Returns an empty string if {@link #indentEnabled} is false.
+		 * 
 		 * @return
 		 */
 		private String getIndent() {
+			if (!indentEnabled) 
+				return "";
+					
 			StringBuffer buf = new StringBuffer();
 			for (int i = 0; i < indent; i++) {
 				buf.append(indentString);
