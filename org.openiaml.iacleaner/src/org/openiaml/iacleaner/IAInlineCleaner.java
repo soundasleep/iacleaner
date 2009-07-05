@@ -292,8 +292,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		writer.write(reader.read(5));
 		// add a space (unless we start with an inline comment)
 		String next2 = reader.readAheadSkipWhitespace(2);
+		
+		boolean needsWhitespace = false;
 		if (!next2.equals("//") && !next2.equals("/*")) {
-			writer.write(' ');
+			needsWhitespace = true;		// by default, we need whitespace
 		}
 		
 		// following php code will be indented
@@ -307,7 +309,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		int cur = -1;
 		int prev = ' ';
 		int prevNonWhitespace = -1;
-		boolean needsWhitespace = false;
 		boolean isOnBlankLine = false;	// is the current character the first character on a new line? the first line is "part" of <?php
 		while ((cur = reader.read()) != -1) {
 			if (cur == '?' && reader.readAhead() == '>') {
@@ -1097,6 +1098,25 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.newLineMaybe();
 				}
 				return;
+			}
+			
+			if (reader.readAhead(5).equals("<?php")) {
+				if (isOnBlankLine) {
+					writer.newLineMaybe();
+				}
+				
+				if (prevNonWhitespace == '{') {
+					writer.indentIncrease();
+				}
+				
+				// we need to switch into php mode!
+				// we expect the php block will end with a ?>,
+				// otherwise how will we know when the </script> ends?
+				cleanPhpBlock(reader, writer);
+				
+				if (prevNonWhitespace == '{') {
+					writer.indentDecrease();
+				}
 			}
 		}
 		
