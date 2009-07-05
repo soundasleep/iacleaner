@@ -122,11 +122,9 @@
        * Is every element in the array equal?
        */
       function is_array_equal(a) {
-        if (a.length <= 1)
-          return true;
+        if (a.length <= 1) return true;
         for (var i = 1; i < a.length; i++) {
-          if (a[0] != a[i])
-          return false;
+          if (a[0] != a[i]) return false;
         }
         return true;
       }
@@ -146,15 +144,13 @@
       /**
        * Copied from http://www.quirksmode.org/js/cookies.html
        */
-      function createCookie(name,value,days) {
+      function createCookie(name, value, days) {
         if (days) {
           var date = new Date();
-          date.setTime(date.getTime() + (days*24*60*60*1000));
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
           var expires = "; expires=" + date.toGMTString();
-        }
-        else
-          var expires = "";
-          document.cookie = name + "=" + value+expires + "; path=/";
+        } else var expires = "";
+        document.cookie = name + "=" + value + expires + "; path=/";
       }
       function readCookie(name) {
         var nameEQ = name + "=";
@@ -169,7 +165,7 @@
         return null;
       }
       function eraseCookie(name) {
-        createCookie(name,"",-1);
+        createCookie(name, "", -1);
       }
       /* page onload functions */
       populateFields();
@@ -200,8 +196,7 @@
               // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@1f70a5d (isGenerated: true, id: operations.11e47202c63.e)
               // expanding inline event trigger edit
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
@@ -219,8 +214,7 @@
             // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@1f70a5d (isGenerated: true, id: operations.11e47202c63.e)
             // expanding inline event trigger edit
             // should we still run the chained functions?
-            if (!function_queue_queued)
-              function_queue();
+            if (!function_queue_queued) function_queue();
           }
           running_model_11e47202c05_28 = false;
         }
@@ -255,8 +249,7 @@
                   throw new IamlJavascriptException("Error: Key check failed. You may need to login.");
                 }
                 // should we still run the chained functions?
-                if (!function_queue_queued)
-                  function_queue();
+                if (!function_queue_queued) function_queue();
               } catch (e if e instanceof IamlJavascriptException) {
                 // unexpected exception
                 alert("Unexpected exception: " + e);
@@ -278,8 +271,7 @@
                 throw new IamlJavascriptException("Error: Key check failed. You may need to login.");
               }
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             }
             try_catch_depth--;
           } catch (e if e instanceof IamlJavascriptException) {
@@ -320,8 +312,7 @@
               function_queue_queued = true; // we are waiting for it to return to execute the function queue
               // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@cedf4e (isGenerated: true, id: operations.11e47202c63.c)
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
@@ -344,8 +335,7 @@
             function_queue_queued = true; // we are waiting for it to return to execute the function queue
             // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@cedf4e (isGenerated: true, id: operations.11e47202c63.c)
             // should we still run the chained functions?
-            if (!function_queue_queued)
-              function_queue();
+            if (!function_queue_queued) function_queue();
           }
           running_model_11e47202c05_20 = false;
         }
