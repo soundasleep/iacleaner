@@ -12,15 +12,15 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport) {
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
@@ -35,15 +35,15 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport) {
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
@@ -57,8 +57,7 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
@@ -67,10 +66,11 @@
               debug('executing function queue');
               function_queue();
             }
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport){
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
