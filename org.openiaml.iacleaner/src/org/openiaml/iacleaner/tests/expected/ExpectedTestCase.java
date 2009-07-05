@@ -91,7 +91,7 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(outputText, result);
+		assertStringEquals(result, outputText);
 
 	}
 	
@@ -109,7 +109,7 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(inputText, result);
+		assertStringEquals(result, inputText);
 		
 	}
 	
@@ -130,7 +130,7 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(outputText, result);
+		assertStringEquals(result, outputText);
 		
 	}
 	
@@ -138,26 +138,26 @@ public abstract class ExpectedTestCase extends TestCase {
 	 * This is like {@link #assertEquals(String, String)}, except we ignore any
 	 * differences in line endings (\r, \n)
 	 * 
-	 * @param a
-	 * @param b
+	 * @param expected
+	 * @param actual
 	 */
-	public static void assertStringEquals(String a, String b) {
-		assertEquals(a.replace("\r", ""), b.replace("\r", ""));
+	public static void assertStringEquals(String expected, String actual) {
+		assertEquals(expected.replace("\r", ""), actual.replace("\r", ""));
 	}
 	
 	/**
 	 * Expands on the standard {@link #assertEquals(String, String)} method by also
 	 * printing out the individual characters.
 	 * 
-	 * @param a
-	 * @param b
+	 * @param expected
+	 * @param actual
 	 */
-	public static void assertEquals(String a, String b) {
+	public static void assertEquals(String expected, String actual) {
 		try {
-			TestCase.assertEquals(a, b);
+			TestCase.assertEquals(expected, actual);
 		} catch (AssertionFailedError e) {
-			System.out.println("result: " + Arrays.toString(b.toCharArray()));
-			System.out.println("wanted: " + Arrays.toString(a.toCharArray()));
+			System.out.println("result: " + Arrays.toString(actual.toCharArray()));
+			System.out.println("wanted: " + Arrays.toString(expected.toCharArray()));
 			throw e;
 		}
 	}
