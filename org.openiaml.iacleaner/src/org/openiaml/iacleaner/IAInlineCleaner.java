@@ -150,6 +150,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 	
 	/**
+	 * Do we need to add one piece of whitespace (' ') between characters
+	 * 'a' and 'b' in PHP mode?
 	 * 
 	 * @param a previous character
 	 * @param b current character
@@ -157,7 +159,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 */
 	private boolean needsWhitespaceBetweenPhp(MyStringWriter writer, int a, int b) throws IOException {
-		return (a == ')' && b == '{') || (a == ',') || (b == '=') || (a == '=' && b != '>') || 
+		return (a == ')' && b == '{') || (a == ',') || (a != '=' && b == '=') || (a == '=' && (b != '>' && b != '=')) || 
 			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
 			(b == '{') || 
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
@@ -173,6 +175,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		"for",
 		"foreach",
 		"=>",
+	};
+	
+	private String[] inlineBraceWordsPhp = new String[] {
+		"else",
+		"catch"
 	};
 	
 	/**
@@ -233,6 +240,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		writer.indentIncrease();
 		
 		boolean needsLineBefore = false;
+		boolean inInlineBrace = false;
+		boolean lastBlockCommentWasOnLine = false;
 		
 		int cur = -1;
 		int prev = ' ';
@@ -278,22 +287,27 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				jumpOverPhpInlineComment(reader, writer); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
+				inInlineBrace = false;
 				continue;
 			}
 			
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
+				lastBlockCommentWasOnLine = false;
 				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
-				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1) {
+				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
+					// this comment is on its own line
+					lastBlockCommentWasOnLine = true;
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
 				jumpOverPhpBlockComment(reader, writer);
 				needsWhitespace = true;	// put a space before the next statement if necessary
 				prevNonWhitespace = -2;	// reset to "did a comment block"
+				inInlineBrace = false;
 				continue;
 			}
 			
@@ -325,13 +339,28 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
+				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
+					// previous statement was closing a */; new line
+					// (but not when the next character is a ';')
+					writer.newLineMaybe();
+					needsWhitespace = false;
+					lastBlockCommentWasOnLine = false;
 				} else if (prevNonWhitespace == '{') {
 					// open a new block
 					writer.newLineMaybe();
 					writer.indentIncrease();
+					needsWhitespace = false;
+					inInlineBrace = false;
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
-					writer.newLine();
+					if (!isInlinePhpReservedWordAfterBrace(reader, writer)) {
+						// a normal ending brace
+						writer.newLine();
+					} else {
+						// a term like 'else' after a brace
+						writer.write(' ');
+						inInlineBrace = true;
+					}
 				} else if (prevNonWhitespace == ']' && (cur == ')')) {
 					// do nothing
 				} else if (needsWhitespaceBetweenPhp(writer, prevNonWhitespace, cur)) {
@@ -340,7 +369,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				} else if (needsWhitespace) {
 					// needs whitespace from a previous separator character
 					if (!doesntActuallyNeedWhitespaceBeforePhp(reader, writer, cur) && prevNonWhitespace != -3) {
-						writer.write(' ');
+						if (writer.getPrevious() != '\n') {
+							// don't need to write whitespace when we just wrote
+							// a new line
+							writer.write(' ');
+						}
 					}
 					needsWhitespace = false;
 				} 
@@ -349,6 +382,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					// close an existing block
 					writer.indentDecrease();
 					writer.newLineMaybe();
+				}
+				
+				if (cur == '(' && inInlineBrace) {
+					// in an inline brace like catch(...)
+					writer.write(' ');
 				}
 				
 				// write like normal
@@ -372,6 +410,43 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 
 	/**
+	 * The last character was a '}' indicating end-of-block. Should we
+	 * add a new line after this brace? Or is the next term part of an
+	 * inline statement (e.g. if/else/elseif)?
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @return True if we shouldn't output a new line
+	 * @throws IOException 
+	 */
+	private boolean isInlinePhpReservedWordAfterBrace(MyStringReader reader,
+			MyStringWriter writer) throws IOException {
+		// get maximum number of chars to go backwards
+		int max = inlineBraceWordsPhp[0].length();
+		for (String s : inlineBraceWordsPhp) {
+			if (s.length() > max)
+				max = s.length();
+		}
+		String next = (char) reader.getLastChar() + reader.readAheadSkipWhitespace(max + 1);
+		for (String s : inlineBraceWordsPhp) {
+			// must be at least 1 character longer than the word
+			if (next.length() > s.length() + 1) {
+				// does it start with the given reserved word?
+				if (s.equals( next.substring(0, s.length()) )) {
+					// the word matches... the next character cannot
+					// be a alphanumeric character
+					if (!Character.isLetterOrDigit(next.charAt(s.length()))) {
+						// the next whole word is the reserved word;
+						// don't add a new line
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * The last character we read in PHP mode was '"'; skip through the string
 	 * until we find the end of the string.
 	 * 
@@ -383,6 +458,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
+			writer.enableWordwrap(false);	// no wordwrap!
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
 				if (cur == '"') {
@@ -402,6 +478,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			throw new CleanerException("PHP string did not terminate");
 		} finally {
 			writer.enableIndent(true);
+			writer.enableWordwrap(true);	// no wordwrap!
 		}
 	}
 
@@ -1121,10 +1198,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		public MyStringReader(String s) {
 			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
 		}
-		
+
 		/**
 		 * Read ahead for the next two characters, excluding <b>leading</b>
-		 * Reads up to PUSHBACK_BUFFER_SIZE characters.
+		 * whitespace. Reads up to PUSHBACK_BUFFER_SIZE characters.
 		 * 
 		 * @param i
 		 * @return
@@ -1479,6 +1556,15 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (writeBufferPos >= WRITE_BUFFER_SIZE)
 				writeBufferPos = 0;		// wrap
 			writeBuffer[writeBufferPos] = c;
+		}
+		
+		/**
+		 * Get the previously written character.
+		 * 
+		 * @return
+		 */
+		public int getPrevious() {
+			return previousChar;
 		}
 
 		/**

@@ -127,9 +127,7 @@
       die;
       $running_model_11e47202c05_20 = false;
     }
-  }
-?>
-<html>
+  } ?><html>
   <head>
     <title>viewkey</title>
     <link rel="stylesheet" type="text/css" href="default.css" />
