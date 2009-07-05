@@ -303,8 +303,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		boolean needsLineBefore = false;
 		boolean inInlineBrace = false;
-		boolean lastBlockCommentWasOnLine = false;
 		boolean inBracket = false;	// currently in a (...)?
+		int charBeforeBlockComment = -1;	// any character before a block comment
 		
 		int cur = -1;
 		int prev = ' ';
@@ -346,7 +346,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '/'
-				jumpOverPhpInlineComment(reader, writer); 
+				jumpOverPhpInlineComment(reader, writer, false); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
 				inInlineBrace = false;
@@ -356,18 +356,16 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				lastBlockCommentWasOnLine = false;
 				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
-					// this comment is on its own line
-					lastBlockCommentWasOnLine = true;
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
-				jumpOverPhpBlockComment(reader, writer);
+				jumpOverPhpBlockComment(reader, writer, false);
 				needsWhitespace = true;	// put a space before the next statement if necessary
+				charBeforeBlockComment = prevNonWhitespace;		// save the previous char
 				prevNonWhitespace = -2;	// reset to "did a comment block"
 				inInlineBrace = false;
 				continue;
@@ -407,12 +405,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					} else {
 						writer.newLine();
 					}
-				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
+				} else if (prevNonWhitespace == -2 && cur != ';' && cur != ',' && cur != ')' && cur != '{' && !Character.isWhitespace(cur) && charBeforeBlockComment != '(') {
 					// previous statement was closing a */; new line
 					// (but not when the next character is a ';')
 					writer.newLineMaybe();
 					needsWhitespace = false;
-					lastBlockCommentWasOnLine = false;
 				} else if (prevNonWhitespace == '{') {
 					// open a new block
 					writer.newLineMaybe();
@@ -631,10 +628,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			// jump into php mode
 			// we will assume we return successfully from it, otherwise
 			// it's pretty much impossible to tell when script mode ends
+			boolean oldIndent = writer.getIndentEnabled();
 			writer.enableIndent(true);
 			reader.unread('<');	// go backwards
 			cleanPhpBlock(reader, writer);
-			writer.enableIndent(false);
+			writer.enableIndent(oldIndent);
 			
 			// resume!
 			return true;
@@ -649,14 +647,23 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @param reader
 	 * @param writer
+	 * @param allowSwitchToPhpMode can we switch to PHP mode within this inline comment?
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpInlineComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpInlineComment(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
+				// allow switch to PHP mode on getting "<?php"?
+				if (allowSwitchToPhpMode) {
+					if (didSwitchToPhpMode(reader, writer, cur)) {
+						// resume
+						continue;
+					}
+				}
+				
 				if (cur == '\r') {
 					// ignore
 					continue;
@@ -682,16 +689,25 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @param reader
 	 * @param writer
+	 * @param allowSwitchToPhpMode can we switch to PHP mode within this comment?
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpBlockComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpBlockComment(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
 			boolean isBlankLine = false;
 			boolean isJavadoc = (reader.readAhead() == '*');
 			while ((cur = reader.read()) != -1) {
+				// allow switch to PHP mode on getting "<?php"?
+				if (allowSwitchToPhpMode) {
+					if (didSwitchToPhpMode(reader, writer, cur)) {
+						// resume
+						continue;
+					}
+				}
+				
 				if (cur == '*' && reader.readAhead() == '/') {
 					// if this is a javadoc character, and it is the first one, and this is a
 					// javadoc comment, write an extra space to properly pad out the comment
@@ -959,8 +975,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		boolean needsLineBefore = false;
 		boolean inInlineBrace = false;
-		boolean lastBlockCommentWasOnLine = false;
 		boolean inBracket = false;	// currently in a (...)?
+		int charBeforeBlockComment = -1;	// any character before a block comment
 		
 		int cur = -1;
 		int prev = ' ';
@@ -993,7 +1009,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '/'
-				jumpOverPhpInlineComment(reader, writer); 
+				jumpOverPhpInlineComment(reader, writer, true); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
 				inInlineBrace = false;
@@ -1003,18 +1019,17 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				lastBlockCommentWasOnLine = false;
 				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
 					// this comment is on its own line
-					lastBlockCommentWasOnLine = true;
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
-				jumpOverPhpBlockComment(reader, writer);
+				jumpOverPhpBlockComment(reader, writer, true);
 				needsWhitespace = true;	// put a space before the next statement if necessary
+				charBeforeBlockComment = prevNonWhitespace;		// save the previous char
 				prevNonWhitespace = -2;	// reset to "did a comment block"
 				inInlineBrace = false;
 				continue;
@@ -1059,12 +1074,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					} else {
 						writer.newLine();
 					}
-				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
+				} else if (prevNonWhitespace == -2 && cur != ';' && cur != ',' && cur != ')' && cur != '{' && !Character.isWhitespace(cur) && charBeforeBlockComment != '(') {
 					// previous statement was closing a */; new line
 					// (but not when the next character is a ';')
 					writer.newLineMaybe();
 					needsWhitespace = false;
-					lastBlockCommentWasOnLine = false;
 				} else if (prevNonWhitespace == '{') {
 					// open a new block
 					writer.newLineMaybe();
@@ -1632,6 +1646,15 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		public MyStringWriter() {
 			super();
+		}
+
+		/**
+		 * Is indentation currently enabled?
+		 * 
+		 * @return
+		 */
+		public boolean getIndentEnabled() {
+			return indentEnabled;
 		}
 
 		/**
