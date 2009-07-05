@@ -138,14 +138,18 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(cur == '-' && reader.readAhead() == '>') /* -> operator */ ||
 			(writer.getLastWritten(2).equals("->")) /* -> operator */;
 	}	
+	
 	/**
 	 * Even though we've been told we need whitespace before this character,
 	 * do we actually need it?
+	 * @param writer 
+	 * @param reader 
 	 * 
 	 * @param cur current character
 	 * @return
+	 * @throws IOException 
 	 */
-	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(int cur) {
+	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.';
 	}
 	
@@ -159,9 +163,36 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 */
 	private boolean needsWhitespaceBetweenPhp(MyStringWriter writer, int a, int b) throws IOException {
-		return (a == ')' && b == '{') || (a == ',') || (a != '=' && b == '=') || (a == '=' && (b != '>' && b != '=')) || 
+		return (a == ')' && b == '{') || (a == ',') || 
+			((a != '=' && a != '+' && a != '-' && a != '*' && a != '/' && a != '<' && a != '>' && a != '!') && b == '=') || 
+			(a == '=' && (b != '>' && b != '=')) || 
 			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
 			(b == '{') || 
+			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
+			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
+			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
+			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
+			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
+			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
+			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ );
+	}
+	
+	/**
+	 * Do we need to add one piece of whitespace (' ') between characters
+	 * 'a' and 'b' in PHP mode?
+	 * 
+	 * @param a previous character
+	 * @param b current character
+	 * @return
+	 * @throws IOException 
+	 */
+	private boolean needsWhitespaceBetweenJavascript(MyStringWriter writer, int a, int b) throws IOException {
+		return (a == ')' && b == '{') || (a == ',') || 
+			((a != '=' && a != '+' && a != '-' && a != '*' && a != '/' && a != '<' && a != '>' && a != '!') && b == '=') || 
+			(a == '=' && (b != '>' && b != '=')) || 
+			(b == '?') || (a == '?') || 
+			(b == '{') || 
+			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
@@ -206,16 +237,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * 
-	 * @param a previous character
-	 * @param b current character
-	 * @return
-	 */
-	private boolean needsWhitespaceBetweenJavascript(int a, int b) {
-		return (a == ')' && b == '{') || (a == ',') || (b == '=') || (a == '=');
 	}
 	
 	/**
@@ -353,7 +374,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					inInlineBrace = false;
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
-					if (!isInlinePhpReservedWordAfterBrace(reader, writer)) {
+					if (cur == ',' || cur == ')') {
+						// ignore 'function(){...}, x'
+					} else if (!isInlinePhpReservedWordAfterBrace(reader, writer)) {
 						// a normal ending brace
 						writer.newLine();
 					} else {
@@ -830,6 +853,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean needsNewLine = true;
 		
 		boolean needsLineBefore = false;
+		boolean inInlineBrace = false;
+		boolean lastBlockCommentWasOnLine = false;
 		
 		int cur = -1;
 		int prev = ' ';
@@ -864,9 +889,14 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (prevNonWhitespace == '{') {
 					// put this comment on a new line
 					writer.newLine();
+					// increase the indent because we're starting a new block
+					// (and the code later won't be executed)
 					writer.indentIncrease();
 				} else if (prevNonWhitespace == -1) {
 					// the first comment of the php block needs to be on a new line
+					writer.newLine();
+				} else if (prevNonWhitespace == '}') {
+					// inline comment should be on a new line
 					writer.newLine();
 				} else if (isOnBlankLine) {
 					// put this comment on a new line
@@ -878,22 +908,27 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				jumpOverPhpInlineComment(reader, writer); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
+				inInlineBrace = false;
 				continue;
 			}
 			
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -3) {
+				lastBlockCommentWasOnLine = false;
+				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
-				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -2) {
+				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
+					// this comment is on its own line
+					lastBlockCommentWasOnLine = true;
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
 				jumpOverPhpBlockComment(reader, writer);
 				needsWhitespace = true;	// put a space before the next statement if necessary
 				prevNonWhitespace = -2;	// reset to "did a comment block"
+				inInlineBrace = false;
 				continue;
 			}
 			
@@ -909,8 +944,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
 				// skip multiple whitespace
 			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
-				// we actually need this whitespace
-				needsWhitespace = true;
+				// we _may_ actually need this whitespace
+				if (prev != '[') {
+					needsWhitespace = true;
+				}
 			} else if (Character.isWhitespace(cur)) {
 				// ignore whitespace otherwise
 			} else {
@@ -918,38 +955,66 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (needsLineBefore) {
 					writer.newLineMaybe();
 					needsLineBefore = false;
+				} 
+				
+				if (needsNewLine) {
+					writer.newLineMaybe();
+					needsNewLine = false;
 				}
-
+				
 				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
 					writer.newLine();
+				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
+					// previous statement was closing a */; new line
+					// (but not when the next character is a ';')
+					writer.newLineMaybe();
+					needsWhitespace = false;
+					lastBlockCommentWasOnLine = false;
 				} else if (prevNonWhitespace == '{') {
 					// open a new block
 					writer.newLineMaybe();
 					writer.indentIncrease();
+					needsWhitespace = false;
+					inInlineBrace = false;
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
-					writer.newLine();
-				} 
-					
-				if (needsNewLine) {
-					writer.newLineMaybe();
-					needsNewLine = false;
-				} else if (needsWhitespace) {
-					// needs whitespace from a previous separator character
-					if (!doesntActuallyNeedWhitespaceBeforeJavascript(cur)) {
+					if (cur == ',' || cur == ')') {
+						// ignore 'function(){...}, x'
+					} else if (!isInlinePhpReservedWordAfterBrace(reader, writer)) {
+						// a normal ending brace
+						writer.newLine();
+					} else {
+						// a term like 'else' after a brace
 						writer.write(' ');
+						inInlineBrace = true;
 					}
-					needsWhitespace = false;
-				} else if (needsWhitespaceBetweenJavascript(prevNonWhitespace, cur)) {
+				} else if (prevNonWhitespace == ']' && (cur == ')')) {
+					// do nothing
+				} else if (needsWhitespaceBetweenJavascript(writer, prevNonWhitespace, cur)) {
 					writer.write(' ');
 					needsWhitespace = false;
-				}
+				} else if (needsWhitespace) {
+					// needs whitespace from a previous separator character
+					if (!doesntActuallyNeedWhitespaceBeforeJavascript(reader, writer, cur) && prevNonWhitespace != -3) {
+						if (writer.getPrevious() != '\n') {
+							// don't need to write whitespace when we just wrote
+							// a new line
+							writer.write(' ');
+						}
+					}
+					needsWhitespace = false;
+				} 
 				
 				if (cur == '}') {
 					// close an existing block
 					writer.indentDecrease();
 					writer.newLineMaybe();
+				}
+				
+				if (cur == '(' && inInlineBrace) {
+					// in an inline brace like catch(...)
+					writer.write(' ');
 				}
 				
 				// write like normal
