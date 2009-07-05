@@ -164,10 +164,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	private boolean needsWhitespaceBetweenPhp(MyStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
-			((a != '=' && a != '+' && a != '-' && a != '*' && a != '/' && a != '<' && a != '>' && a != '!') && b == '=') || 
+			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
-			(b == '{') || 
+			(b == '{') || (a != '(' && b == '!') || 
 			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
@@ -188,23 +188,44 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	private boolean needsWhitespaceBetweenJavascript(MyStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
-			((a != '=' && a != '+' && a != '-' && a != '*' && a != '/' && a != '<' && a != '>' && a != '!') && b == '=') || 
+			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(b == '?') || (a == '?') || 
-			(b == '{') || 
+			(b == '{') || (a != '(' && b == '!') || 
 			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
-			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
-			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ );
+			((isPhpOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
+			((isPhpOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ );
+	}
+	
+	/**
+	 * Is the given character a single-character operator?
+	 * 
+	 * @param a
+	 * @return
+	 */
+	private boolean isPhpOperator(int a) {
+		return a == '+' || a == '-' || a == '*' || a == '/' || a == '>' || a == '<' || a == '=' || a == '!';
+	}
+	
+	/**
+	 * Is the given character a single-character operator?
+	 * 
+	 * @param a
+	 * @return
+	 */
+	private boolean isJavascriptOperator(int a) {
+		return isPhpOperator(a);
 	}
 
 	private String[] reservedWordsPhp = new String[] {
 		"if",
 		"for",
 		"foreach",
+		"while",
 		"=>",
 	};
 	
@@ -414,6 +435,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// write like normal
 				writer.write(cur);
+				
+				if (cur == ';') {
+					inInlineBrace = false;	// impossible to have inline braces later
+				}
 				
 				// switch into strings mode?
 				if (cur == '"') {
@@ -1019,6 +1044,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// write like normal
 				writer.write(cur);
+
+				if (cur == ';') {
+					inInlineBrace = false;	// impossible to have inline braces later
+				}
 				
 				// switch into strings mode?
 				if (cur == '"') {
