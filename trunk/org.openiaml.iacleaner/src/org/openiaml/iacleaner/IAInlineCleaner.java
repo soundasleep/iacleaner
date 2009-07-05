@@ -133,7 +133,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforePhp(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
-		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' ||
+		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' || cur == ',' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
 			(writer.getLastWritten(2).equals("::")) /* :: operator */ ||
 			(cur == '-' && reader.readAhead() == '>') /* -> operator */ ||
 			(writer.getLastWritten(2).equals("->")) /* -> operator */;
@@ -150,7 +150,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
-		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.';
+		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+';
 	}
 	
 	/**
@@ -172,6 +172,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a == '+' && b == '+' && reader.readAhead() == '+') ||
 			(a != '-' && b == '-' && reader.readAhead() != '-' && reader.readAhead() != '>') ||
 			(a == '-' && b == '-' && reader.readAhead() == '-') ||
+			(a != '|' && b == '|') || 
+			(a != '&' && b == '&') || 
+			(b == '<' || (a != '-' && a != '=' && b == '>')) ||
 			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
 			(a == '*') ||
 			(b == '*') || (a == ')' && b == '-') ||
@@ -202,6 +205,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a == '+' && b == '+' && reader.readAhead() == '+') ||
 			(a != '-' && b == '-' && reader.readAhead() != '-') ||
 			(a == '-' && b == '-' && reader.readAhead() == '-') ||
+			(a != '|' && b == '|') || 
+			(a != '&' && b == '&') || 
+			(b == '<' || b == '>') ||
 			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
 			(a == '*') ||
 			(b == '*') || (a == ')' && b == '-') ||
@@ -220,7 +226,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean isPhpOperator(int a) {
-		return a == '+' || a == '-' || a == '*' || a == '/' || a == '>' || a == '<' || a == '=' || a == '!';
+		return a == '+' || a == '-' || a == '*' || a == '/' || a == '>' || a == '<' || a == '=' || a == '!' || a == '&' || a == '|';
 	}
 	
 	/**
@@ -912,24 +918,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean needsWhitespace = false;
 		boolean isOnBlankLine = false;	// is the current character the first character on a new line? the first line is "part" of <script>
 		while ((cur = reader.read()) != -1) {
-			// is the next tag </script>?
-			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
-			if (nextTag.toLowerCase().equals("/script")) {
-				// we want to go back to html mode
-				// print the current character (if not whitespace)
-				if (!Character.isWhitespace(cur)) {
-					writer.write(cur);
-				}
-				
-				writer.indentDecrease(); // end indent
-				// always end with a newline
-				if (!needsNewLine) {
-					// dont write a new line if we haven't actually written anything in here
-					writer.newLineMaybe();
-				}
-				return;
-			}
-			
 			if (cur == '/' && reader.readAhead() == '/') {
 				// a single-line comment
 				if (!isOnBlankLine && (prevNonWhitespace == ';')) {
@@ -1096,6 +1084,20 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				}
 			}
 			prev = cur;
+			
+			// is the next tag </script>?
+			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
+			if (nextTag.toLowerCase().equals("/script")) {
+				// we want to go back to html mode
+				
+				writer.indentDecrease(); // end indent
+				// always end with a newline
+				if (!needsNewLine) {
+					// dont write a new line if we haven't actually written anything in here
+					writer.newLineMaybe();
+				}
+				return;
+			}
 		}
 		
 		// it's NOT ok to fall out of script mode; this means we never
