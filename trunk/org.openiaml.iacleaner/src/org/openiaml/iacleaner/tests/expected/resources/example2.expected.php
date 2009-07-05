@@ -141,15 +141,15 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport) {
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
@@ -164,15 +164,15 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport) {
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
@@ -186,8 +186,7 @@
         debug("creating ajax request to url: " + url);
         $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) + 1; // increment ajax counter
         new Ajax.Request(url, {
-          method: 'get',
-          onSuccess: function(transport) {
+          method: 'get', onSuccess: function(transport) {
             var response = transport.responseText || "no response text";
             debug("success: " + response);
             document.getElementById('response').innerHTML = response;
@@ -196,10 +195,11 @@
               debug('executing function queue');
               function_queue();
             }
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
-          },
-          onFailure: function(transport){
-            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1; // decrement ajax counter
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
+          }, onFailure: function(transport) {
+            $('ajax_monitor').innerHTML = (1 * $('ajax_monitor').innerHTML) - 1;
+            // decrement ajax counter
             debug("something went wrong: " + transport.responseText);
             $('ajax_monitor').innerHTML = 'failed: ' + response.responseText; // for speeding up testing
             alert('Something went wrong...'); // alert is last so we can continue execution
@@ -251,11 +251,9 @@
        * Is every element in the array equal?
        */
       function is_array_equal(a) {
-        if (a.length <= 1)
-          return true;
+        if (a.length <= 1) return true;
         for (var i = 1; i < a.length; i++) {
-          if (a[0] != a[i])
-          return false;
+          if (a[0] != a[i]) return false;
         }
         return true;
       }
@@ -275,30 +273,26 @@
       /**
        * Copied from http://www.quirksmode.org/js/cookies.html
        */
-      function createCookie(name,value,days) {
+      function createCookie(name, value, days) {
         if (days) {
           var date = new Date();
-          date.setTime(date.getTime() + (days*24*60*60*1000));
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
           var expires = "; expires=" + date.toGMTString();
-        }
-        else
-          var expires = "";
-          document.cookie = name + "=" + value+expires + "; path=/";
+        } else var expires = "";
+        document.cookie = name + "=" + value + expires + "; path=/";
       }
       function readCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
-        for(var i = 0; i < ca.length; i++) {
+        for (var i = 0; i < ca.length; i++) {
           var c = ca[i];
-          while (c.charAt(0) == ' ')
-            c = c.substring(1,c.length);
-          if (c.indexOf(nameEQ) == 0)
-            return c.substring(nameEQ.length, c.length);
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
       }
       function eraseCookie(name) {
-        createCookie(name,"",-1);
+        createCookie(name, "", -1);
       }
       /* page onload functions */
       populateFields();
@@ -329,8 +323,7 @@
               // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@1f70a5d (isGenerated: true, id: operations.11e47202c63.e)
               // expanding inline event trigger edit
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
@@ -348,8 +341,7 @@
             // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@1f70a5d (isGenerated: true, id: operations.11e47202c63.e)
             // expanding inline event trigger edit
             // should we still run the chained functions?
-            if (!function_queue_queued)
-              function_queue();
+            if (!function_queue_queued) function_queue();
           }
           running_model_11e47202c05_28 = false;
         }
@@ -384,8 +376,7 @@
                   throw new IamlJavascriptException("Error: Key check failed. You may need to login.");
                 }
                 // should we still run the chained functions?
-                if (!function_queue_queued)
-                  function_queue();
+                if (!function_queue_queued) function_queue();
               } catch (e if e instanceof IamlJavascriptException) {
                 // unexpected exception
                 alert("Unexpected exception: " + e);
@@ -407,8 +398,7 @@
                 throw new IamlJavascriptException("Error: Key check failed. You may need to login.");
               }
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             }
             try_catch_depth--;
           } catch (e if e instanceof IamlJavascriptException) {
@@ -449,8 +439,7 @@
               function_queue_queued = true; // we are waiting for it to return to execute the function queue
               // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@cedf4e (isGenerated: true, id: operations.11e47202c63.c)
               // should we still run the chained functions?
-              if (!function_queue_queued)
-                function_queue();
+              if (!function_queue_queued) function_queue();
             } catch (e if e instanceof IamlJavascriptException) {
               // unexpected exception
               alert("Unexpected exception: " + e);
@@ -473,8 +462,7 @@
             function_queue_queued = true; // we are waiting for it to return to execute the function queue
             // do nothing org.openiaml.model.model.operations.impl.FinishNodeImpl@cedf4e (isGenerated: true, id: operations.11e47202c63.c)
             // should we still run the chained functions?
-            if (!function_queue_queued)
-              function_queue();
+            if (!function_queue_queued) function_queue();
           }
           running_model_11e47202c05_20 = false;
         }
@@ -496,8 +484,7 @@
       page_id VARCHAR(64) NOT NULL,
       event_name VARCHAR(64) NOT NULL,
       arg0 BLOB
-    );") or local_die("could not create table: " . print_r($db->errorInfo(),
-            true));
+    );") or local_die("could not create table: " . print_r($db->errorInfo(), true));
           }
           log_message("finding events for page id visual.11e37b8d948.d");
           $s = $db->prepare("SELECT * FROM stored_events WHERE page_id=?") or local_die("could not get stored events: "
@@ -506,44 +493,32 @@
           . print_r($db->errorInfo(), true));
           foreach ($s->fetchAll() as $row) {
             log_message("found event $row[id]: event_name=$row[event_name] arg0=$row[arg0]");
-            echo $row["event_name"] . "(\"" . $row["arg0"] . "\"); // from db " . $row["id"] . "\n";
+            echo $row["event_name"] . "(\"" . $row["arg0"] . "\"); // from db "
+            . $row["id"] . "\n";
           }
           // delete all the events for this page now
           log_message("deleting all events for page visual.11e37b8d948.d");
-          $s = $db->prepare("DELETE FROM stored_events WHERE page_id=?") or local_die("could not delete stored events: " . print_r($db->errorInfo(), true));
+          $s = $db->prepare("DELETE FROM stored_events WHERE page_id=?") or local_die("could not delete stored events: "
+          . print_r($db->errorInfo(), true));
           $s->execute(array("visual.11e37b8d948.d")) or local_die("could not execute delete query: "
           . print_r($db->errorInfo(), true)); ?>
       }
     </script>
   </head>
   <body onLoad="loadStoredEvents()">
-    <div style="font-size:small; text-align: right;">
-      <a href="clear_session.php">clear session</a> - <a href="sitemap.html">sitemap</a>
-    </div>
+    <div style="font-size:small; text-align: right;"><a href="clear_session.php">clear
+    session</a>- <a href="sitemap.html">sitemap</a></div>
     <h1>viewkey</h1>
-    <div id="runtime_errors"><!-- any runtime errors go into here --></div>
-    <?php
+    <div id="runtime_errors"><!-- any runtime errors go into here --></div><?php
       /* expand any fail error messages */
-      if (require_get("fail")) { ?>
-        <div class="error">
-          <p>
-            An exception occured: <i><?php echo htmlspecialchars(require_get("fail")); ?></i>
-          </p>
-        </div>
-        <?php
-      }
-    ?>
-    <div>
-      <label id="label_visual_11e37df5bce_1c"> current login key <input type="text"
-      id="visual_11e37df5bce_1c" name="visual_11e37df5bce_1c" onChange="return false;">
-      </label>
-    </div>
-    <div id="debug">
-      <div>
-        <div id="response">empty</div>
-        <!-- for test cases to improve speed: an outstanding ajax calls counter -->
-        <div id="ajax_monitor"></div>
-      </div>
-    </div>
-  </body>
+      if (require_get("fail")) { ?><div class="error"><p>
+      An exception occured: <i><?php echo htmlspecialchars(require_get("fail"));
+        ?></i>
+    </p></div><?php
+    } ?><div><label id="label_visual_11e37df5bce_1c">current login key <input type="text"
+  id="visual_11e37df5bce_1c" name="visual_11e37df5bce_1c" onChange=" return false;"></label></div><div
+  id="debug"><div><div id="response">empty</div>
+  <!-- for test cases to improve speed: an outstanding ajax calls counter -->
+  <div id="ajax_monitor"></div></div></div>
+</body>
 </html>
