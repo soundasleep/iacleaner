@@ -473,9 +473,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// switch into strings mode?
 				if (cur == '"') {
-					jumpOverPhpString(reader, writer);
+					jumpOverPhpString(reader, writer, false);
 				} else if (cur == '\'') {
-					jumpOverPhpSingleString(reader, writer);
+					jumpOverPhpSingleString(reader, writer, false);
 				}
 				if (!Character.isWhitespace(cur)) {
 					prevNonWhitespace = cur;
@@ -531,15 +531,24 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @param reader
 	 * @param writer
+	 * @param allowSwitchToPhpMode can we switch to PHP mode in this string?
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			writer.enableWordwrap(false);	// no wordwrap!
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
+				// allow switch to PHP mode on getting "<?php"?
+				if (allowSwitchToPhpMode) {
+					if (didSwitchToPhpMode(reader, writer, cur)) {
+						// resume
+						continue;
+					}
+				}
+
 				if (cur == '"') {
 					// at the end of the string
 					writer.write(cur);
@@ -567,14 +576,23 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @param reader
 	 * @param writer
+	 * @param allowSwitchToPhpMode can we switch to a new PHP block within this string?
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
+				// allow switch to PHP mode on getting "<?php"?
+				if (allowSwitchToPhpMode) {
+					if (didSwitchToPhpMode(reader, writer, cur)) {
+						// resume
+						continue;
+					}
+				}
+				
 				if (cur == '\'') {
 					// at the end of the string
 					writer.write(cur);
@@ -593,6 +611,37 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		} finally {
 			writer.enableIndent(true);
 		}
+	}
+
+	/**
+	 * Try switching to PHP mode from the current point. 
+	 * Returns true if the switch was successful, in which case
+	 * the outside loop should issue 'continue;' to resume parsing.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @param cur
+	 * @return
+	 * @throws CleanerException 
+	 * @throws IOException 
+	 */
+	private boolean didSwitchToPhpMode(MyStringReader reader,
+			MyStringWriter writer, int cur) throws IOException, CleanerException {
+		if (cur == '<' && reader.readAhead(4).equals("?php")) {
+			// jump into php mode
+			// we will assume we return successfully from it, otherwise
+			// it's pretty much impossible to tell when script mode ends
+			writer.enableIndent(true);
+			reader.unread('<');	// go backwards
+			cleanPhpBlock(reader, writer);
+			writer.enableIndent(false);
+			
+			// resume!
+			return true;
+		}
+		
+		// didn't do anything
+		return false;
 	}
 
 	/**
@@ -1076,9 +1125,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// switch into strings mode?
 				if (cur == '"') {
-					jumpOverPhpString(reader, writer);
+					jumpOverPhpString(reader, writer, true);
 				} else if (cur == '\'') {
-					jumpOverPhpSingleString(reader, writer);
+					jumpOverPhpSingleString(reader, writer, true);
 				}
 				if (!Character.isWhitespace(cur)) {
 					prevNonWhitespace = cur;
