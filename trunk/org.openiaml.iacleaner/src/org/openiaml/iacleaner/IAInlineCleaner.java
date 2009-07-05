@@ -162,13 +162,19 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenPhp(MyStringWriter writer, int a, int b) throws IOException {
+	private boolean needsWhitespaceBetweenPhp(MyStringReader reader, MyStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
 			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
 			(b == '{') || (a != '(' && b == '!') || 
-			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
+			(a != '+' && b == '+' && reader.readAhead() != '+') ||
+			(a == '+' && b == '+' && reader.readAhead() == '+') ||
+			(a != '-' && b == '-' && reader.readAhead() != '-' && reader.readAhead() != '>') ||
+			(a == '-' && b == '-' && reader.readAhead() == '-') ||
+			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
+			(a == '*') ||
+			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
@@ -186,13 +192,19 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenJavascript(MyStringWriter writer, int a, int b) throws IOException {
+	private boolean needsWhitespaceBetweenJavascript(MyStringReader reader, MyStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
 			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(b == '?') || (a == '?') || 
 			(b == '{') || (a != '(' && b == '!') || 
-			(b == '+') || (b == '*') || (a == ')' && b == '-') ||
+			(a != '+' && b == '+' && reader.readAhead() != '+') ||
+			(a == '+' && b == '+' && reader.readAhead() == '+') ||
+			(a != '-' && b == '-' && reader.readAhead() != '-') ||
+			(a == '-' && b == '-' && reader.readAhead() == '-') ||
+			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
+			(a == '*') ||
+			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
@@ -284,6 +296,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean needsLineBefore = false;
 		boolean inInlineBrace = false;
 		boolean lastBlockCommentWasOnLine = false;
+		boolean inBracket = false;	// currently in a (...)?
 		
 		int cur = -1;
 		int prev = ' ';
@@ -380,7 +393,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
-					writer.newLine();
+					if (inBracket) {
+						// for (...; ...; ...)
+						// just write a space
+						writer.write(' ');
+					} else {
+						writer.newLine();
+					}
 				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
 					// previous statement was closing a */; new line
 					// (but not when the next character is a ';')
@@ -407,7 +426,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					}
 				} else if (prevNonWhitespace == ']' && (cur == ')')) {
 					// do nothing
-				} else if (needsWhitespaceBetweenPhp(writer, prevNonWhitespace, cur)) {
+				} else if (needsWhitespaceBetweenPhp(reader, writer, prevNonWhitespace, cur)) {
 					writer.write(' ');
 					needsWhitespace = false;
 				} else if (needsWhitespace) {
@@ -438,6 +457,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				if (cur == ';') {
 					inInlineBrace = false;	// impossible to have inline braces later
+				}
+				if (cur == '(') {
+					inBracket = true;
+				} else if (cur == ')') {
+					inBracket = false;
 				}
 				
 				// switch into strings mode?
@@ -880,6 +904,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean needsLineBefore = false;
 		boolean inInlineBrace = false;
 		boolean lastBlockCommentWasOnLine = false;
+		boolean inBracket = false;	// currently in a (...)?
 		
 		int cur = -1;
 		int prev = ' ';
@@ -989,7 +1014,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				isOnBlankLine = false;
 				if (prevNonWhitespace == ';') {
-					writer.newLine();
+					if (inBracket) {
+						// for (...; ...; ...)
+						// just write a space
+						writer.write(' ');
+					} else {
+						writer.newLine();
+					}
 				} else if (prevNonWhitespace == -2 && lastBlockCommentWasOnLine && cur != ';' && !Character.isWhitespace(cur)) {
 					// previous statement was closing a */; new line
 					// (but not when the next character is a ';')
@@ -1016,7 +1047,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					}
 				} else if (prevNonWhitespace == ']' && (cur == ')')) {
 					// do nothing
-				} else if (needsWhitespaceBetweenJavascript(writer, prevNonWhitespace, cur)) {
+				} else if (needsWhitespaceBetweenJavascript(reader, writer, prevNonWhitespace, cur)) {
 					writer.write(' ');
 					needsWhitespace = false;
 				} else if (needsWhitespace) {
@@ -1047,6 +1078,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 
 				if (cur == ';') {
 					inInlineBrace = false;	// impossible to have inline braces later
+				}
+				if (cur == '(') {
+					inBracket = true;
+				} else if (cur == ')') {
+					inBracket = false;
 				}
 				
 				// switch into strings mode?
