@@ -702,7 +702,17 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			tag.equals("/script");
 	}
 
-
+	/**
+	 * Does the given HTML singleton tag (i.e. <tag />) 
+	 * need to be appended with a new line?
+	 * 
+	 * @param tag
+	 * @return
+	 */
+	protected boolean htmlTagNeedsNewLineSingleton(String tag) {
+		return htmlTagNeedsTrailingNewLine("/" + tag);
+	}
+	
 	/**
 	 * We have just started an &lt;htmlTag attr...&gt;. Clean the tag up, and return
 	 * the 'htmlTag'.
@@ -743,6 +753,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		boolean doneTag = false;
 		while ((cur = reader.read()) != -1) {
 			if (cur == '>') {
+				int prev = writer.getPrevious();
+				
 				// end of tag
 				writer.write(cur);
 				
@@ -754,6 +766,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// trailing newline?
 				if (htmlTagNeedsTrailingNewLine(tagName)) {
+					writer.newLine();
+				} else if (prev == '/' && htmlTagNeedsNewLineSingleton(tagName)) {
+					// it's a single tag <link />, do we need to
+					// add a new line after here too?
 					writer.newLine();
 				}
 				
