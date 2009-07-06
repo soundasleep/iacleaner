@@ -43,6 +43,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(PhpStrings_Php.class);
 		suite.addTestSuite(JsStrings_Html.class);
 		suite.addTestSuite(JsStrings_Js.class);
+		suite.addTestSuite(JsFunctions2_Html.class);
 		//$JUnit-END$
 		return suite;
 	}
