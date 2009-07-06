@@ -368,7 +368,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
+				if (prevNonWhitespace == '{') {
+					// put this comment on a new line
+					writer.newLine();
+					// increase the indent because we're starting a new block
+					// (and the code later won't be executed)
+					writer.indentIncrease();
+				} else if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
@@ -1108,7 +1114,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '/' && reader.readAhead() == '*') {
 				// a multi-line comment
 				// write a whitespace before
-				if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
+				if (prevNonWhitespace == '{') {
+					// put this comment on a new line
+					writer.newLine();
+					// increase the indent because we're starting a new block
+					// (and the code later won't be executed)
+					writer.indentIncrease();
+				} else if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
@@ -1806,6 +1818,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		private boolean indentEnabled = true;		// turn off indenting
 		
+		private long lineCount = 1;		// number of newlines written so far
+		
 		/**
 		 * Columns after this long will be wordwrapped when {@link #canWordWrap} is true.
 		 */
@@ -1916,11 +1930,20 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			indent--;
 			if (indent < 0) {
 				// we went too far!
-				throwWarning("Fell out of indent", getBuffer().toString());
+				throwWarning("Fell out of indent after " + getLineCount() + " lines", getBuffer().toString());
 				indent = 0;
 			}
 		}
 		
+		/**
+		 * Get the number of lines printed already
+		 * 
+		 * @return
+		 */
+		public long getLineCount() {
+			return lineCount;
+		}
+
 		int previousChar = -1;
 		boolean wordwrapOnNext = false;
 
@@ -1929,6 +1952,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 */
 		@Override
 		public void write(int c) {
+			// increase line count for newlines
+			if (c == '\n') {
+				lineCount++;
+			}
+			
 			if (canWordWrap() && wordwrapOnNext && c != ' ') {
 				// need to do wordwrap indent now!
 				wordwrapOnNext = false;
