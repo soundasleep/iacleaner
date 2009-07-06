@@ -597,7 +597,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			throw new InlineCleanerException("PHP string did not terminate", reader);
 		} finally {
 			writer.enableIndent(true);
-			writer.enableWordwrap(true);	// no wordwrap!
+			writer.enableWordwrap(true);
 		}
 	}
 
@@ -614,6 +614,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
+			writer.enableWordwrap(false);
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
 				// allow switch to PHP mode on getting "<?php"?
@@ -644,6 +645,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			throw new InlineCleanerException("PHP single-quoted string did not terminate", reader);
 		} finally {
 			writer.enableIndent(true);
+			writer.enableWordwrap(true);
 		}
 	}
 
