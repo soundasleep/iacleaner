@@ -791,18 +791,20 @@ $s->execute(array("visual.11e37b8d948.d")) or local_die("could not execute delet
 
     <h1>viewkey</h1>
 
-    <div id="runtime_errors"><!-- any runtime errors go into here --></div>
+    <div id="runtime_errors"><!-- any runtime errors go into here --><p>
 
     <?php
     /* expand any fail error messages */
     if (require_get("fail")) {
 ?>
   <div class="error">
-    <p>An exception occured: <i><?php echo htmlspecialchars(require_get("fail")); ?></i></p>
+    An exception occured: <i><?php echo htmlspecialchars(require_get("fail")); ?></i>
   </div>
 <?php
     }
-    ?>
+    ?></p>
+
+    </div>
 
   <div>
   <label id="label_visual_11e37df5bce_1c">
