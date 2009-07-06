@@ -6,10 +6,23 @@ package org.openiaml.iacleaner.inline;
 import java.io.IOException;
 
 /**
+ * <p>
+ * This is a special Writer which, most importantly, supports both
+ * wordwrapping and indentation. By default, both of these are enabled
+ * (wordwrap is set to 79 characters: {@link #wordWrapCol}).
+ * </p>
+ * 
+ * <p>
+ * We also support going backwards through what we have written
+ * already, through {@link #getPrevious()} and {@link #getLastWritten(int)}.
+ * </p>
+ * 
+ * @see #enableIndent(boolean)
+ * @see #enableWordwrap(boolean)
  * @author Jevon
  *
  */
-public abstract class InlineStringWriter extends DontWriteLinesOfJustSpaces {
+public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 
 	private int indent = 0;
 	private static final String indentString = "  ";

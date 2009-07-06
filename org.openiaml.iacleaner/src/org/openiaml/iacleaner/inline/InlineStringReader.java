@@ -8,6 +8,18 @@ import java.io.PushbackReader;
 import java.io.StringReader;
 
 /**
+ * <p>
+ * We extend {@link PushbackReader} to allow us to "read ahead",
+ * but still allow us to "unread" characters after reading them.
+ * </p>
+ * 
+ * <p>
+ * We also add a few convenience
+ * methods, in particular, {@link #getLastChar()}, 
+ * {@link #getLine} and {@link #readAheadSkipWhitespace(int)}.
+ * </p>
+ * 
+ * @see PushbackReader#unread(int)
  * @author Jevon
  *
  */
