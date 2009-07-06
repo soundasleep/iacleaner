@@ -3,8 +3,6 @@
  */
 package org.openiaml.iacleaner;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -526,6 +524,18 @@ public class IARegexpCleaner extends DefaultIACleaner implements IACleaner {
 		r.putAll( replaceQuotes );
 		r.putAll( replaceQuotesSq );
 		return r;
+	}
+
+	/**
+	 * This method doesn't actually do anything different; the 
+	 * extension parameter is ignored.
+	 * 
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public String cleanScript(String script, String extension)
+			throws CleanerException {
+		return cleanScript(script);
 	}
 
 }

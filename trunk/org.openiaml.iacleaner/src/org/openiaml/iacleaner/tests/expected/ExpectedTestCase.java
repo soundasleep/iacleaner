@@ -90,7 +90,7 @@ public abstract class ExpectedTestCase extends TestCase {
 		outputText = outputText.replace("\r\n", "\n");
 
 		IACleaner c = AllTests.getCleaner();
-		String result = c.cleanScript(inputText);
+		String result = c.cleanScript(getInputFile());
 		assertStringEquals(outputText, result);
 		
 		// no warnings
@@ -111,7 +111,7 @@ public abstract class ExpectedTestCase extends TestCase {
 		inputText = inputText.replace("\r\n", "\n");
 
 		IACleaner c = AllTests.getCleaner();
-		String result = c.cleanScript(inputText);
+		String result = c.cleanScript(getExpectedFile());
 		assertStringEquals(inputText, result);
 
 		// no warnings
@@ -135,7 +135,7 @@ public abstract class ExpectedTestCase extends TestCase {
 		outputText = outputText.replace("\r\n", "\n");
 
 		IACleaner c = AllTests.getCleaner();
-		String result = c.cleanScript(inputText);
+		String result = c.cleanScript(getWhitespaceInputFile());
 		assertStringEquals(outputText, result);
 
 		// no warnings

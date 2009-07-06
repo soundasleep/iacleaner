@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 
 import org.openiaml.iacleaner.CleanerException;
 import org.openiaml.iacleaner.IACleaner;
-import org.openiaml.iacleaner.IAInlineCleaner;
 import org.openiaml.iacleaner.tests.AllTests;
 
 /**
