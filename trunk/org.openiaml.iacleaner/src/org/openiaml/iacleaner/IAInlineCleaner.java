@@ -22,8 +22,8 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * the IACleaner to parse the string character-by-character in
  * real-time.</p>
  * 
- * <p>As a result, it is of an order of magnitude faster than
- * {@link IARegexpCleaner}.
+ * <p>As a result, it is at least an order of magnitude faster than
+ * {@link IARegexpCleaner}.</p>
  * 
  * @author Jevon
  *

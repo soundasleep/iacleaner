@@ -7,6 +7,9 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
+ * These cover all the expected output tests for the IACleaner
+ * interface.
+ * 
  * @author Jevon
  *
  */

@@ -6,16 +6,20 @@ package org.openiaml.iacleaner.inline;
 import java.io.StringWriter;
 
 /**
+ * <p>
  * This extends a StringWriter so that if we try to write something like 
- * 's a \n s s s \n s b' (s = space), we actually write
- * 's a \n \n s b' (so we don't write lines of just spaces).
+ * '<code>s a \n s s s \n s b</code>' (s = space), we actually write
+ * '<code>s a \n \n s b</code>' (so we don't write lines of just spaces).
+ * </p>
  * 
+ * <p>
  * Any spaces at the end of the file will also be trimmed (but not newlines).
+ * </p>
  *  
  * @author Jevon
  *
  */
-public class DontWriteLinesOfJustSpaces extends StringWriter {
+public class IgnoreEmptyLinesWriter extends StringWriter {
 
 	/**
 	 * The longest buffer we will store in until we will be forced

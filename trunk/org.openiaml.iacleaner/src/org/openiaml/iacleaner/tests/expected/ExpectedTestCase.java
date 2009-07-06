@@ -11,7 +11,19 @@ import org.openiaml.iacleaner.IACleaner;
 import org.openiaml.iacleaner.tests.AllTests;
 
 /**
+ * <p>
  * For testing the expected results of different input files, we extend this abstract class.
+ * </p>
+ * 
+ * <p>
+ * If a class is called <code>Foo_Html</code>, it will run the
+ * following tests:
+ * <ol>
+ * 	<li>format('foo.html') == 'foo.expected.html': {@link #testExpected()}</li>
+ * 	<li>format('foo.expected.html') == 'foo.expected.html': {@link #testStable()}</li>
+ * 	<li>format('foo.compact.html') == 'foo.expected.html': {@link #testWhitespace()}</li>
+ * </ol>
+ * </p>
  * 
  * @author Jevon
  *
