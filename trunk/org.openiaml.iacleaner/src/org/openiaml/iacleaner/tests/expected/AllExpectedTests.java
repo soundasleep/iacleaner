@@ -40,6 +40,9 @@ public class AllExpectedTests {
 		suite.addTestSuite(JsInlinePhp_Php.class);
 		suite.addTestSuite(BasicJs_Html.class);
 		suite.addTestSuite(PhpInJsComments_Php.class);
+		suite.addTestSuite(PhpStrings_Php.class);
+		suite.addTestSuite(JsStrings_Html.class);
+		suite.addTestSuite(JsStrings_Js.class);
 		//$JUnit-END$
 		return suite;
 	}

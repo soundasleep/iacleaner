@@ -580,7 +580,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// write the character as normal
 				writer.write(cur);
 	
-				if (cur == '\\' && reader.readAhead() == '"') {
+				if (cur == '\\' && reader.readAhead() == '\\') {
+					// skip \ escapes
+					writer.write(reader.read());
+				} else if (cur == '\\' && reader.readAhead() == '"') {
 					// escaping the next string character
 					writer.write(reader.read());
 				}
@@ -623,8 +626,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				
 				// write the character as normal
 				writer.write(cur);
-	
-				if (cur == '\\' && reader.readAhead() == '\'') {
+				
+				if (cur == '\\' && reader.readAhead() == '\\') {
+					// skip \ escapes
+					writer.write(reader.read());
+				} else if (cur == '\\' && reader.readAhead() == '\'') {
 					// escaping the next string character
 					writer.write(reader.read());
 				}
@@ -666,7 +672,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.write(cur);
 					
 					// any additional regexp parameters?
-					/*
 					while ((cur = reader.read()) != -1) {
 						if (!Character.isLetter(cur)) 
 							break;
@@ -675,7 +680,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					}
 					// put the last read character back on, since it's not part of the regexp
 					reader.unread(cur);
-					*/
 					return;
 				}
 				
@@ -1055,7 +1059,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 		
 		// always start with a newline (but let <script></script> remain as one line)
-		boolean needsNewLine = true;
+		// (only if we are in HTML mode)
+		boolean needsNewLine = withinHtml;
 		
 		boolean needsLineBefore = false;
 		boolean inInlineBrace = false;
