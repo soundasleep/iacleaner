@@ -10,8 +10,8 @@ import junit.framework.TestSuite;
 
 import org.openiaml.iacleaner.IACleaner;
 import org.openiaml.iacleaner.IAInlineCleaner;
-import org.openiaml.iacleaner.IARegexpCleaner;
 import org.openiaml.iacleaner.tests.expected.AllExpectedTests;
+import org.openiaml.iacleaner.tests.inline.AllInlineTests;
 
 /**
  * Run all automated tests.
@@ -35,6 +35,7 @@ public class AllTests {
 		suite.addTestSuite(ComplexPhpTest.class);
 		suite.addTestSuite(SitemapHtmlTest.class);
 		suite.addTest(AllExpectedTests.suite());
+		suite.addTest(AllInlineTests.suite());
 		//$JUnit-END$
 		return suite;
 	}

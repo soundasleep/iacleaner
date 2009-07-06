@@ -35,7 +35,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		 * @throws IOException 
 		 */
 		public InlineCleanerException(String string, MyStringReader reader) throws IOException {
-			super(string + " [last='" + (char) reader.getLastChar() + "' following='" + reader.readAhead(32) + "']");
+			super("Line " + reader.getLine() + ": " + string + " [last='" + (char) reader.getLastChar() + "' following='" + reader.readAhead(32) + "']");
 		}
 
 	}
@@ -1426,8 +1426,61 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		private static final int PUSHBACK_BUFFER_SIZE = 1024;
 		private int lastChar = -1;
 		
+		private long lineNumber = 1;		/* keep track of newlines found */
+		
 		public MyStringReader(String s) {
 			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
+		}
+
+		/**
+		 * What line number are we currently on?
+		 * 
+		 * @return
+		 */
+		public long getLine() {
+			return lineNumber;
+		}
+
+		/**
+		 * Override to support line numbers.
+		 * 
+		 * @see java.io.PushbackReader#unread(char[], int, int)
+		 */
+		@Override
+		public void unread(char[] cbuf, int off, int len) throws IOException {
+			super.unread(cbuf, off, len);
+			for (int i = 0; i < len; i++) {
+				if (cbuf[i+off] == '\n') {
+					lineNumber--;
+				}
+			}
+		}
+
+		/**
+		 * Override to support line numbers.
+		 * 
+		 * @see java.io.PushbackReader#unread(char[])
+		 */
+		@Override
+		public void unread(char[] cbuf) throws IOException {
+			super.unread(cbuf);
+			for (int i = 0; i < cbuf.length; i++) {
+				if (cbuf[i] == '\n') {
+					lineNumber--;
+				}
+			}
+		}
+
+		/**
+		 * Override to support line numbers.
+		 * 
+		 * @see java.io.PushbackReader#unread(int)
+		 */
+		@Override
+		public void unread(int c) throws IOException {
+			super.unread(c);
+			if (c == '\n')
+				lineNumber--;
 		}
 
 		/**
@@ -1544,6 +1597,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		public int read() throws IOException {
 			int c = super.read();
 			lastChar = c;
+			if (c == '\n')
+				lineNumber++;
 			return c;
 		}
 		
