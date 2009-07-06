@@ -28,6 +28,8 @@ public class AllExpectedTests {
 		suite.addTestSuite(JsComments_Html.class);
 		suite.addTestSuite(Basic_Html.class);
 		suite.addTestSuite(Inline2_Html.class);
+		suite.addTestSuite(Regexps_Html.class);
+		suite.addTestSuite(PhpInJsStrings_Php.class);
 		suite.addTestSuite(Example3_Php.class);
 		suite.addTestSuite(Example2_Php.class);
 		suite.addTestSuite(JsLanguage_Html.class);
@@ -35,7 +37,6 @@ public class AllExpectedTests {
 		suite.addTestSuite(Inline3_Html.class);
 		suite.addTestSuite(JsInlinePhp_Php.class);
 		suite.addTestSuite(BasicJs_Html.class);
-		suite.addTestSuite(PhpInJsStrings_Php.class);
 		suite.addTestSuite(PhpInJsComments_Php.class);
 		//$JUnit-END$
 		return suite;
