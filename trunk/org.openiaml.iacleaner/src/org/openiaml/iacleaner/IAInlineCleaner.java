@@ -172,9 +172,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	private boolean needsWhitespaceBetweenPhp(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
-			(!isJavascriptOperator(a) && b == '=') || 
+			(!isPhpOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
-			(a == '.') || (b == '.') || (b == '?') || (a == '?') || 
+			(a == '.' && b != '=') || (b == '.') || (b == '?') || (a == '?') || 
 			(b == '{') || (a != '(' && b == '!') || 
 			(a != '+' && b == '+' && reader.readAhead() != '+') ||
 			(a == '+' && b == '+' && reader.readAhead() == '+') ||
@@ -183,15 +183,18 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a != '|' && b == '|') || 
 			(a != '&' && b == '&') || 
 			(b == '<' || (a != '-' && a != '=' && b == '>')) ||
-			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
-			(a == '*') ||
+			(isPhpOperator(a) && !isPhpOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
+			(a == ')' && isPhpOperator(b)) ||
+			(isPhpOperator(a) && a != '!' && b == '$') ||
+			(a == '*' && b != '=') ||
 			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
 			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
-			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ );
+			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ ) ||
+			(Character.isLetter(a) && isPhpOperator(b) && (b != '-' && reader.readAhead() != '>')) /* e.g. $f * $g */;
 	}
 	
 	/**
@@ -223,8 +226,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
-			((isPhpOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
-			((isPhpOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ );
+			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
+			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ );
 	}
 	
 
@@ -248,7 +251,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean isPhpOperator(int a) {
-		return a == '+' || a == '-' || a == '*' || a == '/' || a == '>' || a == '<' || a == '=' || a == '!' || a == '&' || a == '|';
+		return a == '.' || isJavascriptOperator(a);
 	}
 	
 	/**
@@ -258,7 +261,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	private boolean isJavascriptOperator(int a) {
-		return isPhpOperator(a);
+		return a == '+' || a == '-' || a == '*' || a == '/' || a == '^' || a == '>' || a == '<' || a == '=' || a == '!' || a == '&' || a == '|';
 	}
 
 	private String[] reservedWordsPhp = new String[] {
