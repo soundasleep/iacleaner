@@ -89,14 +89,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else {
 				// tag mode!
 				cleanHtmlTag(reader, writer).toLowerCase();
-				if (reader.readAhead() != -1) {
-					/*
-					if (htmlTag.equals("/h1") || htmlTag.equals("/title") ||
-							htmlTag.equals("/head")) { 
-						writer.newLine();	// some tags need a new line
-					}
-					*/
-				}
 			}
 		}
 		
@@ -317,6 +309,17 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				writer.write(' ');
 				writer.write(cur); // write '?'
 				writer.write(reader.read()); // write '>'
+				
+				// handle trailing braces { }, which should still increase the indent etc
+				if (prevNonWhitespace == '{') {
+					// open a new block
+					writer.newLineMaybe();
+					writer.indentIncrease();
+					needsWhitespace = false;
+					inInlineBrace = false;
+					prevNonWhitespace = -5;
+				}
+				
 				writer.indentDecrease();	// end indent
 				return;	// stop
 			}
@@ -448,7 +451,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (cur == '}') {
 					// close an existing block
 					writer.indentDecrease();
-					writer.newLineMaybe();
+					// only write a new line if we aren't starting the current block
+					if (prevNonWhitespace != -1) {
+						writer.newLineMaybe();
+					} else {
+						writer.write(' ');
+					}
 				}
 				
 				if (cur == '(' && inInlineBrace) {
@@ -477,8 +485,16 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				if (!Character.isWhitespace(cur)) {
 					prevNonWhitespace = cur;
 				}
+				
 			}
 			prev = cur;
+		}
+		
+		// handle trailing braces { }, which should still increase the indent etc
+		if (prevNonWhitespace == '{') {
+			// open a new block
+			writer.newLineMaybe();
+			writer.indentIncrease();
 		}
 		
 		// it's ok to fall out of PHP mode
