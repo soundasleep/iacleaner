@@ -10,6 +10,7 @@ import junit.framework.TestSuite;
 
 import org.openiaml.iacleaner.IACleaner;
 import org.openiaml.iacleaner.IAInlineCleaner;
+import org.openiaml.iacleaner.IARegexpCleaner;
 import org.openiaml.iacleaner.tests.expected.AllExpectedTests;
 import org.openiaml.iacleaner.tests.inline.AllInlineTests;
 
@@ -45,6 +46,7 @@ public class AllTests {
 	 */
 	public static IACleaner getCleaner() {
 		return new IAInlineCleaner();
+		// return new IARegexpCleaner();
 	}
 
 }
