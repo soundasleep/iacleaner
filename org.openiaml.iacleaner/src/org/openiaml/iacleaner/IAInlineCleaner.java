@@ -4,41 +4,31 @@
 package org.openiaml.iacleaner;
 
 import java.io.IOException;
-import java.io.PushbackReader;
-import java.io.StringReader;
-import java.io.StringWriter;
+
+import org.openiaml.iacleaner.inline.IACleanerStringReader;
+import org.openiaml.iacleaner.inline.IACleanerStringWriter;
+import org.openiaml.iacleaner.inline.InlineCleanerException;
+import org.openiaml.iacleaner.inline.InlineStringReader;
+import org.openiaml.iacleaner.inline.InlineStringWriter;
 
 
 /**
+ * <p>This cleaner implementation uses a much more efficient method of 
+ * reading, parsing and writing the formatted output.</p> 
+ * 
+ * <p>Instead of keeping
+ * the entire string in memory at once, two special buffered readers and
+ * writers ({@link InlineStringReader} and {@link InlineStringWriter}) allow
+ * the IACleaner to parse the string character-by-character in
+ * real-time.</p>
+ * 
+ * <p>As a result, it is of an order of magnitude faster than
+ * {@link IARegexpCleaner}.
+ * 
  * @author Jevon
  *
  */
 public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
-
-	/**
-	 * Try to add additional information about the state based on
-	 * the custom classes we use.
-	 * 
-	 * @author Jevon
-	 *
-	 */
-	public class InlineCleanerException extends CleanerException {
-
-		private static final long serialVersionUID = 1L;
-
-		/**
-		 * Try to add additional knowledge to the exception from the 
-		 * given reader.
-		 * 
-		 * @param string
-		 * @param reader
-		 * @throws IOException 
-		 */
-		public InlineCleanerException(String string, MyStringReader reader) throws IOException {
-			super("Line " + reader.getLine() + ": " + string + " [last='" + (char) reader.getLastChar() + "' following='" + reader.readAhead(32) + "']");
-		}
-
-	}
 
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
@@ -50,10 +40,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		extension = extension.toLowerCase();
 		
 		// put the script into a reader
-		MyStringReader reader = new MyStringReader(script);
+		InlineStringReader reader = new IACleanerStringReader(script, this);
 		
 		// and it will output into the writer
-		MyStringWriter writer = new MyStringWriter();
+		InlineStringWriter writer = new IACleanerStringWriter(this);
 		
 		try {
 			if (extension.equals("js")) {
@@ -82,7 +72,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlBlock(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanHtmlBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 
 		while (removeHtmlTextSpacingUntil(reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
@@ -135,7 +125,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean doesntActuallyNeedWhitespaceBeforePhp(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
+	private boolean doesntActuallyNeedWhitespaceBeforePhp(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' || cur == ',' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
 			(writer.getLastWritten(2).equals("::")) /* :: operator */ ||
 			(cur == '-' && reader.readAhead() == '>') /* -> operator */ ||
@@ -152,7 +142,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
+	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+';
 	}
 	
@@ -167,7 +157,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean doesntActuallyNeedWhitespaceBeforeCss(MyStringReader reader, MyStringWriter writer, int cur) throws IOException {
+	private boolean doesntActuallyNeedWhitespaceBeforeCss(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || cur == ':';
 	}
 	
@@ -180,7 +170,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenPhp(MyStringReader reader, MyStringWriter writer, int a, int b) throws IOException {
+	private boolean needsWhitespaceBetweenPhp(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
 			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
@@ -213,7 +203,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenJavascript(MyStringReader reader, MyStringWriter writer, int a, int b) throws IOException {
+	private boolean needsWhitespaceBetweenJavascript(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
 			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
@@ -247,7 +237,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenCss(MyStringReader reader, MyStringWriter writer, int a, int b) throws IOException {
+	private boolean needsWhitespaceBetweenCss(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ',') || (a == '+') || (a == '<') || (b == '+') || (b == '<') || (a == '>') || (b == '>') || (b == '.') || (b == '{') || (a == ':');
 	}
 	
@@ -289,7 +279,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean previousWordIsReservedWordPhp(MyStringWriter writer) throws IOException {
+	private boolean previousWordIsReservedWordPhp(InlineStringWriter writer) throws IOException {
 		// get maximum number of chars to go backwards
 		int backwards = reservedWordsPhp[0].length();
 		for (String s : reservedWordsPhp) {
@@ -319,7 +309,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanPhpBlock(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanPhpBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 		// write in the php header as-is
 		writer.write(reader.read(5));
 		// add a space (unless we start with an inline comment)
@@ -557,8 +547,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return True if we shouldn't output a new line
 	 * @throws IOException 
 	 */
-	private boolean isInlinePhpReservedWordAfterBrace(MyStringReader reader,
-			MyStringWriter writer) throws IOException {
+	private boolean isInlinePhpReservedWordAfterBrace(InlineStringReader reader,
+			InlineStringWriter writer) throws IOException {
 		// get maximum number of chars to go backwards
 		int max = inlineBraceWordsPhp[0].length();
 		for (String s : inlineBraceWordsPhp) {
@@ -594,7 +584,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpString(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	protected void jumpOverPhpString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			writer.enableWordwrap(false);	// no wordwrap!
@@ -642,7 +632,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpSingleString(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	protected void jumpOverPhpSingleString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			writer.enableWordwrap(false);
@@ -693,7 +683,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverJavascriptRegexp(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	protected void jumpOverJavascriptRegexp(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			int cur = -1;
@@ -747,8 +737,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 * @throws IOException 
 	 */
-	private boolean didSwitchToPhpMode(MyStringReader reader,
-			MyStringWriter writer, int cur) throws IOException, CleanerException {
+	private boolean didSwitchToPhpMode(InlineStringReader reader,
+			InlineStringWriter writer, int cur) throws IOException, CleanerException {
 		if (cur == '<' && reader.readAhead(4).equals("?php")) {
 			// jump into php mode
 			// we will assume we return successfully from it, otherwise
@@ -776,7 +766,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpInlineComment(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	protected void jumpOverPhpInlineComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
@@ -818,7 +808,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpBlockComment(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	protected void jumpOverPhpBlockComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
@@ -888,7 +878,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlComment(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanHtmlComment(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 		// read until we find the end
 		int cur = -1;
 		boolean isNewline = false;
@@ -992,7 +982,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException if we hit EOF unexpectedly
 	 */
-	protected String cleanHtmlTag(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected String cleanHtmlTag(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 		// get the first char <
 		int first = reader.read();
 		
@@ -1088,8 +1078,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlCss(MyStringReader reader,
-			MyStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
+	protected void cleanHtmlCss(InlineStringReader reader,
+			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
 		// is it immediately </script>?
 		if (withinHtml && readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/style")) {
 			// we don't need to do anything
@@ -1307,8 +1297,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlJavascript(MyStringReader reader,
-			MyStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
+	protected void cleanHtmlJavascript(InlineStringReader reader,
+			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
 		// is it immediately </script>?
 		if (withinHtml && readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
 			// we don't need to do anything
@@ -1574,8 +1564,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlTagAttributes(MyStringReader reader,
-			MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanHtmlTagAttributes(InlineStringReader reader,
+			InlineStringWriter writer) throws IOException, CleanerException {
 		
 		int cur = -1;
 		int prev = -1;
@@ -1634,8 +1624,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param writer
 	 * @param stringCharacter either " or '
 	 */
-	protected void jumpOverHtmlAttributeString(MyStringReader reader,
-			MyStringWriter writer, int stringCharacter) throws IOException, CleanerException {
+	protected void jumpOverHtmlAttributeString(InlineStringReader reader,
+			InlineStringWriter writer, int stringCharacter) throws IOException, CleanerException {
 		try {
 			// disable wordwrap, so we don't wrap strings in tags!
 			writer.enableWordwrap(false);
@@ -1666,13 +1656,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * If this returns an empty string, it may mean EOF, or the stream
 	 * begins with [A-Za-z0-9_\-/].
 	 * 
-	 * @see MyStringReader#readAheadUntilEndHtmlTag()
+	 * @see InlineStringReader#readAheadUntilEndHtmlTag()
 	 * @param reader
 	 * @return
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private String findHtmlTagName(MyStringReader reader) throws IOException, CleanerException {
+	private String findHtmlTagName(InlineStringReader reader) throws IOException, CleanerException {
 		return readAheadUntilEndHtmlTag(reader);
 	}
 
@@ -1689,8 +1679,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private boolean removeHtmlTextSpacingUntil(MyStringReader reader,
-			MyStringWriter writer, char c) throws IOException, CleanerException {
+	private boolean removeHtmlTextSpacingUntil(InlineStringReader reader,
+			InlineStringWriter writer, char c) throws IOException, CleanerException {
 		
 		int cur;
 		int prev = -1;
@@ -1740,7 +1730,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 	
 	/**
-	 * Same as {@link #readAheadUntilEndHtmlTag(org.openiaml.iacleaner.IAInlineCleaner.MyStringReader)},
+	 * Same as {@link #readAheadUntilEndHtmlTag(org.openiaml.iacleaner.IAInlineCleaner.InlineStringReader)},
 	 * except this skips over a '<' in front.
 	 * 
 	 * @param reader
@@ -1749,8 +1739,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected String readAheadUntilEndHtmlTagWithOpenBrace(MyStringReader reader,
-			MyStringWriter writer) throws IOException, CleanerException {
+	protected String readAheadUntilEndHtmlTagWithOpenBrace(InlineStringReader reader,
+			InlineStringWriter writer) throws IOException, CleanerException {
 		int oldChar = reader.getLastChar();
 		int cur = reader.read();	// consume <
 		String nextTag = readAheadUntilEndHtmlTag(reader);
@@ -1765,16 +1755,18 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * Read ahead until we find something outside [A-Za-z0-9_\-/!], ignoring
 	 * leading whitespace.
 	 * 
+	 * Will only read up to 512 characters into the stream.
+	 * 
 	 * Return the text found, or throws an exception.
 	 * 
 	 * @return
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected String readAheadUntilEndHtmlTag(MyStringReader reader) throws IOException, CleanerException {
+	protected String readAheadUntilEndHtmlTag(InlineStringReader reader) throws IOException, CleanerException {
 		int oldLast = reader.getLastChar();
-		char[] buffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to unread back to reader
-		char[] retBuffer = new char[MyStringReader.PUSHBACK_BUFFER_SIZE];	// to return
+		char[] buffer = new char[512];	// to unread back to reader
+		char[] retBuffer = new char[512];	// to return
 
 		int i = -1;	// pos in buffer
 		int j = -1;	// pos in retBuffer
@@ -1805,514 +1797,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 	}
 	
-	public class MyStringReader extends PushbackReader {
-
-		private static final int PUSHBACK_BUFFER_SIZE = 1024;
-		private int lastChar = -1;
-		
-		private long lineNumber = 1;		/* keep track of newlines found */
-		
-		public MyStringReader(String s) {
-			super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
-		}
-
-		/**
-		 * What line number are we currently on?
-		 * 
-		 * @return
-		 */
-		public long getLine() {
-			return lineNumber;
-		}
-
-		/**
-		 * Override to support line numbers.
-		 * 
-		 * @see java.io.PushbackReader#unread(char[], int, int)
-		 */
-		@Override
-		public void unread(char[] cbuf, int off, int len) throws IOException {
-			super.unread(cbuf, off, len);
-			for (int i = 0; i < len; i++) {
-				if (cbuf[i+off] == '\n') {
-					lineNumber--;
-				}
-			}
-		}
-
-		/**
-		 * Override to support line numbers.
-		 * 
-		 * @see java.io.PushbackReader#unread(char[])
-		 */
-		@Override
-		public void unread(char[] cbuf) throws IOException {
-			super.unread(cbuf);
-			for (int i = 0; i < cbuf.length; i++) {
-				if (cbuf[i] == '\n') {
-					lineNumber--;
-				}
-			}
-		}
-
-		/**
-		 * Override to support line numbers.
-		 * 
-		 * @see java.io.PushbackReader#unread(int)
-		 */
-		@Override
-		public void unread(int c) throws IOException {
-			super.unread(c);
-			if (c == '\n')
-				lineNumber--;
-		}
-
-		/**
-		 * Read ahead for the next two characters, excluding <b>leading</b>
-		 * whitespace. Reads up to PUSHBACK_BUFFER_SIZE characters.
-		 * 
-		 * @param i
-		 * @return
-		 * @throws IOException 
-		 */
-		public String readAheadSkipWhitespace(int i) throws IOException {
-			char[] buf = new char[PUSHBACK_BUFFER_SIZE];
-			char[] result = new char[i];
-			boolean startCounting = false;
-			int j, k;
-			for (j = 0, k = 0; j < buf.length; j++) {
-				buf[j] = (char) read();
-				if (!startCounting && !Character.isWhitespace(buf[j])) {
-					startCounting = true;
-				}
-				if (startCounting) {
-					result[k] = buf[j];
-					k++;
-					if (k == i) {
-						// we found it
-						// put back what we read
-						unread(buf, 0, j + 1);
-						return String.valueOf(result);
-					}
-				}
-			}
-			// return back what we had read back so far
-			unread(buf, 0, j);
-			// return whatever we found
-			return String.valueOf(buf, 0, k);
-		}
-
-		/**
-		 * Set the last character to a given character.
-		 * This should ONLY be called if an external method implements readAhead manually.
-		 * 
-		 * @param oldLast
-		 */
-		public void setLastChar(int oldLast) {
-			lastChar = oldLast;
-		}
-
-		/**
-		 * Read the given number of characters into a String. Will return
-		 * a shorter string if EOF is found.
-		 * 
-		 * @param i
-		 * @return
-		 * @throws IOException 
-		 */
-		public String read(int i) throws IOException {
-			char[] result = new char[i];
-			int read = read(result);
-			return String.valueOf(result, 0, read);
-		}
-
-		/**
-		 * What was the last character we read?
-		 * 
-		 * @return e.g. a newline, or 'a' etc
-		 */
-		public int getLastChar() {
-			return lastChar;
-		}
-
-		/**
-		 * "Read ahead" up to N characters, so we can see what is coming up.
-		 * If EOF is reached, returns the remaining read-ahead.
-		 * 
-		 * @param n number of characters to read ahead
-		 * @return the characters read, or null if we are EOF
-		 * @throws IOException
-		 */
-		public String readAhead(int n) throws IOException {
-			int oldLast = lastChar;
-			char[] c = new char[n];
-			int found = read(c);
-			if (found != -1) {				
-				unread(c, 0, found); // push these characters back on
-			}
-			 
-			lastChar = oldLast; // reset
-			if (found == -1) {
-				return null;
-			} else {
-				return String.valueOf(c).substring(0, found);
-			}
-		}
-		
-		/**
-		 * "Read ahead" 1 character, so we can see what is coming up.
-		 * 
-		 * @return the next character, or -1 if EOF
-		 * @throws IOException
-		 */
-		public int readAhead() throws IOException {
-			int oldLast = lastChar;
-			int found = read();
-			if (found != -1)
-				unread(found);
-			lastChar = oldLast;	// reset
-			return found;
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.PushbackReader#read()
-		 */
-		@Override
-		public int read() throws IOException {
-			int c = super.read();
-			lastChar = c;
-			if (c == '\n')
-				lineNumber++;
-			return c;
-		}
-		
-	}
-	
-	/**
-	 * This extends a StringWriter so that if we try to write something like 
-	 * 's a \n s s s \n s b' (s = space), we actually write
-	 * 's a \n \n s b' (so we don't write lines of just spaces).
-	 * 
-	 * Any spaces at the end of the file will also be trimmed (but not newlines).
-	 *  
-	 * @author Jevon
-	 *
-	 */
-	public class DontWriteLinesOfJustSpaces extends StringWriter {
-
-		/**
-		 * The longest buffer we will store in until we will be forced
-		 * to flush it all to the writer.
-		 */
-		private static final int BUFFER_SIZE = 4096;
-		
-		private char[] buffer = new char[BUFFER_SIZE];
-		private int pointer = 0;
-		private boolean startBuffer = false;
-		
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(int)
-		 */
-		@Override
-		public void write(int c) {
-			if (c == '\n') {
-				// ignore any buffer, just print a newline
-				super.write(c);
-				startBuffer = true;
-				pointer = 0;
-			} else if (c == ' ' && startBuffer) {
-				// add to buffer
-				buffer[pointer] = (char) c;
-				pointer++;
-			} else {
-				// write out any buffer
-				super.write(buffer, 0, pointer);
-				startBuffer = false;
-				pointer = 0;
-				// write the actual character
-				super.write(c);
-			}
-		}
-		
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(char[], int, int)
-		 */
-		@Override
-		public void write(char[] cbuf, int off, int len) {
-			// TODO optimize
-			for (int i = 0; i < len; i++) {
-				write(cbuf[i + off]);
-			}
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(java.lang.String, int, int)
-		 */
-		@Override
-		public void write(String str, int off, int len) {
-			// TODO optimize
-			write(str.toCharArray(), off, len);
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(java.lang.String)
-		 */
-		@Override
-		public void write(String str) {
-			// TODO optimize
-			write(str.toCharArray(), 0, str.length());
-		}
-		
-	}
-	
-	public class MyStringWriter extends DontWriteLinesOfJustSpaces {
-
-		private int indent = 0;
-		private static final String indentString = "  ";
-		private boolean canWordWrap = true;
-		private int col = 0;
-		
-		private static final int WRITE_BUFFER_SIZE = 1024;
-		private int[] writeBuffer = new int[WRITE_BUFFER_SIZE];
-		private int writeBufferPos = -1;	// last position written
-		
-		private boolean indentEnabled = true;		// turn off indenting
-		
-		private long lineCount = 1;		// number of newlines written so far
-		
-		/**
-		 * Columns after this long will be wordwrapped when {@link #canWordWrap} is true.
-		 */
-		private static final int wordWrapCol = 79;	
-		
-		public MyStringWriter() {
-			super();
-		}
-
-		/**
-		 * Is indentation currently enabled?
-		 * 
-		 * @return
-		 */
-		public boolean getIndentEnabled() {
-			return indentEnabled;
-		}
-
-		/**
-		 * Get the last written character, or \0 if no characters have been written yet
-		 * 
-		 * @return
-		 */
-		public int previous() {
-			if (writeBufferPos == -1)
-				return 0;
-			return writeBuffer[writeBufferPos];
-		}
-
-		/**
-		 * Enable/disable wordwrap where appropriate.
-		 * 
-		 * @param b
-		 */
-		public void enableWordwrap(boolean b) {
-			canWordWrap = b;
-		}
-
-		public void enableIndent(boolean enabled) {
-			indentEnabled = enabled;
-		}
-
-		/**
-		 * Get the last i written characters. Up to WRITE_BUFFER_SIZE written 
-		 * characters are stored in writeBuffer. If i characters haven't been written
-		 * yet, will prefix the string with \0
-		 * 
-		 * @param i
-		 * @return
-		 * @throws IOException 
-		 */
-		public String getLastWritten(int i) throws IOException {
-			if (i > WRITE_BUFFER_SIZE) {
-				throw new IOException("Cannot go back further than WRITE_BUFFER_SIZE=" + WRITE_BUFFER_SIZE + " bytes");
-			}
-			char[] result = new char[i];
-			int p = writeBufferPos - i + 1;
-			if (p < 0) {
-				p += WRITE_BUFFER_SIZE; // wrap around
-			}
-			for (int j = 0; j < i; j++) {
-				result[j] = (char) writeBuffer[p];
-				p++;
-				if (p == WRITE_BUFFER_SIZE) {
-					p = 0;		// go back to the start
-				}
-			}
-			// return the result
-			return String.valueOf(result);
-		}
-
-		/**
-		 * Can this writer do word wrap automatically?
-		 * Should be turned off when outputting strings, etc.
-		 * 
-		 * @return
-		 */
-		public boolean canWordWrap() {
-			return canWordWrap;
-		}
-
-		/**
-		 * Only write a new line if the previous line wasn't one.
-		 */
-		public void newLineMaybe() {
-			if (previousChar != '\n' && !wordwrapOnNext)
-				newLine();
-		}
-
-		/**
-		 * Write a newline. 
-		 */
-		public void newLine() {
-			write('\n');
-		}
-
-		/**
-		 * Increase output indentation.
-		 */
-		public void indentIncrease() {
-			indent++;
-		}
-
-		/**
-		 * Decrease output indentation.
-		 */
-		public void indentDecrease() {
-			indent--;
-			if (indent < 0) {
-				// we went too far!
-				throwWarning("Fell out of indent after " + getLineCount() + " lines", getBuffer().toString());
-				indent = 0;
-			}
-		}
-		
-		/**
-		 * Get the number of lines printed already
-		 * 
-		 * @return
-		 */
-		public long getLineCount() {
-			return lineCount;
-		}
-
-		int previousChar = -1;
-		boolean wordwrapOnNext = false;
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(int)
-		 */
-		@Override
-		public void write(int c) {
-			// increase line count for newlines
-			if (c == '\n') {
-				lineCount++;
-			}
-			
-			if (canWordWrap() && wordwrapOnNext && c != ' ') {
-				// need to do wordwrap indent now!
-				wordwrapOnNext = false;
-				newLine();	// will also do indent
-				previousChar = -1;	// don't double indent
-				write(getIndent());	// will update col
-				// continue like normal
-			}
-			if (previousChar == '\n') {
-				// indent?		
-				previousChar = c;
-				write(getIndent());	// will update col
-			}
-			if (canWordWrap()) {
-				if (c == ' ' && col >= wordWrapCol) {				
-					// start wordwrap
-					wordwrapOnNext = true;	// write the indent next time
-					previousChar = c;
-					// don't write ' '
-					return;
-				}
-			} 
-			
-			super.write(c);
-			col++;
-			previousChar = c;
-			if (c == '\n') {
-				col = 0;	// reset column
-			}
-			// save to written buffer
-			writeBufferPos++;
-			if (writeBufferPos >= WRITE_BUFFER_SIZE)
-				writeBufferPos = 0;		// wrap
-			writeBuffer[writeBufferPos] = c;
-		}
-		
-		/**
-		 * Get the previously written character.
-		 * 
-		 * @return
-		 */
-		public int getPrevious() {
-			return previousChar;
-		}
-
-		/**
-		 * Create the indent text, and return it.
-		 * 
-		 * Returns an empty string if {@link #indentEnabled} is false.
-		 * 
-		 * @return
-		 */
-		private String getIndent() {
-			if (!indentEnabled) 
-				return "";
-					
-			StringBuffer buf = new StringBuffer();
-			for (int i = 0; i < indent; i++) {
-				buf.append(indentString);
-			}
-			return buf.toString();
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(char[], int, int)
-		 */
-		@Override
-		public void write(char[] cbuf, int off, int len) {
-			// TODO optimize
-			for (int i = 0; i < len; i++) {
-				write(cbuf[i + off]);
-			}
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(java.lang.String, int, int)
-		 */
-		@Override
-		public void write(String str, int off, int len) {
-			// TODO optimize
-			for (int i = 0; i < len; i++) {
-				write(str.charAt(i + off));
-			}
-		}
-
-		/* (non-Javadoc)
-		 * @see java.io.StringWriter#write(java.lang.String)
-		 */
-		@Override
-		public void write(String str) {
-			// TODO optimize
-			write(str, 0, str.length());
-		}
-		
-	}
-
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String)
 	 */
