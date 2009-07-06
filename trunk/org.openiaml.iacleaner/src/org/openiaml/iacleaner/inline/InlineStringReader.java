@@ -1,0 +1,204 @@
+/**
+ * 
+ */
+package org.openiaml.iacleaner.inline;
+
+import java.io.IOException;
+import java.io.PushbackReader;
+import java.io.StringReader;
+
+/**
+ * @author Jevon
+ *
+ */
+public abstract class InlineStringReader extends PushbackReader {
+
+	private static final int PUSHBACK_BUFFER_SIZE = 1024;
+	private int lastChar = -1;
+	
+	private long lineNumber = 1;		/* keep track of newlines found */
+	
+	public InlineStringReader(String s) {
+		super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
+	}
+
+	/**
+	 * What line number are we currently on?
+	 * 
+	 * @return
+	 */
+	public long getLine() {
+		return lineNumber;
+	}
+
+	/**
+	 * Override to support line numbers.
+	 * 
+	 * @see java.io.PushbackReader#unread(char[], int, int)
+	 */
+	@Override
+	public void unread(char[] cbuf, int off, int len) throws IOException {
+		super.unread(cbuf, off, len);
+		for (int i = 0; i < len; i++) {
+			if (cbuf[i+off] == '\n') {
+				lineNumber--;
+			}
+		}
+	}
+
+	/**
+	 * Override to support line numbers.
+	 * 
+	 * @see java.io.PushbackReader#unread(char[])
+	 */
+	@Override
+	public void unread(char[] cbuf) throws IOException {
+		super.unread(cbuf);
+		for (int i = 0; i < cbuf.length; i++) {
+			if (cbuf[i] == '\n') {
+				lineNumber--;
+			}
+		}
+	}
+
+	/**
+	 * Override to support line numbers.
+	 * 
+	 * @see java.io.PushbackReader#unread(int)
+	 */
+	@Override
+	public void unread(int c) throws IOException {
+		super.unread(c);
+		if (c == '\n')
+			lineNumber--;
+	}
+
+	/**
+	 * Read ahead for the next two characters, excluding <b>leading</b>
+	 * whitespace. Reads up to PUSHBACK_BUFFER_SIZE characters.
+	 * 
+	 * @param i
+	 * @return
+	 * @throws IOException 
+	 */
+	public String readAheadSkipWhitespace(int i) throws IOException {
+		char[] buf = new char[PUSHBACK_BUFFER_SIZE];
+		char[] result = new char[i];
+		boolean startCounting = false;
+		int j, k;
+		for (j = 0, k = 0; j < buf.length; j++) {
+			buf[j] = (char) read();
+			if (!startCounting && !Character.isWhitespace(buf[j])) {
+				startCounting = true;
+			}
+			if (startCounting) {
+				result[k] = buf[j];
+				k++;
+				if (k == i) {
+					// we found it
+					// put back what we read
+					unread(buf, 0, j + 1);
+					return String.valueOf(result);
+				}
+			}
+		}
+		// return back what we had read back so far
+		unread(buf, 0, j);
+		// return whatever we found
+		return String.valueOf(buf, 0, k);
+	}
+
+	/**
+	 * Set the last character to a given character.
+	 * This should ONLY be called if an external method implements readAhead manually.
+	 * 
+	 * @param oldLast
+	 */
+	public void setLastChar(int oldLast) {
+		lastChar = oldLast;
+	}
+
+	/**
+	 * Read the given number of characters into a String. Will return
+	 * a shorter string if EOF is found.
+	 * 
+	 * @param i
+	 * @return
+	 * @throws IOException 
+	 */
+	public String read(int i) throws IOException {
+		char[] result = new char[i];
+		int read = read(result);
+		return String.valueOf(result, 0, read);
+	}
+
+	/**
+	 * What was the last character we read?
+	 * 
+	 * @return e.g. a newline, or 'a' etc
+	 */
+	public int getLastChar() {
+		return lastChar;
+	}
+
+	/**
+	 * "Read ahead" up to N characters, so we can see what is coming up.
+	 * If EOF is reached, returns the remaining read-ahead.
+	 * 
+	 * @param n number of characters to read ahead
+	 * @return the characters read, or null if we are EOF
+	 * @throws IOException
+	 */
+	public String readAhead(int n) throws IOException {
+		int oldLast = lastChar;
+		char[] c = new char[n];
+		int found = read(c);
+		if (found != -1) {				
+			unread(c, 0, found); // push these characters back on
+		}
+		 
+		lastChar = oldLast; // reset
+		if (found == -1) {
+			return null;
+		} else {
+			return String.valueOf(c).substring(0, found);
+		}
+	}
+	
+	/**
+	 * "Read ahead" 1 character, so we can see what is coming up.
+	 * 
+	 * @return the next character, or -1 if EOF
+	 * @throws IOException
+	 */
+	public int readAhead() throws IOException {
+		int oldLast = lastChar;
+		int found = read();
+		if (found != -1)
+			unread(found);
+		lastChar = oldLast;	// reset
+		return found;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.io.PushbackReader#read()
+	 */
+	@Override
+	public int read() throws IOException {
+		int c = super.read();
+		lastChar = c;
+		if (c == '\n')
+			lineNumber++;
+		return c;
+	}
+	
+	/**
+	 * If we need to throw a warning, we need some way to report it
+	 * back to whatever is using this InlineStringWriter.
+	 * 
+	 * @param message the warning message
+	 * @param buffer the current writer buffer
+	 */
+	protected abstract void throwWarning(String message, String buffer);
+
+}
