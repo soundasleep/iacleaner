@@ -55,11 +55,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		// and it will output into the writer
 		MyStringWriter writer = new MyStringWriter();
 		
-		// we will assume we're in HTML mode
 		try {
 			if (extension.equals("js")) {
 				// straight to JS mode
 				cleanHtmlJavascript(reader, writer, false);
+			} else if (extension.equals("css")) {
+				// straight to CSS mode
+				cleanHtmlCss(reader, writer, false);
 			} else {
 				// default: PHP (which is also HTML)
 				cleanHtmlBlock(reader, writer);
@@ -1125,6 +1127,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.indentIncrease();
 				} else if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
+				} else if (prevNonWhitespace == -1 && !withinHtml) {
+					// don't newline for initial out-of-html blocks
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
 					// this comment is on its own line
@@ -1343,6 +1347,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					// increase the indent because we're starting a new block
 					// (and the code later won't be executed)
 					writer.indentIncrease();
+				} else if (prevNonWhitespace == -1 && !withinHtml) {
+					// don't newline for initial out-of-html blocks
 				} else if (prevNonWhitespace == -1) {
 					// the first comment of the php block needs to be on a new line
 					writer.newLine();
@@ -1374,6 +1380,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.indentIncrease();
 				} else if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
+				} else if (prevNonWhitespace == -1 && !withinHtml) {
+					// don't newline for initial out-of-html blocks
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {
 					writer.newLine();
 					// this comment is on its own line
