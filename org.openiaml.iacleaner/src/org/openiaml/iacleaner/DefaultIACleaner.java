@@ -69,7 +69,23 @@ public abstract class DefaultIACleaner implements IACleaner {
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.File)
 	 */
 	public String cleanScript(File sourceFile) throws IOException, CleanerException {
-		return cleanScript(readFile(sourceFile));
+		// TODO add extension
+		return cleanScript(readFile(sourceFile), getExtension(sourceFile));
+	}
+
+	/**
+	 * Get the case-sensitive file extension (separated by a period ".")
+	 * of the given file (even if the file doesn't exist).
+	 * 
+	 * @param f
+	 * @return "html", "php" etc, or "" if none is found
+	 */
+	public static String getExtension(File f) {
+		if (f.getAbsolutePath().indexOf('.') != -1) {
+			int pos = f.getAbsolutePath().lastIndexOf('.');
+			return f.getAbsolutePath().substring(pos + 1);
+		}
+		return "";
 	}
 	
 }

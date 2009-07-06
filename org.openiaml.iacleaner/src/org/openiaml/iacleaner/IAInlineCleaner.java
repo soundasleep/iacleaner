@@ -41,10 +41,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public String cleanScript(String script) throws CleanerException {
+	public String cleanScript(String script, String extension) throws CleanerException {
+		
+		// lowercase the extension
+		extension = extension.toLowerCase();
 		
 		// put the script into a reader
 		MyStringReader reader = new MyStringReader(script);
@@ -54,7 +57,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		// we will assume we're in HTML mode
 		try {
-			cleanHtmlScript(reader, writer);
+			if (extension.equals("js")) {
+				// straight to JS mode
+				cleanHtmlJavascript(reader, writer, false);
+			} else {
+				// default: PHP (which is also HTML)
+				cleanHtmlBlock(reader, writer);
+			}
 		} catch (IOException e) {
 			throw new CleanerException(e, script);
 		}
@@ -71,7 +80,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlScript(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
+	protected void cleanHtmlBlock(MyStringReader reader, MyStringWriter writer) throws IOException, CleanerException {
 
 		while (removeHtmlTextSpacingUntil(reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
@@ -993,7 +1002,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// should we step into any special modes?
 				if (tagName.toLowerCase().equals("script")) {
 					// javascript mode!
-					cleanHtmlJavascript(reader, writer);
+					cleanHtmlJavascript(reader, writer, true);
 					// will continue when </script>
 				}
 				
@@ -1033,15 +1042,17 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void cleanHtmlJavascript(MyStringReader reader,
-			MyStringWriter writer) throws IOException, CleanerException {
+			MyStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
 		// is it immediately </script>?
-		if (readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
+		if (withinHtml && readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
 			// we don't need to do anything
 			return;
 		}
 		
 		// following script code will be indented
-		writer.indentIncrease();
+		if (withinHtml) {
+			writer.indentIncrease();
+		}
 		
 		// always start with a newline (but let <script></script> remain as one line)
 		boolean needsNewLine = true;
@@ -1216,7 +1227,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					jumpOverPhpString(reader, writer, true);
 				} else if (cur == '\'') {
 					jumpOverPhpSingleString(reader, writer, true);
-				} else if (cur == '/' && (prevNonWhitespace == '=' || prevNonWhitespace == '(' || prevNonWhitespace == '.')) {
+				} else if (cur == '/' && (prevNonWhitespace == '=' || prevNonWhitespace == '(' || prevNonWhitespace == '.' || prevNonWhitespace == ':')) {
 					// regexp
 					jumpOverJavascriptRegexp(reader, writer, true);
 					prevNonWhitespace = -4;
@@ -1232,20 +1243,22 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			prev = cur;
 			
 			// is the next tag </script>?
-			String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
-			if (nextTag.toLowerCase().equals("/script")) {
-				// we want to go back to html mode
-				
-				writer.indentDecrease(); // end indent
-				// always end with a newline
-				if (!needsNewLine) {
-					// dont write a new line if we haven't actually written anything in here
-					writer.newLineMaybe();
+			if (withinHtml) {
+				String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
+				if (nextTag.toLowerCase().equals("/script")) {
+					// we want to go back to html mode
+					
+					writer.indentDecrease(); // end indent
+					// always end with a newline
+					if (!needsNewLine) {
+						// dont write a new line if we haven't actually written anything in here
+						writer.newLineMaybe();
+					}
+					return;
 				}
-				return;
 			}
 			
-			if (reader.readAhead(5).equals("<?php")) {
+			if (reader.readAhead(5) != null && reader.readAhead(5).equals("<?php")) {
 				if (isOnBlankLine) {
 					writer.newLineMaybe();
 				}
@@ -1265,9 +1278,14 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			}
 		}
 		
-		// it's NOT ok to fall out of script mode; this means we never
-		// found a </script>.
-		throw new InlineCleanerException("Unexpectedly terminated out of Javascript mode", reader);
+		if (withinHtml) {
+			// it's NOT ok to fall out of script mode; this means we never
+			// found a </script>.
+			throw new InlineCleanerException("Unexpectedly terminated out of Javascript mode", reader);
+		} else {
+			// in a JS file, its perfectly OK
+			return;
+		}
 	}
 
 	/**
@@ -2001,4 +2019,13 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 		
 	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String)
+	 */
+	@Override
+	public String cleanScript(String script) throws CleanerException {
+		return cleanScript(script, "php");
+	}
+
 }

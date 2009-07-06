@@ -17,7 +17,9 @@ import java.util.List;
 public interface IACleaner {
 
 	/**
-	 * Format a web script using regular expressions.
+	 * Format a web script using regular expressions. Because there
+	 * is no way to know what the file extension of the given
+	 * script is, it is assumed to be PHP.
 	 * 
 	 * @param script
 	 * @return
@@ -25,6 +27,18 @@ public interface IACleaner {
 	 */
 	public abstract String cleanScript(String script) throws CleanerException;
 
+	/**
+	 * Format a web script with extension 'extension' using regular
+	 * expressions. If the extension is unrecognised, format
+	 * using PHP.
+	 * 
+	 * @param script
+	 * @param extension
+	 * @return
+	 * @throws CleanerException
+	 */
+	public abstract String cleanScript(String script, String extension) throws CleanerException;
+	
 	/**
 	 * Throw a warning. Prints it out to stderr and adds it to
 	 * {@link #getWarnings()}

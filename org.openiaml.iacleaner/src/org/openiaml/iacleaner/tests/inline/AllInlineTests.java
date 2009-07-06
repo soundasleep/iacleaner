@@ -21,6 +21,7 @@ public class AllInlineTests extends TestCase {
 		TestSuite suite = new TestSuite("Inline iacleaner tests");
 		//$JUnit-BEGIN$
 		suite.addTestSuite(TestInlineCleanerException.class);
+		suite.addTestSuite(TestGetExtension.class);
 		//$JUnit-END$
 		return suite;
 	}
