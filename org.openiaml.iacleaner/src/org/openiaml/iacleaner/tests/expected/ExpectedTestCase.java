@@ -91,8 +91,11 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(result, outputText);
-
+		assertStringEquals(outputText, result);
+		
+		// no warnings
+		assertNoWarnings(c);
+		
 	}
 	
 	/**
@@ -109,8 +112,11 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(result, inputText);
-		
+		assertStringEquals(inputText, result);
+
+		// no warnings
+		assertNoWarnings(c);
+
 	}
 	
 	/**
@@ -130,10 +136,24 @@ public abstract class ExpectedTestCase extends TestCase {
 
 		IACleaner c = AllTests.getCleaner();
 		String result = c.cleanScript(inputText);
-		assertStringEquals(result, outputText);
-		
+		assertStringEquals(outputText, result);
+
+		// no warnings
+		assertNoWarnings(c);
+
 	}
 	
+	/**
+	 * The given IACleaner should not contain any warnings.
+	 * 
+	 * @param c
+	 */
+	protected void assertNoWarnings(IACleaner c) {
+		if (c.hasWarnings()) {
+			fail("IACleaner should not contain warnings, contains " + c.getWarnings().size() + " warnings. First: '" + c.getWarnings().get(0) + "'");
+		}
+	}
+
 	/**
 	 * This is like {@link #assertEquals(String, String)}, except we ignore any
 	 * differences in line endings (\r, \n)

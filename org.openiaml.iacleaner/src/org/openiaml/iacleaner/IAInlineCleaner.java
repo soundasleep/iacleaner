@@ -560,7 +560,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.write(reader.read());
 				}
 			}
-			throw new CleanerException("PHP string did not terminate");
+			throw new InlineCleanerException("PHP string did not terminate", reader);
 		} finally {
 			writer.enableIndent(true);
 			writer.enableWordwrap(true);	// no wordwrap!
@@ -604,12 +604,69 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					writer.write(reader.read());
 				}
 			}
-			throw new CleanerException("PHP single-quoted string did not terminate");
+			throw new InlineCleanerException("PHP single-quoted string did not terminate", reader);
 		} finally {
 			writer.enableIndent(true);
 		}
 	}
 
+
+	/**
+	 * The last character we read in Javascript mode was "/"; skip through the string
+	 * until we find the end of the regexp "/". We also print out any
+	 * regexp parameters that are attached to the regexp, e.g.
+	 * "/regexp/ig".
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @param allowSwitchToPhpMode can we switch to a new PHP block within this string?
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void jumpOverJavascriptRegexp(MyStringReader reader, MyStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+		try {
+			writer.enableIndent(false);		// we don't want to indent the strings by accident
+			int cur = -1;
+			while ((cur = reader.read()) != -1) {
+				// allow switch to PHP mode on getting "<?php"?
+				if (allowSwitchToPhpMode) {
+					if (didSwitchToPhpMode(reader, writer, cur)) {
+						// resume
+						continue;
+					}
+				}
+				
+				if (cur == '/') {
+					// at the end of the regexp
+					writer.write(cur);
+					
+					// any additional regexp parameters?
+					/*
+					while ((cur = reader.read()) != -1) {
+						if (!Character.isLetter(cur)) 
+							break;
+						
+						writer.write(cur); // yes it is
+					}
+					// put the last read character back on, since it's not part of the regexp
+					reader.unread(cur);
+					*/
+					return;
+				}
+				
+				// write the character as normal
+				writer.write(cur);
+	
+				if (cur == '\\' && reader.readAhead() == '/') {
+					// escaping the next regexp character
+					writer.write(reader.read());
+				}
+			}
+			throw new InlineCleanerException("PHP single-quoted string did not terminate", reader);
+		} finally {
+			writer.enableIndent(true);
+		}
+	}
 	/**
 	 * Try switching to PHP mode from the current point. 
 	 * Returns true if the switch was successful, in which case
@@ -748,7 +805,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	
 			}
 			// its NOT ok if this is end of file
-			throw new CleanerException("At end of file before found end of PHP block comment");
+			throw new InlineCleanerException("At end of file before found end of PHP block comment", reader);
 		} finally {
 			writer.enableWordwrap(true);
 		}
@@ -1099,7 +1156,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					}
 				} else if (prevNonWhitespace == ']' && (cur == ')')) {
 					// do nothing
-				} else if (needsWhitespaceBetweenJavascript(reader, writer, prevNonWhitespace, cur)) {
+				} else if (prevNonWhitespace != -4 && needsWhitespaceBetweenJavascript(reader, writer, prevNonWhitespace, cur)) {
 					writer.write(' ');
 					needsWhitespace = false;
 				} else if (needsWhitespace) {
@@ -1137,15 +1194,24 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					inBracket = false;
 				}
 				
+				boolean didRegexpMode = false;
 				// switch into strings mode?
 				if (cur == '"') {
 					jumpOverPhpString(reader, writer, true);
 				} else if (cur == '\'') {
 					jumpOverPhpSingleString(reader, writer, true);
+				} else if (cur == '/' && (prevNonWhitespace == '=' || prevNonWhitespace == '(' || prevNonWhitespace == '.')) {
+					// regexp
+					jumpOverJavascriptRegexp(reader, writer, true);
+					prevNonWhitespace = -4;
+					needsWhitespace = false;
+					didRegexpMode = true;
 				}
-				if (!Character.isWhitespace(cur)) {
+
+				if (!Character.isWhitespace(cur) && !didRegexpMode) {
 					prevNonWhitespace = cur;
 				}
+
 			}
 			prev = cur;
 			
