@@ -1325,20 +1325,27 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void jumpOverHtmlAttributeString(MyStringReader reader,
 			MyStringWriter writer, int stringCharacter) throws IOException, CleanerException {
-		int cur = -1;
-		while ((cur = reader.read()) != -1) {
-			if (cur == stringCharacter) {
-				// at the end of the string
+		try {
+			// disable wordwrap, so we don't wrap strings in tags!
+			writer.enableWordwrap(false);
+			int cur = -1;
+			while ((cur = reader.read()) != -1) {
+				if (cur == stringCharacter) {
+					// at the end of the string
+					writer.write(cur);
+					return;
+				}
+				
+				// write the character as normal
 				writer.write(cur);
-				return;
+	
+				// there is no escaping in HTML
 			}
-			
-			// write the character as normal
-			writer.write(cur);
-
-			// there is no escaping in HTML
+			throw new InlineCleanerException("HTML Attribute string did not terminate", reader);
+		} finally {
+			// re-enable wordwrap
+			writer.enableWordwrap(true);
 		}
-		throw new InlineCleanerException("HTML Attribute string did not terminate", reader);
 	}
 
 	/**
