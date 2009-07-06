@@ -1176,7 +1176,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 					inInlineBrace = false;
 				} else if (prevNonWhitespace == '}') {
 					// a new statement (like ;)
-					if (cur == ',' || cur == ')') {
+					if (cur == ',' || cur == ')' || cur == ';') {
 						// ignore 'function(){...}, x'
 					} else if (!isInlinePhpReservedWordAfterBrace(reader, writer)) {
 						// a normal ending brace
