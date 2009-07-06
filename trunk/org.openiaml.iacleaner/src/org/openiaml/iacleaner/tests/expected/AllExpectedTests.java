@@ -44,6 +44,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(JsStrings_Html.class);
 		suite.addTestSuite(JsStrings_Js.class);
 		suite.addTestSuite(JsFunctions2_Html.class);
+		suite.addTestSuite(Css_Html.class);
 		//$JUnit-END$
 		return suite;
 	}
