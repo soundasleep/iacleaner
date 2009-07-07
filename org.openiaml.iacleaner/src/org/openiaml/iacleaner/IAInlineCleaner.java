@@ -127,8 +127,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforePhp(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' || cur == ',' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
+			isPhpTwoCharacterOperator(cur, reader.readAhead()) ||
 			(writer.getLastWritten(2).equals("::")) /* :: operator */ ||
-			(cur == '-' && reader.readAhead() == '>') /* -> operator */ ||
 			(writer.getLastWritten(2).equals("->")) /* -> operator */;
 	}	
 	
@@ -143,7 +143,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
-		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+';
+		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
+			isJavascriptTwoCharacterOperator(cur, reader.readAhead());
 	}
 	
 	
@@ -175,7 +176,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(!isPhpOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(a == '.' && b != '=') || (b == '.') || (b == '?') || (a == '?') || 
-			(b == '{') || (a != '(' && b == '!') || 
+			(b == '{') || (a != '(' && a != '!' && b == '!') || 
 			(a != '+' && b == '+' && reader.readAhead() != '+') ||
 			(a == '+' && b == '+' && reader.readAhead() == '+') ||
 			(a != '-' && b == '-' && reader.readAhead() != '-' && reader.readAhead() != '>') ||
@@ -186,7 +187,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(isPhpOperator(a) && !isPhpOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
 			(a == ')' && isPhpOperator(b)) ||
 			(isPhpOperator(a) && a != '!' && b == '$') ||
-			(a == '*' && b != '=') ||
 			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
@@ -194,7 +194,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
 			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
 			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ ) ||
-			(Character.isLetter(a) && isPhpOperator(b) && (b != '-' && reader.readAhead() != '>')) /* e.g. $f * $g */;
+			(Character.isLetter(a) && isPhpOperator(b) && !isPhpTwoCharacterOperator(b, reader.readAhead())) /* e.g. $f * $g */;
 	}
 	
 	/**
@@ -211,7 +211,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(!isJavascriptOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(b == '?') || (a == '?') || 
-			(b == '{') || (a != '(' && b == '!') || 
+			(b == '{') || (a != '(' && a != '!' && b == '!') || 
 			(a != '+' && b == '+' && reader.readAhead() != '+') ||
 			(a == '+' && b == '+' && reader.readAhead() == '+') ||
 			(a != '-' && b == '-' && reader.readAhead() != '-') ||
@@ -220,16 +220,42 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			(a != '&' && b == '&') || 
 			(b == '<' || b == '>') ||
 			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
-			(a == '*') ||
+			(a == ')' && isJavascriptOperator(b)) ||
 			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
 			(previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
 			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
-			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ );
+			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ ) ||
+			(Character.isLetter(a) && isJavascriptOperator(b) && !isJavascriptTwoCharacterOperator(b, reader.readAhead())) /* e.g. f * g */;
 	}
 	
+	/**
+	 * Are these two characters a two-character PHP operator?
+	 * 
+	 * isPhpOperator(a) == true
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private boolean isPhpTwoCharacterOperator(int a, int b) {
+		return (a == '-' && b == '>') || isJavascriptTwoCharacterOperator(a, b);
+	}
+	
+	/**
+	 * Are these two characters a two-character Javascript operator?
+	 * 
+	 * isJavascriptOperator(a) == true
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private boolean isJavascriptTwoCharacterOperator(int a, int b) {
+		return (a == '+' && b == '+') || (a == '-' && b == '-') || (a == '!' && b == '!');
+	}
 
 	/**
 	 * Do we need to add one piece of whitespace (' ') between characters
@@ -426,7 +452,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// skip multiple whitespace
 			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
 				// we _may_ actually need this whitespace
-				if (prev != '[') {
+				if (prev != '[' && prev != '!') {
 					needsWhitespace = true;
 				}
 			} else if (Character.isWhitespace(cur)) {
@@ -1402,7 +1428,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// skip multiple whitespace
 			} else if (Character.isWhitespace(cur) && !Character.isWhitespace(prev)) {
 				// we _may_ actually need this whitespace
-				if (prev != '[') {
+				if (prev != '[' && prev != '!') {
 					needsWhitespace = true;
 				}
 			} else if (Character.isWhitespace(cur)) {

@@ -86,10 +86,10 @@ public abstract class InlineStringReader extends PushbackReader {
 	}
 
 	/**
-	 * Read ahead for the next two characters, excluding <b>leading</b>
+	 * Read ahead for the next <i>i</i> characters, excluding <b>leading</b>
 	 * whitespace. Reads up to PUSHBACK_BUFFER_SIZE characters.
 	 * 
-	 * @param i
+	 * @param i number of characters to read ahead after leading whitespace
 	 * @return
 	 * @throws IOException 
 	 */
@@ -212,5 +212,16 @@ public abstract class InlineStringReader extends PushbackReader {
 	 * @param buffer the current writer buffer
 	 */
 	protected abstract void throwWarning(String message, String buffer);
+
+	/**
+	 * Read ahead only one character, skipping whitespace.
+	 * 
+	 * @see #readAheadSkipWhitespace(int)
+	 * @return
+	 * @throws IOException 
+	 */
+	public int readAheadSkipWhitespace() throws IOException {
+		return readAheadSkipWhitespace(1).charAt(0);
+	}
 
 }
