@@ -1621,7 +1621,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else if (cur == '"' || cur == '\'') {
 				// parse until end of string
 				writer.write(cur);
-				jumpOverHtmlAttributeString(reader, writer, cur);
+				jumpOverHtmlAttributeString(reader, writer, cur, true);
 				ignoreWhitespaceAfter = false;
 				needWhitespace = true;		// any further attributes needs whitespace
 			} else {
@@ -1652,18 +1652,30 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @param reader
 	 * @param writer
 	 * @param stringCharacter either " or '
+	 * @param allowJumpToPhp can we jump to PHP mode?
 	 */
 	protected void jumpOverHtmlAttributeString(InlineStringReader reader,
-			InlineStringWriter writer, int stringCharacter) throws IOException, CleanerException {
+			InlineStringWriter writer, int stringCharacter, boolean allowJumpToPhp) throws IOException, CleanerException {
 		try {
 			// disable wordwrap, so we don't wrap strings in tags!
 			writer.enableWordwrap(false);
+			writer.enableIndent(false);
 			int cur = -1;
 			while ((cur = reader.read()) != -1) {
 				if (cur == stringCharacter) {
 					// at the end of the string
 					writer.write(cur);
 					return;
+				}
+				
+				if (allowJumpToPhp && cur == '<' && reader.readAhead(4).equals("?php")) {
+					// we can jump to PHP mode
+					// stick '<' back into the stream
+					reader.unread(cur);
+					
+					// jump into PHP mode
+					cleanPhpBlock(reader, writer);
+					continue;
 				}
 				
 				// write the character as normal
@@ -1675,6 +1687,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		} finally {
 			// re-enable wordwrap
 			writer.enableWordwrap(true);
+			writer.enableIndent(true);
 		}
 	}
 
