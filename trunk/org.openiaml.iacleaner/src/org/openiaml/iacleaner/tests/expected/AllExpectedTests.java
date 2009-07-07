@@ -50,6 +50,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(Css_Html.class);
 		suite.addTestSuite(Css_Css.class);
 		suite.addTestSuite(PhpOperations_Php.class);
+		suite.addTestSuite(JsOperations_Html.class);
 		//$JUnit-END$
 		return suite;
 	}
