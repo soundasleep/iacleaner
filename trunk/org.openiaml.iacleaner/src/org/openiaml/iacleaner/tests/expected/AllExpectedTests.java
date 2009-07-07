@@ -51,6 +51,7 @@ public class AllExpectedTests {
 		suite.addTestSuite(Css_Css.class);
 		suite.addTestSuite(PhpOperations_Php.class);
 		suite.addTestSuite(JsOperations_Html.class);
+		suite.addTestSuite(PhpInlineHtml_Php.class);
 		//$JUnit-END$
 		return suite;
 	}
