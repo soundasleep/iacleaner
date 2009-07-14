@@ -224,4 +224,55 @@ public abstract class InlineStringReader extends PushbackReader {
 		return readAheadSkipWhitespace(1).charAt(0);
 	}
 
+	/**
+	 * Read ahead a number of characters, skipping ALL whitespace
+	 * even inbetween the characters read.
+	 * 
+	 * @see #readAheadSkipWhitespace(int)
+	 * @param i
+	 * @return the string found, may be the empty string ""
+	 * @throws IOException 
+	 */
+	public String readAheadSkipAllWhitespace(int i) throws IOException {
+		char[] buf = new char[PUSHBACK_BUFFER_SIZE];
+		char[] result = new char[i];
+		int j, k;
+		for (j = 0, k = 0; j < buf.length; j++) {
+			buf[j] = (char) read();
+			if (!Character.isWhitespace(buf[j])) {
+				result[k] = buf[j];
+				k++;
+				if (k == i) {
+					// we found it
+					// put back what we read
+					unread(buf, 0, j + 1);
+					return String.valueOf(result);
+				}
+			}
+		}
+		// return back what we had read back so far
+		unread(buf, 0, j);
+		// return whatever we found
+		return String.valueOf(buf, 0, k);
+ 	}
+
+	/**
+	 * Read 'i' characters, ignoring all whitespace, until we have
+	 * read 'i' non-whitespace characters, or we have hit EOF.
+	 * 
+	 * @param i
+	 * @throws IOException 
+	 */
+	public void skipAllWhitespace(int i) throws IOException {
+		int cur;
+		int nonws = 0;
+		while ((cur = read()) != -1) {
+			if (!Character.isWhitespace(cur)) {
+				nonws++;				
+				if (nonws == i)
+					return;		// finished
+			}
+		}
+	}
+
 }
