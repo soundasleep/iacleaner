@@ -1,0 +1,2 @@
+/* initial comment */body{color:red;background:url('my file.png');border:1px solid red;/* comment within a brace */}a+b,a+c,#my_style,#my-style{color:blue;}.a .b{color:green;}a #b,c#d,e.f{color:#ff0;}a:hover{content:'hello, world!; '}
+/* a comment */
