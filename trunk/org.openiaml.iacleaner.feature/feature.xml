@@ -2,7 +2,7 @@
 <feature
       id="org.openiaml.iacleaner.feature"
       label="Internet Application Cleaner/Formatter"
-      version="0.1.0"
+      version="0.2.0"
       provider-name="www.openiaml.org">
 
    <description url="http://www.openiaml.org/">
@@ -13,18 +13,24 @@ PHP, CSS and JSP.
 It allows you to format complex, messy web application code into
 a more structured format.
 
-To achieve this, it uses regular expressions and custom indenting
-code. As a result, this formatter is fragile at best, so use
-at your own risk! However, it does come with a set of automated
-test cases, to ensure that it generally outputs suitable code.
+To achieve this, it uses specialised reader/writer implementations
+and a custom parser. As a result, this formatter is fragile at
+best, so use at your own risk! However, it does come with a set
+of automated test cases, to ensure that it generally outputs
+suitable code.
    </description>
 
    <copyright url="http://www.example.com/copyright">
       [Enter Copyright Description here.]
    </copyright>
 
-   <license url="http://www.example.com/license">
-      [Enter License Description here.]
+   <license url="http://www.gnu.org/licenses/gpl.html">
+      iacleaner: an Internet Application Formatter/Cleaner
+Copyright (C) 2009  Jevon Wright
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
    </license>
 
    <url>
@@ -35,7 +41,7 @@ test cases, to ensure that it generally outputs suitable code.
          id="org.openiaml.iacleaner"
          download-size="0"
          install-size="0"
-         version="0.1.0"
+         version="0.2.0"
          unpack="false"/>
 
 </feature>
