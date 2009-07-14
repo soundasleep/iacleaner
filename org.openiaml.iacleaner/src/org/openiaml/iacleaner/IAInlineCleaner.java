@@ -1353,7 +1353,49 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		int prevNonWhitespace = -1;
 		boolean needsWhitespace = false;
 		boolean isOnBlankLine = false;	// is the current character the first character on a new line? the first line is "part" of <script>
+		boolean hadCdataBlock = false;
 		while ((cur = reader.read()) != -1) {
+			if (cur == '<' && "![CDATA[".equals(reader.readAheadSkipAllWhitespace(8))) {
+				// CDATA block
+				writer.newLineMaybe();
+				writer.write("<![CDATA[");
+				writer.newLine();
+				reader.skipAllWhitespace(8);
+				hadCdataBlock = true;
+				needsNewLine = false;
+				continue;
+			}
+			
+			if (hadCdataBlock && cur == ']' && "]>".equals(reader.readAheadSkipAllWhitespace(2)) ) {
+				// end of CDATA block
+				writer.newLineMaybe();
+				writer.write("]]>");
+				reader.skipAllWhitespace(2);
+				needsNewLine = false;
+				hadCdataBlock = false;
+				continue;
+			}
+			
+			if (withinHtml && cur == '<') {
+				// put < back on
+				reader.unread(cur);
+				
+				if (readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
+					// we want to go back to html mode
+					
+					writer.indentDecrease(); // end indent
+					// always end with a newline
+					if (!needsNewLine) {
+						// dont write a new line if we haven't actually written anything in here
+						writer.newLineMaybe();
+					}
+					
+					return;
+				}
+				
+				reader.read();
+			}
+			
 			if (cur == '/' && reader.readAhead() == '/') {
 				// a single-line comment
 				if (!isOnBlankLine && (prevNonWhitespace == ';')) {
@@ -1541,7 +1583,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			// is the next tag </script>?
 			if (withinHtml) {
 				String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
-				if (nextTag.toLowerCase().equals("/script")) {
+				if (nextTag != null && "/script".equals(nextTag.toLowerCase())) {
 					// we want to go back to html mode
 					
 					writer.indentDecrease(); // end indent
