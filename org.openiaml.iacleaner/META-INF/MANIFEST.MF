@@ -2,7 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Internet Application Cleaner/Formatter
 Bundle-SymbolicName: org.openiaml.iacleaner
-Bundle-Version: 0.1
-Export-Package: org.openiaml.iacleaner,
- org.openiaml.iacleaner.tests
+Bundle-Version: 0.2
+Export-Package: org.openiaml.iacleaner;uses:="org.openiaml.iacleaner.inline",
+ org.openiaml.iacleaner.inline;uses:="org.openiaml.iacleaner",
+ org.openiaml.iacleaner.tests;uses:="org.openiaml.iacleaner,junit.framework"
 Require-Bundle: org.junit
+Bundle-Vendor: www.openiaml.org
