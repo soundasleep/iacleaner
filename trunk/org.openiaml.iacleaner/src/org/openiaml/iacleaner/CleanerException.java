@@ -1,5 +1,6 @@
 package org.openiaml.iacleaner;
 
+
 /**
  * An exception to throw if something has gone wrong while trying to
  * format the code.
@@ -33,6 +34,10 @@ public class CleanerException extends Exception {
 	public CleanerException(Throwable e, String source) {
 		super(e.getMessage(), e);
 		this.source = source;
+	}
+
+	public CleanerException(Throwable e) {
+		super(e.getMessage(), e);
 	}
 
 	/**
