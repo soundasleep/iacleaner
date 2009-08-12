@@ -162,18 +162,24 @@ public abstract class InlineStringReader extends PushbackReader {
 	 * @throws IOException
 	 */
 	public String readAhead(int n) throws IOException {
-		int oldLast = lastChar;
-		char[] c = new char[n];
-		int found = read(c);
-		if (found != -1) {				
-			unread(c, 0, found); // push these characters back on
-		}
-		 
-		lastChar = oldLast; // reset
-		if (found == -1) {
-			return null;
-		} else {
-			return String.valueOf(c).substring(0, found);
+		// don't modify the line number
+		long oldLineNumber = lineNumber;
+		try {
+			int oldLast = lastChar;
+			char[] c = new char[n];
+			int found = read(c);
+			if (found != -1) {				
+				unread(c, 0, found); // push these characters back on
+			}
+			 
+			lastChar = oldLast; // reset
+			if (found == -1) {
+				return null;
+			} else {
+				return String.valueOf(c).substring(0, found);
+			}
+		} finally {
+			lineNumber = oldLineNumber;
 		}
 	}
 	
@@ -184,12 +190,18 @@ public abstract class InlineStringReader extends PushbackReader {
 	 * @throws IOException
 	 */
 	public int readAhead() throws IOException {
-		int oldLast = lastChar;
-		int found = read();
-		if (found != -1)
-			unread(found);
-		lastChar = oldLast;	// reset
-		return found;
+		// don't modify the line number
+		long oldLineNumber = lineNumber;
+		try {
+			int oldLast = lastChar;
+			int found = read();
+			if (found != -1)
+				unread(found);
+			lastChar = oldLast;	// reset
+			return found;
+		} finally {
+			lineNumber = oldLineNumber;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -234,26 +246,32 @@ public abstract class InlineStringReader extends PushbackReader {
 	 * @throws IOException 
 	 */
 	public String readAheadSkipAllWhitespace(int i) throws IOException {
-		char[] buf = new char[PUSHBACK_BUFFER_SIZE];
-		char[] result = new char[i];
-		int j, k;
-		for (j = 0, k = 0; j < buf.length; j++) {
-			buf[j] = (char) read();
-			if (!Character.isWhitespace(buf[j])) {
-				result[k] = buf[j];
-				k++;
-				if (k == i) {
-					// we found it
-					// put back what we read
-					unread(buf, 0, j + 1);
-					return String.valueOf(result);
+		// don't modify the line number
+		long oldLineNumber = lineNumber;
+		try {
+			char[] buf = new char[PUSHBACK_BUFFER_SIZE];
+			char[] result = new char[i];
+			int j, k;
+			for (j = 0, k = 0; j < buf.length; j++) {
+				buf[j] = (char) read();
+				if (!Character.isWhitespace(buf[j])) {
+					result[k] = buf[j];
+					k++;
+					if (k == i) {
+						// we found it
+						// put back what we read
+						unread(buf, 0, j + 1);
+						return String.valueOf(result);
+					}
 				}
 			}
+			// return back what we had read back so far
+			unread(buf, 0, j);
+			// return whatever we found
+			return String.valueOf(buf, 0, k);
+		} finally {
+			lineNumber = oldLineNumber;
 		}
-		// return back what we had read back so far
-		unread(buf, 0, j);
-		// return whatever we found
-		return String.valueOf(buf, 0, k);
  	}
 
 	/**
