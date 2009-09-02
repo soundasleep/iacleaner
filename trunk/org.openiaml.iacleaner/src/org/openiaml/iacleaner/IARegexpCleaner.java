@@ -532,7 +532,6 @@ public class IARegexpCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
 	 */
-	@Override
 	public String cleanScript(String script, String extension)
 			throws CleanerException {
 		return cleanScript(script);

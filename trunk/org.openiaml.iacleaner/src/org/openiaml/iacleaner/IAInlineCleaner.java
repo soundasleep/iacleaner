@@ -33,7 +33,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
 	 */
-	@Override
 	public String cleanScript(String script, String extension) throws CleanerException {
 		
 		// lowercase the extension
@@ -1884,7 +1883,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String)
 	 */
-	@Override
 	public String cleanScript(String script) throws CleanerException {
 		return cleanScript(script, "php");
 	}
