@@ -99,7 +99,13 @@ public abstract class InlineStringReader extends PushbackReader {
 		boolean startCounting = false;
 		int j, k;
 		for (j = 0, k = 0; j < buf.length; j++) {
-			buf[j] = (char) read();
+			int c = read();
+			if (c == -1) {
+				// found the end of the string; bail
+				j--;
+				break;
+			}
+			buf[j] = (char) c;
 			if (!startCounting && !Character.isWhitespace(buf[j])) {
 				startCounting = true;
 			}
