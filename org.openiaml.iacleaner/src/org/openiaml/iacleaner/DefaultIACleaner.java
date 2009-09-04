@@ -52,13 +52,13 @@ public abstract class DefaultIACleaner implements IACleaner {
 	 */
 	public static String readFile(File sourceFile) throws IOException {
 		int bufSize = 128;
-		StringBuffer sb = new StringBuffer(bufSize);
+		StringBuffer sb = new StringBuffer();
 		BufferedReader reader = new BufferedReader(new FileReader(sourceFile), bufSize);
 				
 		char[] chars = new char[bufSize];
 		int numRead = 0;
 		while ((numRead = reader.read(chars)) > -1) {
-			sb.append(String.valueOf(chars).substring(0, numRead));	
+			sb.append(String.valueOf(chars, 0, numRead));
 		}
 		
 		reader.close();
