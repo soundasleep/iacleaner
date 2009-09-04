@@ -30,7 +30,7 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 	private int col = 0;
 	
 	private static final int WRITE_BUFFER_SIZE = 1024;
-	private int[] writeBuffer = new int[WRITE_BUFFER_SIZE];
+	private char[] writeBuffer = new char[WRITE_BUFFER_SIZE];
 	private int writeBufferPos = -1;	// last position written
 	
 	private boolean indentEnabled = true;		// turn off indenting
@@ -98,7 +98,7 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 			p += WRITE_BUFFER_SIZE; // wrap around
 		}
 		for (int j = 0; j < i; j++) {
-			result[j] = (char) writeBuffer[p];
+			result[j] = writeBuffer[p];
 			p++;
 			if (p == WRITE_BUFFER_SIZE) {
 				p = 0;		// go back to the start
@@ -178,6 +178,10 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 	 */
 	@Override
 	public void write(int c) {
+		if (c < 0 || c == -1 || c == 65535) {
+			throw new RuntimeException("Invalid character: " + c);
+		}
+		
 		// increase line count for newlines
 		if (c == '\n') {
 			lineCount++;
@@ -216,7 +220,7 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 		writeBufferPos++;
 		if (writeBufferPos >= WRITE_BUFFER_SIZE)
 			writeBufferPos = 0;		// wrap
-		writeBuffer[writeBufferPos] = c;
+		writeBuffer[writeBufferPos] = (char) c;
 	}
 	
 	/**

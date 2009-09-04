@@ -4,6 +4,7 @@
 package org.openiaml.iacleaner.inline;
 
 import java.io.StringWriter;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -21,11 +22,7 @@ import java.io.StringWriter;
  */
 public class IgnoreEmptyLinesWriter extends StringWriter {
 
-	/**
-	 * The longest buffer we will store in until we will be forced
-	 * to flush it all to the writer.
-	 */
-	private static final int BUFFER_SIZE = 4096;
+	private int BUFFER_SIZE = 4096;
 	
 	private char[] buffer = new char[BUFFER_SIZE];
 	private int pointer = 0;
@@ -45,6 +42,12 @@ public class IgnoreEmptyLinesWriter extends StringWriter {
 			// add to buffer
 			buffer[pointer] = (char) c;
 			pointer++;
+			if (pointer >= BUFFER_SIZE) {
+				// increase buffer size
+				int new_buffer_size = BUFFER_SIZE * 2;				
+				buffer = Arrays.copyOf(buffer, new_buffer_size); 
+				BUFFER_SIZE = new_buffer_size;	
+			}
 		} else {
 			// write out any buffer
 			super.write(buffer, 0, pointer);
