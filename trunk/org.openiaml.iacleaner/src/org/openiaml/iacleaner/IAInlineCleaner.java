@@ -986,7 +986,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected boolean htmlTagNeedsTrailingNewLine(String tag) {
 		return tag.equals("/h1") || tag.equals("/li") || tag.equals("/title") || tag.equals("/link") || 
 			tag.equals("/head") || tag.equals("/body") || tag.equals("/ol") || tag.equals("/ul") ||
-			tag.equals("/script");
+			tag.equals("/script") || tag.startsWith("!");
 	}
 
 	/**
@@ -1661,6 +1661,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				ignoreWhitespaceAfter = true;
 			} else if (cur == '"' || cur == '\'') {
 				// parse until end of string
+				if (needWhitespace) {
+					writer.write(' ');
+				}
 				writer.write(cur);
 				jumpOverHtmlAttributeString(reader, writer, cur, true);
 				ignoreWhitespaceAfter = false;
