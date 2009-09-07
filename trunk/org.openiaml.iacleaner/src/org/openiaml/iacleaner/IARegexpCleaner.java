@@ -3,6 +3,8 @@
  */
 package org.openiaml.iacleaner;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -535,6 +537,18 @@ public class IARegexpCleaner extends DefaultIACleaner implements IACleaner {
 	public String cleanScript(String script, String extension)
 			throws CleanerException {
 		return cleanScript(script);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.InputStream, java.lang.String)
+	 */
+	public String cleanScript(InputStream script, String extension)
+			throws CleanerException {
+		try {
+			return cleanScript(readFile(script));
+		} catch (IOException e) {
+			throw new CleanerException(e);
+		}
 	}
 
 }

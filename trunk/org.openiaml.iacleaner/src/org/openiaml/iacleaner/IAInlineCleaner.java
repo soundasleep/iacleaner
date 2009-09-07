@@ -4,6 +4,8 @@
 package org.openiaml.iacleaner;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.openiaml.iacleaner.inline.IACleanerStringReader;
 import org.openiaml.iacleaner.inline.IACleanerStringWriter;
@@ -34,15 +36,37 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
 	 */
 	public String cleanScript(String script, String extension) throws CleanerException {
+		// put the script into a reader
+		InlineStringReader reader = new IACleanerStringReader(script, this);
+	
+		return cleanScript(reader, extension);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.lang.String, java.lang.String)
+	 */
+	public String cleanScript(InputStream stream, String extension) throws CleanerException {
+		InlineStringReader reader = new IACleanerStringReader(new InputStreamReader(stream), this);
+
+		return cleanScript(reader, extension);
+	}
+	
+	/**
+	 * Do the actual script read/write using our readers and writers.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @param extension the extension of the file; will be changed to lowercase for comparison
+	 * @return the formatted script
+	 * @throws CleanerException 
+	 * @throws IOException 
+	 */
+	protected String cleanScript(InlineStringReader reader, String extension) throws CleanerException {
+		// and it will output into the writer
+		InlineStringWriter writer = new IACleanerStringWriter(this);
 		
 		// lowercase the extension
 		extension = extension.toLowerCase();
-		
-		// put the script into a reader
-		InlineStringReader reader = new IACleanerStringReader(script, this);
-		
-		// and it will output into the writer
-		InlineStringWriter writer = new IACleanerStringWriter(this);
 		
 		try {
 			if (extension.equals("js")) {
@@ -56,11 +80,10 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				cleanHtmlBlock(reader, writer);
 			}
 		} catch (IOException e) {
-			throw new CleanerException(e, script);
+			throw new CleanerException(e);
 		}
 		
 		return writer.getBuffer().toString();
-		
 	}
 
 	/**

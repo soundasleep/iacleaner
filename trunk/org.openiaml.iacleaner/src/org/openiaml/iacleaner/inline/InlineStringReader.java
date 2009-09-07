@@ -5,6 +5,7 @@ package org.openiaml.iacleaner.inline;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import java.io.Reader;
 import java.io.StringReader;
 
 /**
@@ -32,6 +33,10 @@ public abstract class InlineStringReader extends PushbackReader {
 	
 	public InlineStringReader(String s) {
 		super(new StringReader(s), PUSHBACK_BUFFER_SIZE);
+	}
+
+	public InlineStringReader(Reader reader) {
+		super(reader, PUSHBACK_BUFFER_SIZE);
 	}
 
 	/**

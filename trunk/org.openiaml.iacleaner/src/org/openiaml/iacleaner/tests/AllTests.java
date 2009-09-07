@@ -34,6 +34,7 @@ public class AllTests {
 		suite.addTestSuite(IndexTest.class);
 		suite.addTestSuite(ComplexPhpTest.class);
 		suite.addTestSuite(SitemapHtmlTest.class);
+		suite.addTestSuite(InputStreamTest.class);
 		suite.addTest(AllExpectedTests.suite());
 		suite.addTest(AllInlineTests.suite());
 		//$JUnit-END$
