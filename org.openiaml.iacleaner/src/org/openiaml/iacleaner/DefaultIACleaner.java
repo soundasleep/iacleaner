@@ -3,10 +3,15 @@
  */
 package org.openiaml.iacleaner;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,9 +56,27 @@ public abstract class DefaultIACleaner implements IACleaner {
 	 * @throws IOException if an IO exception occurs
 	 */
 	public static String readFile(File sourceFile) throws IOException {
+		return readFile(new FileReader(sourceFile));
+	}
+	
+	/**
+	 * Read in an InputStream into a string.
+	 * 
+	 * @throws IOException if an IO exception occurs
+	 */
+	public static String readFile(InputStream stream) throws IOException {
+		return readFile(new InputStreamReader(stream));
+	}
+	
+	/**
+	 * Read in a Reader into a string.
+	 * 
+	 * @throws IOException if an IO exception occurs
+	 */
+	public static String readFile(Reader sourceReader) throws IOException {
 		int bufSize = 128;
 		StringBuffer sb = new StringBuffer();
-		BufferedReader reader = new BufferedReader(new FileReader(sourceFile), bufSize);
+		BufferedReader reader = new BufferedReader(sourceReader, bufSize);
 		
 		char[] chars = new char[bufSize];
 		int numRead = 0;
@@ -69,8 +92,14 @@ public abstract class DefaultIACleaner implements IACleaner {
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.File)
 	 */
 	public String cleanScript(File sourceFile) throws IOException, CleanerException {
-		// TODO add extension
-		return cleanScript(readFile(sourceFile), getExtension(sourceFile));
+		return cleanScript( new BufferedInputStream(new FileInputStream(sourceFile)), getExtension(sourceFile));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.InputStream)
+	 */
+	public String cleanScript(InputStream stream) throws CleanerException {
+		return cleanScript(stream, "php");
 	}
 
 	/**

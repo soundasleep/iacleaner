@@ -82,4 +82,5 @@ public abstract class IACleanerTestCase extends TestCase {
 	public IACleaner getCleaner() {
 		return clean;
 	}
+
 }

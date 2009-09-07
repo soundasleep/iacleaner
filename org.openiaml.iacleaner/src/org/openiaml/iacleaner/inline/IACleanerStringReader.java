@@ -3,6 +3,8 @@
  */
 package org.openiaml.iacleaner.inline;
 
+import java.io.Reader;
+
 import org.openiaml.iacleaner.IACleaner;
 
 /**
@@ -22,6 +24,12 @@ public class IACleanerStringReader extends InlineStringReader {
 		this.cleaner = cleaner;
 	}
 	
+	public IACleanerStringReader(Reader reader,
+			IACleaner cleaner) {
+		super(reader);
+		this.cleaner = cleaner;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.openiaml.iacleaner.inline.InlineStringWriter#throwWarning(java.lang.String, java.lang.String)
 	 */

@@ -1,10 +1,11 @@
-org.openiaml.iacleaner.tests.DefaultCssTest: 31 ms
-org.openiaml.iacleaner.tests.PrototypeJsTest: 312 ms
-org.openiaml.iacleaner.tests.StoreDbPhpTest: 0 ms
-org.openiaml.iacleaner.tests.ClearSessionPhpTest: 16 ms
+org.openiaml.iacleaner.tests.DefaultCssTest: 32 ms
+org.openiaml.iacleaner.tests.PrototypeJsTest: 343 ms
+org.openiaml.iacleaner.tests.StoreDbPhpTest: 16 ms
+org.openiaml.iacleaner.tests.ClearSessionPhpTest: 0 ms
 org.openiaml.iacleaner.tests.IndexTest: 0 ms
-org.openiaml.iacleaner.tests.ComplexPhpTest: 63 ms
+org.openiaml.iacleaner.tests.ComplexPhpTest: 62 ms
 org.openiaml.iacleaner.tests.SitemapHtmlTest: 0 ms
-Expected output tests: 328 ms
+org.openiaml.iacleaner.tests.InputStreamTest: 93 ms
+Expected output tests: 329 ms
 Inline iacleaner tests: 0 ms
-Total elapsed time: 750 ms
+Total elapsed time: 907 ms
