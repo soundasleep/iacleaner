@@ -1665,6 +1665,16 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				jumpOverHtmlAttributeString(reader, writer, cur, true);
 				ignoreWhitespaceAfter = false;
 				needWhitespace = true;		// any further attributes needs whitespace
+			} else if (cur == '<' && "?php".equals(reader.readAhead(4))) {
+				// starting PHP mode
+				if (needWhitespace) {
+					writer.write(' ');
+					needWhitespace = false;
+				}
+				reader.unread(cur);	// put '<' back on the stack
+				cleanPhpBlock(reader, writer);
+				
+				// will return out of PHP block back into attributes mode
 			} else {
 				// we are reading an attribute "foo" or "foo=bar" or "foo=\"bar\""
 				// do we need whitespace before?
