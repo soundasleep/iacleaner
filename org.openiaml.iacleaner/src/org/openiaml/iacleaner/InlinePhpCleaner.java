@@ -107,7 +107,7 @@ public class InlinePhpCleaner extends InlineCSyntaxCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanPhpBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
+	public void cleanPhpBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 		// write in the php header as-is
 		writer.write(reader.read(5));
 		// add a space (unless we start with an inline comment)
@@ -333,38 +333,6 @@ public class InlinePhpCleaner extends InlineCSyntaxCleaner {
 		
 		// it's ok to fall out of PHP mode
 		writer.indentDecrease(); // end indent
-	}
-
-	/**
-	 * Try switching to PHP mode from the current point. 
-	 * Returns true if the switch was successful, in which case
-	 * the outside loop should issue 'continue;' to resume parsing.
-	 * 
-	 * @param reader
-	 * @param writer
-	 * @param cur
-	 * @return
-	 * @throws CleanerException 
-	 * @throws IOException 
-	 */
-	public boolean didSwitchToPhpMode(InlineStringReader reader,
-			InlineStringWriter writer, int cur) throws IOException, CleanerException {
-		if (cur == '<' && reader.readAhead(4).equals("?php")) {
-			// jump into php mode
-			// we will assume we return successfully from it, otherwise
-			// it's pretty much impossible to tell when script mode ends
-			boolean oldIndent = writer.getIndentEnabled();
-			writer.enableIndent(true);
-			reader.unread('<');	// go backwards
-			cleanPhpBlock(reader, writer);
-			writer.enableIndent(oldIndent);
-			
-			// resume!
-			return true;
-		}
-		
-		// didn't do anything
-		return false;
 	}
 
 }

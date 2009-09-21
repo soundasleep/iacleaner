@@ -59,7 +59,7 @@ public class InlineCssCleaner extends InlineCSyntaxCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlCss(InlineStringReader reader,
+	public void cleanHtmlCss(InlineStringReader reader,
 			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
 		// is it immediately </script>?
 		if (withinHtml && getInline().readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/style")) {

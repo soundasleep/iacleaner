@@ -128,15 +128,17 @@ public class InlineJavascriptCleaner extends InlineCSyntaxCleaner {
 	}
 	/**
 	 * We are in HTML and we have just processed a tag
-	 * '&lt;script ...&gt;'. We need to parse the inline Javascript until
-	 * we are about to hit '&lt;/script&gt;'.
+	 * '&lt;script ...&gt;'; or we are in a single Javascript file.
+	 * We need to parse the inline Javascript until
+	 * we are about to hit '&lt;/script&gt;' (if necessary).
 	 * 
 	 * @param reader
 	 * @param writer
+	 * @param withinHtml true if we are in an HTML block; false if we are alone
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlJavascript(InlineStringReader reader,
+	public void cleanJavascriptBlock(InlineStringReader reader,
 			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
 		// is it immediately </script>?
 		if (withinHtml && getInline().readAheadUntilEndHtmlTagWithOpenBrace(reader, writer).toLowerCase().equals("/script")) {
