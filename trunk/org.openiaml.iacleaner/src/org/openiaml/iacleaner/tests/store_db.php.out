@@ -36,7 +36,7 @@
     $trace));
     log_message("store_db.php calling $url");
     $r = file_get_contents($url);
-    if ($r != "ok") local_die("store_event failed: " +$r);
+    if ($r != "ok") local_die("store_event failed: " + $r);
     return true;
   }
   function store_db($attribute_id, $arg0) {
@@ -54,7 +54,7 @@
     . "&arg0=" . urlencode($arg0) . "&trace=" . urlencode(implode(",", $trace));
     log_message("store_db.php calling $url");
     $r = file_get_contents($url);
-    if ($r != "ok") local_die("store_db failed: " +$r);
+    if ($r != "ok") local_die("store_db failed: " + $r);
     return true;
   }
   log_message("store_db.php? " . print_r($_GET, true));
