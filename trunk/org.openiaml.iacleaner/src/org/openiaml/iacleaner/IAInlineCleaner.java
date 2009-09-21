@@ -997,7 +997,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	protected boolean htmlTagNeedsNewLine(String tag) {
-		return tag.equals("h1") || tag.equals("li") || tag.equals("title") || tag.equals("link") || 
+		return tag.equals("h1") || tag.equals("h2") || tag.equals("h3") ||
+			tag.equals("h4") || tag.equals("h5") || tag.equals("h6") ||
+			tag.equals("li") || tag.equals("title") || tag.equals("link") || 
 			tag.equals("head") || tag.equals("body") || tag.equals("ol") || tag.equals("ul");
 	}
 	
