@@ -514,7 +514,7 @@
         /* expand any fail error messages */
         if (require_get("fail")) { ?>
         <div class="error">An exception occured: <i><?php echo htmlspecialchars(require_get("fail"));
-          ?></i></div><?php } ?>
+          ?></i></div> <?php } ?>
     </p></div><div><label id="label_visual_11e37df5bce_1c">current login key <input
     type="text" id="visual_11e37df5bce_1c" name="visual_11e37df5bce_1c" onChange=" return false;"></label></div><div
     id="debug"><div><div id="response">empty</div>
