@@ -6,6 +6,7 @@ package org.openiaml.iacleaner;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Stack;
 
 import org.openiaml.iacleaner.inline.IACleanerStringReader;
 import org.openiaml.iacleaner.inline.IACleanerStringWriter;
@@ -96,8 +97,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanHtmlBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 
-		String tagName = null;	// last tag
-		while (cleanHtmlTextUntilNextTag(tagName, reader, writer, '<') && reader.readAhead() != -1) {
+		Stack<String> tagStack = new Stack<String>();
+		
+		String lastTag = null;	// last tag
+		String stackTag = null;	// current wrapping tag
+		while (cleanHtmlTextUntilNextTag(stackTag, lastTag, reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
 				// xml mode!
@@ -112,12 +116,55 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// we may continue with html mode
 			} else {
 				// tag mode!
-				tagName = cleanHtmlTag(reader, writer).toLowerCase();
+				lastTag = cleanHtmlTag(reader, writer).toLowerCase();
+				
+				// which tag are we actually in right now?
+				stackTag = getCurrentTagFromStack(lastTag, tagStack);
 			}
 		}
 		
 	}
 	
+	/**
+	 * The given stack contains a stack of opened elements; when we open new 
+	 * ones, they should be added to the stack, and when closed, they should be 
+	 * removed.
+	 * 
+	 * Some elements will never be closed (e.g. <code>&lt;img&gt;</code>;
+	 * the tag stack should just jump up until it finds the closing tag. 
+	 * 
+	 * @param newTagName
+	 * @param tagStack
+	 * @return the current stack tag, or null if we have run out of stack
+	 */
+	private String getCurrentTagFromStack(String newTagName,
+			Stack<String> tagStack) {
+		
+		// ignore null tag names
+		if (newTagName == null)
+			return tagStack.empty() ? null : tagStack.peek();
+		
+		if (newTagName.startsWith("/")) {
+			// we are closing a tag
+			String r = newTagName.substring(1);	// skip '/'
+			while (!tagStack.empty() && !tagStack.pop().equals(r)) {
+				// pop until we find the current tag
+			}
+			// return the next on the stack
+			if (tagStack.empty()) {
+				return null;
+			} else {
+				return tagStack.peek();
+			}
+		} else {
+			// add the current tag to the stack
+			tagStack.push(newTagName);
+			return newTagName;	// we are the top level
+		}
+		
+		
+	}
+
 	/**
 	 * Should we ignore whitespace after the given character? Called from PHP mode.
 	 * 
@@ -1804,7 +1851,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected boolean cleanHtmlTextUntilNextTag(String currentTag, InlineStringReader reader,
+	protected boolean cleanHtmlTextUntilNextTag(String currentTag, String lastTag, InlineStringReader reader,
 			InlineStringWriter writer, char c) throws IOException, CleanerException {
 		
 		int cur;
@@ -1815,20 +1862,34 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			if (cur == '<') {
 				// we're done
 				// do we need to add previous whitespace?
-				if (addWhitespace) {
+				if (addWhitespace && !Character.isWhitespace(writer.getPrevious())) {
 					String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
 					// can we possibly ignore the whitespace?
-					if (!htmlTagRequiresInlineWhitespace(currentTag) || htmlTagWillIgnoreTrailingWhitespace(nextTag)) {
+					if (!htmlTagRequiresInlineWhitespace(currentTag) || htmlTagWillIgnoreLeadingWhitespace(lastTag) || htmlTagWillIgnoreTrailingWhitespace(nextTag)) {
 						// read ahead to find the next tag
 						// eat the <
-						if (nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!')) {
+						if ((nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!' /* comments */))
+								&& !htmlTagNeedsNewLine(nextTag)) {
 							writer.write(' ');
 							addWhitespace = false;
 						}
 					} else {
 						// the current tag requires whitespace
-						writer.write(' ');
-						addWhitespace = false;
+						
+						// if ((nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!' /* comments */))
+						//		&& !htmlTagNeedsNewLine(nextTag) || true) {
+						
+						if (!htmlTagWillIgnoreLeadingWhitespace(nextTag) ||
+								!htmlTagWillIgnoreTrailingWhitespace(nextTag)) {
+							// writer.write(nextTag);
+							// ignore lines that follow with a commment
+							if (nextTag.isEmpty() || nextTag.charAt(0) != '!' /* comments */) {
+								if (!htmlTagWillIgnoreAllWhitespace(currentTag)) {
+									writer.write(' ');
+									addWhitespace = false;
+								}
+							}
+						}
 					}
 				}
 				return true;
@@ -1837,7 +1898,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			// skip multiple whitespace
 			reader.read();	// eat a char (that we just read into cur)
 			if (Character.isWhitespace(cur)) {
-				if (!hasDoneWhitespace && htmlTagRequiresInlineWhitespace(currentTag)) {
+				if (!hasDoneWhitespace && htmlTagRequiresInlineWhitespace(currentTag) 
+						&& !htmlTagWillIgnoreLeadingWhitespace(lastTag)
+						&& !Character.isWhitespace(writer.getPrevious())) {
 					// we haven't done whitespace yet, but the current tag requires we put it in
 					addWhitespace = true;
 				} else if (Character.isWhitespace(prev)) {
@@ -1866,6 +1929,32 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 	
 	/**
+	 * @param currentTag
+	 * @return
+	 */
+	private boolean htmlTagWillIgnoreAllWhitespace(String currentTag) {
+		return currentTag.equals("html") || currentTag.equals("body") || currentTag.equals("head");
+	}
+
+	/**
+	 * Will the given next tag ignore any leading whitespace placed after it?
+	 * 
+	 * @param currentTag
+	 * @return
+	 */
+	private boolean htmlTagWillIgnoreLeadingWhitespace(String currentTag) {
+		if (currentTag == null)
+			return true;
+		
+		return currentTag.equals("h1") || currentTag.equals("h2") || currentTag.equals("h3")
+		|| currentTag.equals("h4") || currentTag.equals("h5") || currentTag.equals("h6")
+		|| currentTag.equals("p") || currentTag.equals("body") || currentTag.equals("html")
+		|| currentTag.equals("title") || currentTag.equals("style") || currentTag.equals("script")
+		|| currentTag.equals("head") || currentTag.equals("div") || currentTag.equals("label")
+		|| currentTag.equals("li") || currentTag.equals("ol") || currentTag.equals("ul");
+	}
+
+	/**
 	 * Will the given next tag ignore any trailing whitespace placed before it?
 	 * 
 	 * @param nextTag
@@ -1875,10 +1964,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		if (nextTag == null)
 			return true;
 	
-		return nextTag.equals("/h1") || nextTag.equals("/h2") || nextTag.equals("/h3")
-			|| nextTag.equals("/h4") || nextTag.equals("/h5") || nextTag.equals("/h6")
-			|| nextTag.equals("/p") || nextTag.equals("/body") || nextTag.equals("/html")
-			|| nextTag.equals("/title") || nextTag.equals("/style") || nextTag.equals("/script");
+		return nextTag.length() > 1 && nextTag.startsWith("/") 
+			&& htmlTagWillIgnoreLeadingWhitespace(nextTag.substring(1));
 	}
 
 	/**
@@ -1892,7 +1979,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		if (currentTag == null)
 			return false;
 		
-		return currentTag.equals("a") || currentTag.equals("/a");
+		return true || currentTag.equals("a") || currentTag.equals("h4");
 	}
 
 	/**
