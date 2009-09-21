@@ -17,6 +17,7 @@ public class PrototypeJsTest extends IACleanerTestCase {
 	public File targetFile = new File("src/org/openiaml/iacleaner/tests/prototype.js.out");
 	private String output = null;
 	
+	@Override
 	public void setUp() throws Exception {
 		output = clean(sourceFile, targetFile);
 		assertNotNull(output);

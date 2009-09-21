@@ -16,24 +16,12 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * @author Jevon
  *
  */
-public class InlineJavascriptCleaner {
-	
-	private IAInlineCleaner inline;
-	private CommonPhpJavascriptCleaner common;
+public class InlineJavascriptCleaner extends InlineCSyntaxCleaner {
 
 	public InlineJavascriptCleaner(IAInlineCleaner inline) {
-		this.inline = inline;
-		this.common = new CommonPhpJavascriptCleaner(inline);
+		super(inline);
 	}
-	
-	public IAInlineCleaner getInline() {
-		return inline;
-	}
-	
-	public CommonPhpJavascriptCleaner getCommon() {
-		return common;
-	}
-	
+
 	/**
 	 * Even though we've been told we need whitespace before this character,
 	 * do we actually need it?
@@ -46,7 +34,7 @@ public class InlineJavascriptCleaner {
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforeJavascript(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '.' || cur == ',' || cur == '[' || cur == ']' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
-			isJavascriptTwoCharacterOperator(cur, reader.readAhead());
+			isTwoCharacterOperator(cur, reader.readAhead());
 	}
 	
 	
@@ -61,7 +49,7 @@ public class InlineJavascriptCleaner {
 	 */
 	private boolean needsWhitespaceBetweenJavascript(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
-			(!isJavascriptOperator(a) && b == '=') || 
+			(!isOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(b == '?') || (a == '?') || 
 			(b == '{') || (a != '(' && a != '!' && b == '!') || 
@@ -72,24 +60,16 @@ public class InlineJavascriptCleaner {
 			(a != '|' && b == '|') || 
 			(a != '&' && b == '&') || 
 			(b == '<' || b == '>') ||
-			(isJavascriptOperator(a) && !isJavascriptOperator(b) && b != ')' && a != '!' && b != ';' && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
-			(a == ')' && isJavascriptOperator(b)) ||
+			(isOperator(a) && !isOperator(b) && b != ')' && a != '!' && b != ';' && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
+			(a == ')' && isOperator(b)) ||
 			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
-			(getCommon().previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
+			(isPreviousWordReserved(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
-			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
-			((isJavascriptOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ ) ||
-			(Character.isLetter(a) && isJavascriptOperator(b) && !isJavascriptTwoCharacterOperator(b, reader.readAhead())) /* e.g. f * g */;
-	}
-
-	private boolean isJavascriptTwoCharacterOperator(int a, int b) {
-		return getCommon().isJavascriptTwoCharacterOperator(a, b);
-	}
-
-	private boolean isJavascriptOperator(int a) {
-		return getCommon().isJavascriptOperator(a);
+			((isOperator(a) || Character.isLetter(a)) && b == '"' /* e.g. 'echo "...' */ ) ||
+			((isOperator(a) || Character.isLetter(a)) && b == '\'' /* e.g. 'echo '...' */ ) ||
+			(Character.isLetter(a) && isOperator(b) && !isTwoCharacterOperator(b, reader.readAhead())) /* e.g. f * g */;
 	}
 
 	/**
@@ -253,7 +233,7 @@ public class InlineJavascriptCleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '/'
-				getCommon().jumpOverPhpInlineComment(reader, writer, true); 
+				jumpOverInlineComment(reader, writer, true); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
 				inInlineBrace = false;
@@ -279,7 +259,7 @@ public class InlineJavascriptCleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
-				getCommon().jumpOverPhpBlockComment(reader, writer, true);
+				jumpOverBlockComment(reader, writer, true);
 				needsWhitespace = true;	// put a space before the next statement if necessary
 				charBeforeBlockComment = prevNonWhitespace;		// save the previous char
 				prevNonWhitespace = -2;	// reset to "did a comment block"
@@ -291,9 +271,9 @@ public class InlineJavascriptCleaner {
 				isOnBlankLine = true;
 			}
 			
-			if (Character.isWhitespace(cur) && getCommon().ignoreWhitespaceAfterPhp(prev)) {
+			if (Character.isWhitespace(cur) && shouldIgnoreWhitespaceAfter(prev)) {
 				// print just a space if necessary
-				if (getCommon().needsWhitespaceCharacterPhp(prev)) {
+				if (needsWhitespaceCharacterAfter(prev)) {
 					needsWhitespace = true;
 				}
 			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
@@ -341,7 +321,7 @@ public class InlineJavascriptCleaner {
 					// a new statement (like ;)
 					if (cur == ',' || cur == ')' || cur == ';') {
 						// ignore 'function(){...}, x'
-					} else if (!getCommon().isInlinePhpReservedWordAfterBrace(reader, writer)) {
+					} else if (!isNextWordInlineBrace(reader, writer)) {
 						// a normal ending brace
 						writer.newLine();
 					} else {
@@ -392,9 +372,9 @@ public class InlineJavascriptCleaner {
 				boolean didRegexpMode = false;
 				// switch into strings mode?
 				if (cur == '"') {
-					getCommon().jumpOverPhpString(reader, writer, true);
+					jumpOverString(reader, writer, true);
 				} else if (cur == '\'') {
-					getCommon().jumpOverPhpSingleString(reader, writer, true);
+					jumpOverSingleString(reader, writer, true);
 				} else if (cur == '/' && (prevNonWhitespace == '=' || prevNonWhitespace == '(' || prevNonWhitespace == '.' || prevNonWhitespace == ':')) {
 					// regexp
 					jumpOverJavascriptRegexp(reader, writer, true);

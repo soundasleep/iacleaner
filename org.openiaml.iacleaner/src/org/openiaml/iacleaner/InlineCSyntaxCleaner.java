@@ -10,16 +10,16 @@ import org.openiaml.iacleaner.inline.InlineStringReader;
 import org.openiaml.iacleaner.inline.InlineStringWriter;
 
 /**
- * Common methods for both the PHP and Javascript inline cleaners.
+ * An abstract class for C syntax-based cleaners.
  * 
  * @author Jevon
  *
  */
-public class CommonPhpJavascriptCleaner {
+public abstract class InlineCSyntaxCleaner {
 
 	public IAInlineCleaner inline;
 	
-	public CommonPhpJavascriptCleaner(IAInlineCleaner inline) {
+	public InlineCSyntaxCleaner(IAInlineCleaner inline) {
 		this.inline = inline;
 	}
 	
@@ -27,33 +27,53 @@ public class CommonPhpJavascriptCleaner {
 		return inline;
 	}
 
-	private String[] inlineBraceWordsPhp = new String[] {
-		"else",
-		"catch"
-	};
-	
-	private String[] reservedWordsPhp = new String[] {
-		"if",
-		"for",
-		"foreach",
-		"while",
-		"=>",
-	};
+	/**
+	 * A list of all the reserved words.
+	 * 
+	 * @see #isPreviousWordReserved(InlineStringWriter)
+	 * @return
+	 */
+	public String[] getReservedWords() {
+		return new String[] {
+				"if",
+				"for",
+				"foreach",
+				"while",
+				"=>"
+		};
+	}
 	
 	/**
-	 * @param reader
+	 * A list of all words that should be inlined when in a brace,
+	 * e.g. "if { ... } else { ... }".
+	 * 
+	 * @see #isNextWordInlineBrace(InlineStringReader, InlineStringWriter)
 	 * @return
+	 */
+	public String[] getInlineBraceWords() {
+		return new String[] {
+				"else",
+				"catch"
+		};
+	}
+	
+	/**
+	 * Was the previously written word (separated by whitespace) a reserved word?
+	 * 
+	 * @see #getReservedWords()
+	 * @param reader
+	 * @return True if the previously written word was reserved.
 	 * @throws IOException 
 	 */
-	protected boolean previousWordIsReservedWordPhp(InlineStringWriter writer) throws IOException {
+	public boolean isPreviousWordReserved(InlineStringWriter writer) throws IOException {
 		// get maximum number of chars to go backwards
-		int backwards = reservedWordsPhp[0].length();
-		for (String s : reservedWordsPhp) {
+		int backwards = getReservedWords()[0].length();
+		for (String s : getReservedWords()) {
 			if (s.length() > backwards)
 				backwards = s.length();
 		}
 		String previous = writer.getLastWritten(backwards + 1);
-		for (String s : reservedWordsPhp) {
+		for (String s : getReservedWords()) {
 			// must be at least 1 character longer than the word
 			if (previous.length() > s.length()) {
 				int prev = previous.charAt(backwards - s.length());
@@ -76,7 +96,7 @@ public class CommonPhpJavascriptCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpInlineComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	public void jumpOverInlineComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
@@ -111,21 +131,21 @@ public class CommonPhpJavascriptCleaner {
 	/**
 	 * Should we ignore whitespace after the given character? Called from PHP mode.
 	 * 
-	 * @param prev
+	 * @param c
 	 * @return
 	 */
-	protected boolean ignoreWhitespaceAfterPhp(int prev) {
-		return prev == '{' || prev == '(' || prev == ')' || prev == '}' || prev == ';' || prev == '"' || prev == '\'' || prev == '.';
+	public boolean shouldIgnoreWhitespaceAfter(int c) {
+		return c == '{' || c == '(' || c == ')' || c == '}' || c == ';' || c == '"' || c == '\'' || c == '.';
 	}
 	
 	/**
 	 * Do we require whitespace after for the given character?
 	 * 
-	 * @param prev
+	 * @param c
 	 * @return
 	 */
-	protected boolean needsWhitespaceCharacterPhp(int prev) {
-		return prev == ',';
+	public boolean needsWhitespaceCharacterAfter(int c) {
+		return c == ',';
 	}
 
 	/**
@@ -137,7 +157,7 @@ public class CommonPhpJavascriptCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpBlockComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	public void jumpOverBlockComment(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableWordwrap(false);	// don't wordwrap this comment!
 			int cur = -1;
@@ -203,21 +223,22 @@ public class CommonPhpJavascriptCleaner {
 	 * add a new line after this brace? Or is the next term part of an
 	 * inline statement (e.g. if/else/elseif)?
 	 * 
+	 * @see #getInlineBraceWords()
 	 * @param reader
 	 * @param writer
 	 * @return True if we shouldn't output a new line
 	 * @throws IOException 
 	 */
-	protected boolean isInlinePhpReservedWordAfterBrace(InlineStringReader reader,
+	public boolean isNextWordInlineBrace(InlineStringReader reader,
 			InlineStringWriter writer) throws IOException {
 		// get maximum number of chars to go backwards
-		int max = inlineBraceWordsPhp[0].length();
-		for (String s : inlineBraceWordsPhp) {
+		int max = getInlineBraceWords()[0].length();
+		for (String s : getInlineBraceWords()) {
 			if (s.length() > max)
 				max = s.length();
 		}
 		String next = (char) reader.getLastChar() + reader.readAheadSkipWhitespace(max + 1);
-		for (String s : inlineBraceWordsPhp) {
+		for (String s : getInlineBraceWords()) {
 			// must be at least 1 character longer than the word
 			if (next.length() > s.length() + 1) {
 				// does it start with the given reserved word?
@@ -245,7 +266,7 @@ public class CommonPhpJavascriptCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	public void jumpOverString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			writer.enableWordwrap(false);	// no wordwrap!
@@ -293,7 +314,7 @@ public class CommonPhpJavascriptCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void jumpOverPhpSingleString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
+	public void jumpOverSingleString(InlineStringReader reader, InlineStringWriter writer, boolean allowSwitchToPhpMode) throws IOException, CleanerException {
 		try {
 			writer.enableIndent(false);		// we don't want to indent the strings by accident
 			writer.enableWordwrap(false);
@@ -332,25 +353,25 @@ public class CommonPhpJavascriptCleaner {
 	}
 	
 	/**
-	 * Are these two characters a two-character Javascript operator?
-	 * 
-	 * isJavascriptOperator(a) == true
+	 * Do these two characters combine into a two-character operator?
+	 * e.g. <code>++</code>, <code>--</code>...
 	 * 
 	 * @param a
 	 * @param b
 	 * @return
 	 */
-	protected boolean isJavascriptTwoCharacterOperator(int a, int b) {
+	public boolean isTwoCharacterOperator(int a, int b) {
 		return (a == '+' && b == '+') || (a == '-' && b == '-') || (a == '!' && b == '!');
 	}
 
 	/**
 	 * Is the given character a single-character operator?
+	 * e.g. <code>+</code>, <code>-</code>, ...
 	 * 
 	 * @param a
 	 * @return
 	 */
-	protected boolean isJavascriptOperator(int a) {
+	public boolean isOperator(int a) {
 		return a == '+' || a == '-' || a == '*' || a == '/' || a == '^' || a == '>' || a == '<' || a == '=' || a == '!' || a == '&' || a == '|';
 	}
 
