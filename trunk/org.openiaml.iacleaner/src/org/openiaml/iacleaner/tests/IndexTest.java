@@ -17,6 +17,7 @@ public class IndexTest extends IACleanerTestCase {
 	public File targetFile = new File("src/org/openiaml/iacleaner/tests/index.html.out");
 	private String output = null;
 	
+	@Override
 	public void setUp() throws Exception {
 		output = clean(sourceFile, targetFile);
 		assertNotNull(output);

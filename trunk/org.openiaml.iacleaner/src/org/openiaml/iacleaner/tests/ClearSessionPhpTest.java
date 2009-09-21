@@ -18,6 +18,7 @@ public class ClearSessionPhpTest extends IACleanerTestCase {
 	public File targetFile = new File("src/org/openiaml/iacleaner/tests/clear_session.php.out");
 	private String output = null;
 	
+	@Override
 	public void setUp() throws Exception {
 		output = clean(sourceFile, targetFile);
 		assertNotNull(output);

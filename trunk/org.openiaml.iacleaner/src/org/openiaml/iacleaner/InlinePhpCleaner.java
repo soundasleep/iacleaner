@@ -15,24 +15,12 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * @author Jevon
  *
  */
-public class InlinePhpCleaner {
-	
-	private IAInlineCleaner inline;
-	private CommonPhpJavascriptCleaner common;
+public class InlinePhpCleaner extends InlineCSyntaxCleaner {
 
 	public InlinePhpCleaner(IAInlineCleaner inline) {
-		this.inline = inline;
-		this.common = new CommonPhpJavascriptCleaner(inline);
+		super(inline);
 	}
-	
-	public IAInlineCleaner getInline() {
-		return inline;
-	}
-	
-	public CommonPhpJavascriptCleaner getCommon() {
-		return common;
-	}
-	
+		
 	/**
 	 * Even though we've been told we need whitespace before this character,
 	 * do we actually need it?
@@ -45,7 +33,7 @@ public class InlinePhpCleaner {
 	 */
 	private boolean doesntActuallyNeedWhitespaceBeforePhp(InlineStringReader reader, InlineStringWriter writer, int cur) throws IOException {
 		return cur == '(' || cur == ')' || cur == '}' || cur == ';' || cur == '[' || cur == ']' || cur == ',' || cur == '+' || cur == '-' || writer.getPrevious() == '-' || writer.getPrevious() == '+' ||
-			isPhpTwoCharacterOperator(cur, reader.readAhead()) ||
+			isTwoCharacterOperator(cur, reader.readAhead()) ||
 			(writer.getLastWritten(2).equals("::")) /* :: operator */ ||
 			(writer.getLastWritten(2).equals("->")) /* -> operator */;
 	}	
@@ -59,9 +47,9 @@ public class InlinePhpCleaner {
 	 * @return
 	 * @throws IOException 
 	 */
-	private boolean needsWhitespaceBetweenPhp(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
+	public boolean needsWhitespaceBetweenPhp(InlineStringReader reader, InlineStringWriter writer, int a, int b) throws IOException {
 		return (a == ')' && b == '{') || (a == ',') || 
-			(!isPhpOperator(a) && b == '=') || 
+			(!isOperator(a) && b == '=') || 
 			(a == '=' && (b != '>' && b != '=')) || 
 			(a == '.' && b != '=') || (b == '.') || (b == '?') || (a == '?') || 
 			(b == '{') || (a != '(' && a != '!' && b == '!') || 
@@ -72,17 +60,17 @@ public class InlinePhpCleaner {
 			(a != '|' && b == '|') || 
 			(a != '&' && b == '&') || 
 			(b == '<' || (a != '-' && a != '=' && b == '>')) ||
-			(isPhpOperator(a) && !isPhpOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
-			(a == ')' && isPhpOperator(b)) ||
-			(isPhpOperator(a) && a != '!' && b == '$') ||
+			(isOperator(a) && !isOperator(b) && b != ')' && a != '!' && b != ';' && b != '$' && !writer.getLastWritten(2).equals("->") && !writer.getLastWritten(3).equals(", -") && !writer.getLastWritten(3).equals(", +")) ||
+			(a == ')' && isOperator(b)) ||
+			(isOperator(a) && a != '!' && b == '$') ||
 			(b == '*') || (a == ')' && b == '-') ||
 			(a == ']' && b == ':') || (a == ')' && b == ':') || /* between ): or ]: */
 			(a == ':' && b != ':' && !writer.getLastWritten(2).equals("::") /* between :: */) ||
-			(getCommon().previousWordIsReservedWordPhp(writer) && (b == '(' || b == '$')) ||
+			(isPreviousWordReserved(writer) && (b == '(' || b == '$')) ||
 			(a == ')' && Character.isLetter(b) /* e.g. 'foo() or..' */ ) ||
 			(Character.isLetter(a) && b == '"' /* e.g. 'echo "...' */ ) ||
 			(Character.isLetter(a) && b == '\'' /* e.g. 'echo '...' */ ) ||
-			(Character.isLetter(a) && isPhpOperator(b) && !isPhpTwoCharacterOperator(b, reader.readAhead())) /* e.g. $f * $g */;
+			(Character.isLetter(a) && isOperator(b) && !isTwoCharacterOperator(b, reader.readAhead())) /* e.g. $f * $g */;
 	}
 	
 	/**
@@ -94,8 +82,9 @@ public class InlinePhpCleaner {
 	 * @param b
 	 * @return
 	 */
-	private boolean isPhpTwoCharacterOperator(int a, int b) {
-		return (a == '-' && b == '>') || getCommon().isJavascriptTwoCharacterOperator(a, b);
+	@Override
+	public boolean isTwoCharacterOperator(int a, int b) {
+		return (a == '-' && b == '>') || super.isTwoCharacterOperator(a, b);
 	}
 	
 	/**
@@ -104,8 +93,9 @@ public class InlinePhpCleaner {
 	 * @param a
 	 * @return
 	 */
-	private boolean isPhpOperator(int a) {
-		return a == '.' || getCommon().isJavascriptOperator(a);
+	@Override
+	public boolean isOperator(int a) {
+		return a == '.' || super.isOperator(a);
 	}
 	
 	/**
@@ -187,7 +177,7 @@ public class InlinePhpCleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '/'
-				getCommon().jumpOverPhpInlineComment(reader, writer, false); 
+				jumpOverInlineComment(reader, writer, false); 
 				needsLineBefore = true; // we need a new line next line
 				prevNonWhitespace = -3;	// reset to "did an inline comment"
 				inInlineBrace = false;
@@ -210,7 +200,7 @@ public class InlinePhpCleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
-				getCommon().jumpOverPhpBlockComment(reader, writer, false);
+				jumpOverBlockComment(reader, writer, false);
 				needsWhitespace = true;	// put a space before the next statement if necessary
 				charBeforeBlockComment = prevNonWhitespace;		// save the previous char
 				prevNonWhitespace = -2;	// reset to "did a comment block"
@@ -222,9 +212,9 @@ public class InlinePhpCleaner {
 				isOnBlankLine = true;
 			}
 			
-			if (Character.isWhitespace(cur) && getCommon().ignoreWhitespaceAfterPhp(prev)) {
+			if (Character.isWhitespace(cur) && shouldIgnoreWhitespaceAfter(prev)) {
 				// print just a space if necessary
-				if (getCommon().needsWhitespaceCharacterPhp(prev)) {
+				if (needsWhitespaceCharacterAfter(prev)) {
 					needsWhitespace = true;
 				}
 			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
@@ -267,7 +257,7 @@ public class InlinePhpCleaner {
 					// a new statement (like ;)
 					if (cur == ',' || cur == ')') {
 						// ignore 'function(){...}, x'
-					} else if (!getCommon().isInlinePhpReservedWordAfterBrace(reader, writer)) {
+					} else if (!isNextWordInlineBrace(reader, writer)) {
 						// a normal ending brace
 						writer.newLine();
 					} else {
@@ -322,9 +312,9 @@ public class InlinePhpCleaner {
 				
 				// switch into strings mode?
 				if (cur == '"') {
-					getCommon().jumpOverPhpString(reader, writer, false);
+					jumpOverString(reader, writer, false);
 				} else if (cur == '\'') {
-					getCommon().jumpOverPhpSingleString(reader, writer, false);
+					jumpOverSingleString(reader, writer, false);
 				}
 				if (!Character.isWhitespace(cur)) {
 					prevNonWhitespace = cur;

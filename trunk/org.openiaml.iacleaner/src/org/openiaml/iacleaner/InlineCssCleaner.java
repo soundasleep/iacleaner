@@ -16,22 +16,10 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * @author Jevon
  *
  */
-public class InlineCssCleaner {
-	
-	private IAInlineCleaner inline;
-	private CommonPhpJavascriptCleaner common;
+public class InlineCssCleaner extends InlineCSyntaxCleaner {
 
 	public InlineCssCleaner(IAInlineCleaner inline) {
-		this.inline = inline;
-		this.common = new CommonPhpJavascriptCleaner(inline);
-	}
-	
-	public IAInlineCleaner getInline() {
-		return inline;
-	}
-	
-	public CommonPhpJavascriptCleaner getCommon() {
-		return common;
+		super(inline);
 	}
 	
 	/**
@@ -118,7 +106,7 @@ public class InlineCssCleaner {
 				}
 				writer.write(cur);	// write '/'
 				writer.write(reader.read());	// write '*'
-				getCommon().jumpOverPhpBlockComment(reader, writer, true);
+				jumpOverBlockComment(reader, writer, true);
 				needsWhitespace = true;	// put a space before the next statement if necessary
 				charBeforeBlockComment = prevNonWhitespace;		// save the previous char
 				prevNonWhitespace = -2;	// reset to "did a comment block"
@@ -129,9 +117,9 @@ public class InlineCssCleaner {
 				isOnBlankLine = true;
 			}
 			
-			if (Character.isWhitespace(cur) && getCommon().ignoreWhitespaceAfterPhp(prev)) {
+			if (Character.isWhitespace(cur) && shouldIgnoreWhitespaceAfter(prev)) {
 				// print just a space if necessary
-				if (getCommon().needsWhitespaceCharacterPhp(prev)) {
+				if (needsWhitespaceCharacterAfter(prev)) {
 					needsWhitespace = true;
 				}
 			} else if (Character.isWhitespace(cur) && Character.isWhitespace(prev)) {
@@ -211,9 +199,9 @@ public class InlineCssCleaner {
 
 				// switch into strings mode?
 				if (cur == '"') {
-					getCommon().jumpOverPhpString(reader, writer, true);
+					jumpOverString(reader, writer, true);
 				} else if (cur == '\'') {
-					getCommon().jumpOverPhpSingleString(reader, writer, true);
+					jumpOverSingleString(reader, writer, true);
 				}
 
 				if (!Character.isWhitespace(cur)) {

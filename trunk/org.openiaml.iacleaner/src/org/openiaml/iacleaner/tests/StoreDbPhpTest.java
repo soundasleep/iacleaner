@@ -18,6 +18,7 @@ public class StoreDbPhpTest extends IACleanerTestCase {
 	public File targetFile = new File("src/org/openiaml/iacleaner/tests/store_db.php.out");
 	private String output = null;
 	
+	@Override
 	public void setUp() throws Exception {
 		output = clean(sourceFile, targetFile);
 		assertNotNull(output);
