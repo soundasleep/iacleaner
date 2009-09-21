@@ -37,7 +37,7 @@ public class InlineHtmlCleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	protected void cleanHtmlBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
+	public void cleanHtmlBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 
 		Stack<String> tagStack = new Stack<String>();
 		

@@ -27,6 +27,10 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * <p>As a result, it is at least an order of magnitude faster than
  * {@link IARegexpCleaner}.</p>
  * 
+ * @see InlineCssCleaner
+ * @see InlineHtmlCleaner
+ * @see InlineJavascriptCleaner
+ * @see InlineHtmlCleaner
  * @author Jevon
  *
  */
@@ -113,6 +117,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	/**
 	 * Clean up HTML code.
 	 * 
+	 * @see InlineHtmlCleaner#cleanHtmlBlock(InlineStringReader, InlineStringWriter)
 	 * @param reader
 	 * @param writer
 	 * @throws IOException 
@@ -127,6 +132,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * We need to read in a PHP script and output it as appropriate.
 	 * Reader starts with "&lt;?php'. 
 	 * 
+	 * @see InlinePhpCleaner#cleanPhpBlock(InlineStringReader, InlineStringWriter)
 	 * @param reader
 	 * @param writer
 	 * @throws IOException 
@@ -173,6 +179,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * '&lt;style ...&gt;'. We need to parse the inline CSS until
 	 * we are about to hit '&lt;/style&gt;'.
 	 * 
+	 * @see InlineCssCleaner#cleanHtmlCss(InlineStringReader, InlineStringWriter, boolean)
 	 * @param reader
 	 * @param writer
 	 * @throws IOException 
@@ -189,6 +196,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * '&lt;script ...&gt;'. We need to parse the inline Javascript until
 	 * we are about to hit '&lt;/script&gt;'.
 	 * 
+	 * @see InlineJavascriptCleaner#cleanJavascriptBlock(InlineStringReader, InlineStringWriter, boolean)
 	 * @param reader
 	 * @param writer
 	 * @throws IOException 
@@ -196,7 +204,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanHtmlJavascript(InlineStringReader reader,
 			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
-		getJavascriptCleaner().cleanHtmlJavascript(reader, writer, withinHtml);
+		getJavascriptCleaner().cleanJavascriptBlock(reader, writer, withinHtml);
 	}
 
 	/**
