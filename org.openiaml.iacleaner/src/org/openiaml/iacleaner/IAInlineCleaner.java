@@ -96,7 +96,8 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanHtmlBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
 
-		while (removeHtmlTextSpacingUntil(reader, writer, '<') && reader.readAhead() != -1) {
+		String tagName = null;	// last tag
+		while (cleanHtmlTextUntilNextTag(tagName, reader, writer, '<') && reader.readAhead() != -1) {
 			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
 				// xml mode!
@@ -111,7 +112,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 				// we may continue with html mode
 			} else {
 				// tag mode!
-				cleanHtmlTag(reader, writer).toLowerCase();
+				tagName = cleanHtmlTag(reader, writer).toLowerCase();
 			}
 		}
 		
@@ -1009,7 +1010,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @return
 	 */
 	protected boolean htmlTagNeedsTrailingNewLine(String tag) {
-		return tag.equals("/h1") || tag.equals("/li") || tag.equals("/title") || tag.equals("/link") || 
+		return tag.equals("/h1") || tag.equals("/h2") || tag.equals("/h3") ||
+			tag.equals("/h4") || tag.equals("/h5") || tag.equals("/h6") || 
+			tag.equals("/li") || tag.equals("/title") || tag.equals("/link") || 
 			tag.equals("/head") || tag.equals("/body") || tag.equals("/ol") || tag.equals("/ul") ||
 			tag.equals("/script") || tag.startsWith("!");
 	}
@@ -1031,7 +1034,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * @param reader
 	 * @param writer
-	 * @return
+	 * @return the htmlTag found, or null if we unexpectedly fell out
 	 * @throws IOException 
 	 * @throws CleanerException if we hit EOF unexpectedly
 	 */
@@ -1118,7 +1121,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		
 		// we never found the end of the tag >
 		throwWarning("We never found the end of HTML tag", tagName.toString());
-		return tagName.toString();
+		return null;
 	}
 
 	/**
@@ -1771,7 +1774,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	}
 
 	/**
-	 * Read ahead in the stream 'html...>...' and find the current HTML tag.
+	 * Read ahead in the stream 'html...>...' and find the current (next) HTML tag.
 	 * Also includes formatted attributes. TODO link
 	 * 
 	 * If this returns an empty string, it may mean EOF, or the stream
@@ -1793,6 +1796,7 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * 
 	 * This also controls the formatting of the output text.
 	 * 
+	 * @param the current tag (or null if there has not been any tags yet)
 	 * @param reader
 	 * @param writer
 	 * @param c
@@ -1800,21 +1804,29 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws IOException 
 	 * @throws CleanerException 
 	 */
-	private boolean removeHtmlTextSpacingUntil(InlineStringReader reader,
+	protected boolean cleanHtmlTextUntilNextTag(String currentTag, InlineStringReader reader,
 			InlineStringWriter writer, char c) throws IOException, CleanerException {
 		
 		int cur;
 		int prev = -1;
 		boolean addWhitespace = false;
+		boolean hasDoneWhitespace = false;
 		while ((cur = reader.readAhead()) != -1) {
 			if (cur == '<') {
 				// we're done
 				// do we need to add previous whitespace?
 				if (addWhitespace) {
-					// read ahead to find the next tag
-					// eat the <
 					String nextTag = readAheadUntilEndHtmlTagWithOpenBrace(reader, writer);
-					if (nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!')) {
+					// can we possibly ignore the whitespace?
+					if (!htmlTagRequiresInlineWhitespace(currentTag) || htmlTagWillIgnoreTrailingWhitespace(nextTag)) {
+						// read ahead to find the next tag
+						// eat the <
+						if (nextTag.isEmpty() || (nextTag.charAt(0) != '/' && nextTag.charAt(0) != '!')) {
+							writer.write(' ');
+							addWhitespace = false;
+						}
+					} else {
+						// the current tag requires whitespace
 						writer.write(' ');
 						addWhitespace = false;
 					}
@@ -1823,9 +1835,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			}
 			
 			// skip multiple whitespace
-			reader.read();	// eat a char
+			reader.read();	// eat a char (that we just read into cur)
 			if (Character.isWhitespace(cur)) {
-				if (Character.isWhitespace(prev)) {
+				if (!hasDoneWhitespace && htmlTagRequiresInlineWhitespace(currentTag)) {
+					// we haven't done whitespace yet, but the current tag requires we put it in
+					addWhitespace = true;
+				} else if (Character.isWhitespace(prev)) {
 					// ignore multiple whitespace inline
 				} else if (prev == -1) {
 					// ignore initial whitespace
@@ -1850,6 +1865,36 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		return false;		
 	}
 	
+	/**
+	 * Will the given next tag ignore any trailing whitespace placed before it?
+	 * 
+	 * @param nextTag
+	 * @return
+	 */
+	private boolean htmlTagWillIgnoreTrailingWhitespace(String nextTag) {
+		if (nextTag == null)
+			return true;
+	
+		return nextTag.equals("/h1") || nextTag.equals("/h2") || nextTag.equals("/h3")
+			|| nextTag.equals("/h4") || nextTag.equals("/h5") || nextTag.equals("/h6")
+			|| nextTag.equals("/p") || nextTag.equals("/body") || nextTag.equals("/html")
+			|| nextTag.equals("/title") || nextTag.equals("/style") || nextTag.equals("/script");
+	}
+
+	/**
+	 * Does the current HTML tag require us to keep whitespace?
+	 * 
+	 * @return
+	 * @throws CleanerException 
+	 * @throws IOException 
+	 */
+	private boolean htmlTagRequiresInlineWhitespace(String currentTag) {
+		if (currentTag == null)
+			return false;
+		
+		return currentTag.equals("a") || currentTag.equals("/a");
+	}
+
 	/**
 	 * Same as {@link #readAheadUntilEndHtmlTag(org.openiaml.iacleaner.IAInlineCleaner.InlineStringReader)},
 	 * except this skips over a '<' in front.

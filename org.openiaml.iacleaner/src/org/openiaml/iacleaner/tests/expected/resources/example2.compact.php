@@ -504,7 +504,7 @@ $s->execute(array("visual.11e37b8d948.d")) or local_die("could not execute delet
 . print_r($db->errorInfo(), true)); ?>
 }
 </script>
-</head><body onLoad="loadStoredEvents()"><div style="font-size:small; text-align: right;"><a href="clear_session.php">clear session</a>- <a href="sitemap.html">sitemap</a></div><h1>viewkey</h1><div id="runtime_errors"><!-- any runtime errors go into here --><p><?php
+</head><body onLoad="loadStoredEvents()"><div style="font-size:small; text-align: right;"><a href="clear_session.php">clear session</a> - <a href="sitemap.html">sitemap</a></div><h1>viewkey</h1><div id="runtime_errors"><!-- any runtime errors go into here --><p><?php
 /* expand any fail error messages */
 if (require_get("fail")) { ?><div class="error">An exception occured: <i><?php echo htmlspecialchars(require_get("fail"));?></i></div><?php }?></p></div><div><label id="label_visual_11e37df5bce_1c">current login key <input type="text"
 id="visual_11e37df5bce_1c" name="visual_11e37df5bce_1c" onChange=" return false;"></label></div><div

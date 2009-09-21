@@ -507,7 +507,7 @@
   </head>
   <body onLoad="loadStoredEvents()">
     <div style="font-size:small; text-align: right;"><a href="clear_session.php">clear
-    session</a>- <a href="sitemap.html">sitemap</a></div>
+    session</a> - <a href="sitemap.html">sitemap</a></div>
     <h1>viewkey</h1>
     <div id="runtime_errors"><!-- any runtime errors go into here --></div><?php
       /* expand any fail error messages */
