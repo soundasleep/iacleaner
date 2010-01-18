@@ -103,6 +103,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else if (extension.equals("css")) {
 				// straight to CSS mode
 				cleanHtmlCss(reader, writer, false);
+			} else if (extension.equals("txt")) {
+				// direct copy: TXT mode
+				directCopy(reader, writer);
 			} else {
 				// default: PHP (which is also HTML)
 				cleanHtmlBlock(reader, writer);
@@ -112,6 +115,26 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		}
 		
 		return writer.getBuffer().toString();
+	}
+
+	/**
+	 * Directly copy from the reader to the writer; this is useful for
+	 * text files, for example.
+	 * 
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 */
+	protected void directCopy(InlineStringReader reader, InlineStringWriter writer) throws IOException {
+		int bufSize = 1024;
+		char[] buf = new char[bufSize];
+		while (true) {
+			int read = reader.read(buf);
+			if (read == -1)
+				break;
+			
+			writer.write(buf, 0, read);
+		}
 	}
 
 	/**
