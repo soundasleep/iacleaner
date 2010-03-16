@@ -92,7 +92,14 @@ public abstract class DefaultIACleaner implements IACleaner {
 	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.File)
 	 */
 	public String cleanScript(File sourceFile) throws IOException, CleanerException {
-		return cleanScript( new BufferedInputStream(new FileInputStream(sourceFile)), getExtension(sourceFile));
+		return cleanScript(sourceFile, getExtension(sourceFile));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#cleanScript(java.io.File)
+	 */
+	public String cleanScript(File sourceFile, String extension) throws IOException, CleanerException {
+		return cleanScript( new BufferedInputStream(new FileInputStream(sourceFile)), extension);
 	}
 
 	/* (non-Javadoc)

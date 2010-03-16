@@ -50,7 +50,8 @@ public interface IACleaner {
 	public abstract void throwWarning(String string, String context);
 
 	/**
-	 * Format the web script contained within a file. Does not
+	 * Format the web script contained within a file. Loads the extension
+	 * from the extension of the actual file. Does not
 	 * actually modify the given file.
 	 * 
 	 * @see IARegexpCleaner#cleanScript(String)
@@ -60,6 +61,21 @@ public interface IACleaner {
 	 * @throws CleanerException if a different formatting exception occurs
 	 */
 	public abstract String cleanScript(File sourceFile) throws IOException,
+			CleanerException;
+	
+	/**
+	 * Format the web script contained within a file. The given 'extension'
+	 * parameter overrides the format type. Does not
+	 * actually modify the given file.
+	 * 
+	 * @see IARegexpCleaner#cleanScript(String)
+	 * @param sourceFile the file to load from and format
+	 * @param extension the overridden extension
+	 * @return the formatted web script
+	 * @throws IOException if an IO exception occurs while loading the file
+	 * @throws CleanerException if a different formatting exception occurs
+	 */
+	public abstract String cleanScript(File sourceFile, String extension) throws IOException,
 			CleanerException;
 
 	/**
