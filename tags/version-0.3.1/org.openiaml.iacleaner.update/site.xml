@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.openiaml.iacleaner.feature_0.1.0.jar" id="org.openiaml.iacleaner.feature" version="0.1.0"/>
+   <feature url="features/org.openiaml.iacleaner.feature_0.2.0.jar" id="org.openiaml.iacleaner.feature" version="0.2.0"/>
+   <feature url="features/org.openiaml.iacleaner.feature_0.3.0.jar" id="org.openiaml.iacleaner.feature" version="0.3.0"/>
+   <feature url="features/org.openiaml.iacleaner.feature_0.3.1.201004171738.jar" id="org.openiaml.iacleaner.feature" version="0.3.1.201004171738"/>
+</site>

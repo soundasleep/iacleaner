@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>web application '(untitled application)': sitemap</title>
+    <link rel="stylesheet" type="text/css" href="default.css" />
+  </head>
+  <body>
+    <h1>Sitemap</h1>
+    <ol>
+      <li><a href="visual_11e19f1b1ea_2.php">Home</a></li>
+      <li><a href="visual_11f1a3d7f0c_66.php">login</a></li>
+      <li>[Session my session]
+      <ol>
+        <li><a href="visual_11e37b8d948_d.php">viewkey</a></li>
+        <li><a href="visual_11f1a3d7f0c_6a.php">logout</a></li>
+      </ol>
+      </li>
+    </ol>
+  </body>
+</html>

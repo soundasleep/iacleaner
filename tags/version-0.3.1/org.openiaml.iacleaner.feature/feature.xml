@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.openiaml.iacleaner.feature"
+      label="Internet Application Cleaner/Formatter"
+      version="0.3.1.qualifier"
+      provider-name="www.openiaml.org">
+
+   <description url="http://www.openiaml.org/">
+      This project aims to provide a Java-based code syntax formatter
+for a diverse range of web languages, including HTML, Javascript,
+PHP, CSS and JSP.
+
+It allows you to format complex, messy web application code into
+a more structured format.
+
+To achieve this, it uses specialised reader/writer implementations
+and a custom parser. As a result, this formatter is fragile at
+best, so use at your own risk! However, it does come with a set
+of automated test cases, to ensure that it generally outputs
+suitable code.
+   </description>
+
+   <copyright url="http://openiaml.org/copyright">
+      Copyright (c) 2007, 2010 Jevon Wright and others.
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the Eclipse Public License
+v1.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v10.html
+   </copyright>
+
+   <license url="http://www.eclipse.org/legal/epl-v10.html">
+      Licensed under the Eclipse Public License v1.0.
+   </license>
+
+   <url>
+      <update label="iacleaner Update Site" url="http://iacleaner.googlecode.com/svn/trunk/org.openiaml.iacleaner.update/"/>
+   </url>
+
+   <plugin
+         id="org.openiaml.iacleaner"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
