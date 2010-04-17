@@ -304,16 +304,4 @@ public abstract class InlineStringReader extends PushbackReader {
 		}
 	}
 
-	/**
-	 * Are the given number of characters available in this stream before
-	 * running into an EOF?
-	 * 
-	 * @param i
-	 * @return
-	 * @throws IOException 
-	 */
-	public boolean has(int i) throws IOException {
-		return readAhead(i).length() == i;
-	}
-
 }

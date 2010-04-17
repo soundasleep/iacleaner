@@ -69,19 +69,12 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 	/**
 	 * Enable/disable wordwrap where appropriate.
 	 * 
-	 * @see #enableIndent(boolean)
 	 * @param b
 	 */
 	public void enableWordwrap(boolean b) {
 		canWordWrap = b;
 	}
 
-	/**
-	 * Enable/disable indenting. 
-	 * 
-	 * @see #enableWordwrap(boolean)
-	 * @param enabled
-	 */
 	public void enableIndent(boolean enabled) {
 		indentEnabled = enabled;
 	}
@@ -255,15 +248,6 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 			buf.append(indentString);
 		}
 		return buf.toString();
-	}
-	
-	/**
-	 * Get the current size of the indent.
-	 * 
-	 * @return the current size of the indent
-	 */
-	public int getIndentSize() {
-		return indent;
 	}
 
 	/* (non-Javadoc)

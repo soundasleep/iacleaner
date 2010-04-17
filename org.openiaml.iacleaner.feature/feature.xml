@@ -2,7 +2,7 @@
 <feature
       id="org.openiaml.iacleaner.feature"
       label="Internet Application Cleaner/Formatter"
-      version="0.3.1.qualifier"
+      version="0.3.0"
       provider-name="www.openiaml.org">
 
    <description url="http://www.openiaml.org/">
@@ -20,17 +20,17 @@ of automated test cases, to ensure that it generally outputs
 suitable code.
    </description>
 
-   <copyright url="http://openiaml.org/copyright">
-      Copyright (c) 2007, 2010 Jevon Wright and others.
-All rights reserved. This program and the accompanying materials
-are made available under the terms of the Eclipse Public License
-v1.0
-which accompanies this distribution, and is available at
-http://www.eclipse.org/legal/epl-v10.html
+   <copyright url="http://www.example.com/copyright">
+      [Enter Copyright Description here.]
    </copyright>
 
-   <license url="http://www.eclipse.org/legal/epl-v10.html">
-      Licensed under the Eclipse Public License v1.0.
+   <license url="http://www.gnu.org/licenses/gpl.html">
+      iacleaner: an Internet Application Formatter/Cleaner
+Copyright (C) 2009  Jevon Wright
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
    </license>
 
    <url>

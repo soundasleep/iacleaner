@@ -193,9 +193,6 @@ public class InlinePhpCleaner extends InlineCSyntaxCleaner {
 					// increase the indent because we're starting a new block
 					// (and the code later won't be executed)
 					writer.indentIncrease();
-				} else if (isOnBlankLine && prevNonWhitespace == '/') {
-					// fix for division symbol being lost
-					writer.write(' ');
 				} else if (!isOnBlankLine && prevNonWhitespace != '(' && prevNonWhitespace != -1 && prevNonWhitespace != -3) {
 					writer.write(' ');
 				} else if (prevNonWhitespace == ';' || prevNonWhitespace == -1 || prevNonWhitespace == -2 || prevNonWhitespace == -1 || prevNonWhitespace == '}') {

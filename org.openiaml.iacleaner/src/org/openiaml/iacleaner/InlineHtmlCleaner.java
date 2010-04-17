@@ -644,7 +644,7 @@ public class InlineHtmlCleaner {
 		if (currentTag == null)
 			return false;
 		
-		return true; // || currentTag.equals("a") || currentTag.equals("h4");
+		return true || currentTag.equals("a") || currentTag.equals("h4");
 	}
 
 }
