@@ -42,6 +42,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		return html;
 	}
 
+	private InlineXmlCleaner xml = new InlineXmlCleaner(this);
+
+	public InlineXmlCleaner getXmlCleaner() {
+		return xml;
+	}
+
 	private InlineCssCleaner css = new InlineCssCleaner(this);
 
 	public InlineCssCleaner getCssCleaner() {
@@ -114,6 +120,18 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			throw new CleanerException(e);
 		}
 		
+		// consume any remaining characters
+		{
+			int c;
+			try {
+				while ((c = reader.read()) != -1) {
+					writer.write(c);
+				}
+			} catch (IOException e) {
+				throw new CleanerException(e);
+			}
+		}
+		
 		return writer.getBuffer().toString();
 	}
 
@@ -149,6 +167,21 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected void cleanHtmlBlock(InlineStringReader reader,
 			InlineStringWriter writer) throws IOException, CleanerException {
 		getHtmlCleaner().cleanHtmlBlock(reader, writer);
+	}
+	
+	/**
+	 * Clean up XML code. This does not change any content, except for
+	 * special tags (PHP, etc).
+	 * 
+	 * @see InlineXmlCleaner#cleanXmlBlock(InlineStringReader, InlineStringWriter)
+	 * @param reader
+	 * @param writer
+	 * @throws IOException 
+	 * @throws CleanerException 
+	 */
+	protected void cleanXmlBlock(InlineStringReader reader,
+			InlineStringWriter writer) throws IOException, CleanerException {
+		getXmlCleaner().cleanXmlBlock(reader, writer);
 	}
 
 	/**

@@ -47,7 +47,7 @@ public class InlineHtmlCleaner {
 			String next5 = reader.readAhead(5);
 			if (next5.equals("<?xml")) {
 				// xml mode!
-				return;	// permanent change
+				getInline().cleanXmlBlock(reader, writer);
 			} else if (next5.equals("<?php")) {
 				// php mode!
 				getInline().cleanPhpBlock(reader, writer);
