@@ -109,9 +109,15 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 			} else if (extension.equals("css")) {
 				// straight to CSS mode
 				cleanHtmlCss(reader, writer, false);
-			} else if (extension.equals("txt")) {
+			} else if (extension.equals("txt") || extension.equals("tex")) {
 				// direct copy: TXT mode
+				
+				// need to first disable wordwrap
+				writer.enableWordwrap(false);
 				directCopy(reader, writer);
+				
+				// once copied, we can re-enable it
+				writer.enableWordwrap(true);
 			} else {
 				// default: PHP (which is also HTML)
 				cleanHtmlBlock(reader, writer);
