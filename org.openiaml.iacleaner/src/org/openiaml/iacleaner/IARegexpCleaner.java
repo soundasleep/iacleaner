@@ -551,4 +551,16 @@ public class IARegexpCleaner extends DefaultIACleaner implements IACleaner {
 		}
 	}
 
+	/**
+	 * The {@link IARegexpCleaner} does not support the {@link #setWordWrapLength(int)}
+	 * method, and will throw an {@link UnsupportedOperationException}.
+	 * 
+	 * @see org.openiaml.iacleaner.IACleaner#setWordWrapLength(int)
+	 * @throws UnsupportedOperationException not supported in this class
+	 */
+	@Override
+	public void setWordWrapLength(int chars) {
+		throw new UnsupportedOperationException("setWordWrapLength() is not supported for IARegexpCleaner");
+	}
+
 }

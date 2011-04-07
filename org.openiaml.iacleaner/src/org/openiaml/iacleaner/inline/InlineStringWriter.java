@@ -39,8 +39,17 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 	
 	/**
 	 * Columns after this long will be wordwrapped when {@link #canWordWrap} is true.
+	 * By default, this value is set to 79.
 	 */
-	private static final int wordWrapCol = 79;	
+	private int wordWrapCol = 79;
+	
+	public void setWordWrapLength(int chars) {
+		wordWrapCol = chars;
+	}
+	
+	public int getWordWrapLength() {
+		return wordWrapCol;
+	}
 	
     public InlineStringWriter() {
 		super();

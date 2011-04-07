@@ -84,6 +84,16 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 
 		return cleanScript(reader, extension);
 	}
+
+	private int wordWrapLength = -1;
+	
+	/* (non-Javadoc)
+	 * @see org.openiaml.iacleaner.IACleaner#setWordWrapLength(int)
+	 */
+	@Override
+	public void setWordWrapLength(int chars) {
+		wordWrapLength = chars;
+	}
 	
 	/**
 	 * Do the actual script read/write using our readers and writers.
@@ -98,6 +108,9 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	protected String cleanScript(InlineStringReader reader, String extension) throws CleanerException {
 		// and it will output into the writer
 		InlineStringWriter writer = new IACleanerStringWriter(this);
+		if (wordWrapLength != -1) {
+			writer.setWordWrapLength(wordWrapLength);
+		}
 		
 		// lowercase the extension
 		extension = extension.toLowerCase();
@@ -343,5 +356,6 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	public String cleanScript(String script) throws CleanerException {
 		return cleanScript(script, "php");
 	}
+
 
 }
