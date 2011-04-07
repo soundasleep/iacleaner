@@ -48,6 +48,7 @@ public class InlineXmlCleaner {
 		writer.enableWordwrap(false);
 		
 		boolean inTag = false;
+		boolean inString = false;
 		while (true) {
 			String next5 = reader.readAhead(5);
 			if (next5 != null && next5.equals("<?php")) {
@@ -72,6 +73,14 @@ public class InlineXmlCleaner {
 					// have to look for them explicitly
 					inTag = false;
 					writer.enableWordwrap(false);
+				} else if (inTag && !inString && c == '"') {
+					// started a "..." - must disable wordwrap
+					inString = true;
+					writer.enableWordwrap(false);
+				} else if (inTag && inString && c == '"') {
+					// ended a "..."
+					inString = false;
+					writer.enableWordwrap(true);
 				}
 				writer.write(c);
 			}
