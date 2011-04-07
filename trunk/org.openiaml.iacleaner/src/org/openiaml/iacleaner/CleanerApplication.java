@@ -35,6 +35,7 @@ public class CleanerApplication {
 		System.out.println(" --input <file>     Use input file, otherwise stdin");
 		System.out.println(" --output <file>    Use output file, otherwise stdout");
 		System.out.println(" --extension <file> Use specified extension");
+		System.out.println(" --wordwrap <file>  Attempt to wordwrap at the given column index");
 		System.out.println(" --help             Display this help");
 		System.out.println();
 	}
@@ -46,6 +47,7 @@ public class CleanerApplication {
 	 * <li><code>--input filename</code> : input from the given filename, otherwise from stdin
 	 * <li><code>--output filename</code> : output to the given filename, otherwise to stdout
 	 * <li><code>--extension ext</code> : use the given file extension, otherwise this is derived from the input filename
+	 * <li><code>--wordwrap nnn</code> : try and wordwrap at the given position 
 	 * <li><code>--help</code> : displays the list of commands
 	 * </ul>
 	 * 
@@ -78,6 +80,7 @@ public class CleanerApplication {
 		String input = null;
 		String output = null;
 		String extension = null;
+		int wordwrap = -1;
 		
 		// cycle through arguments
 		for (int i = 0; i < args.length; i++) {
@@ -89,7 +92,7 @@ public class CleanerApplication {
 					throw new CleanerApplicationException("Expected filename for --input");
 				} else {
 					if (input != null)
-						throw new CleanerApplicationException("Too many --input parameters");
+						throw new CleanerApplicationException("Too many values for --input");
 					input = nextArg;
 					i++;
 				}
@@ -98,7 +101,7 @@ public class CleanerApplication {
 					throw new CleanerApplicationException("Expected filename for --output");
 				} else {
 					if (output != null)
-						throw new CleanerApplicationException("Too many --output parameters");
+						throw new CleanerApplicationException("Too many values for --output");
 					output = nextArg;
 					i++;
 				}
@@ -107,8 +110,17 @@ public class CleanerApplication {
 					throw new CleanerApplicationException("Expected value for --extension");
 				} else {
 					if (extension != null)
-						throw new CleanerApplicationException("Too many --extension parameters");
+						throw new CleanerApplicationException("Too many values for --extension");
 					extension = nextArg;
+					i++;
+				}
+			} else if ("--wordwrap".equals(arg) || "-w".equals(arg)) {
+				if (nextArg == null) {
+					throw new CleanerApplicationException("Expected value for --wordwrap");
+				} else {
+					if (wordwrap != -1)
+						throw new CleanerApplicationException("Too many values for --wordwrap");
+					wordwrap = Integer.parseInt(nextArg);
 					i++;
 				}
 			} else if ("--help".equals(arg) || "/?".equals(arg)) { 
@@ -122,6 +134,9 @@ public class CleanerApplication {
 		// create cleaner
 		IACleaner cleaner = new IAInlineCleaner();
 		String cleaned = null;
+		if (wordwrap != -1) {
+			cleaner.setWordWrapLength(wordwrap);
+		}
 
 		// actually execute cleaner
 		if (input == null) {
