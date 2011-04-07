@@ -115,4 +115,11 @@ public interface IACleaner {
 	 */
 	public abstract String cleanScript(InputStream script, String extension) throws CleanerException;
 	
+	/**
+	 * Set the width of a maximum line before wordwrap occurs.
+	 * 
+	 * @param chars the number of characters
+	 */
+	public void setWordWrapLength(int chars);
+	
 }
