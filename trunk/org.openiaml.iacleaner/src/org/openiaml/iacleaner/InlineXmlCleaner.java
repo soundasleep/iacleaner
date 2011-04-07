@@ -14,6 +14,10 @@ import org.openiaml.iacleaner.inline.InlineStringWriter;
  * clean XML at all, but it allows for PHP content to be parsed
  * mid-stream.
  * 
+ * <p>It is only safe to format white space in two scenarios: when cleaning
+ * PHP code, or when processing the contents of &lt;tags&gt;. Another scenario
+ * that is not implemented yet is XML comments.
+ * 
  * @author Jevon
  *
  */
@@ -43,19 +47,33 @@ public class InlineXmlCleaner {
 
 		writer.enableWordwrap(false);
 		
+		boolean inTag = false;
 		while (true) {
 			String next5 = reader.readAhead(5);
 			if (next5 != null && next5.equals("<?php")) {
 				// php mode!
+				boolean oldWordWrap = writer.canWordWrap();
 				writer.enableWordwrap(true);
 				getInline().cleanPhpBlock(reader, writer);
-				writer.enableWordwrap(false);
-				// we may continue with html mode
+				writer.enableWordwrap(oldWordWrap);
+				// we may continue with xml mode
 			} else {
 				int c = reader.read();
-				if (c == -1)
+				if (c == -1) {
+					// EOF
 					break;
-				writer.write(c);				
+				} else if (!inTag && c == '<') {
+					// started a <tag>
+					inTag = true;
+					writer.enableWordwrap(true);
+				} else if (inTag && c == '>') {
+					// ended a <tag>
+					// all other < and >s have to be escaped in XML, so we don't
+					// have to look for them explicitly
+					inTag = false;
+					writer.enableWordwrap(false);
+				}
+				writer.write(c);
 			}
 		}
 		
