@@ -188,6 +188,16 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 
 	int previousChar = -1;
 	boolean wordwrapOnNext = false;
+	
+	public static class InvalidCharacterException extends RuntimeException {
+		
+		private static final long serialVersionUID = 1L;
+
+		public InvalidCharacterException(String message) {
+			super(message);
+		}
+		
+	}
 
 	/* (non-Javadoc)
 	 * @see java.io.StringWriter#write(int)
@@ -195,7 +205,7 @@ public abstract class InlineStringWriter extends IgnoreEmptyLinesWriter {
 	@Override
 	public void write(int c) {
 		if (c < 0 || c == -1 || c == 65535) {
-			throw new RuntimeException("Invalid character: " + c);
+			throw new InvalidCharacterException("Invalid character: " + c);
 		}
 		
 		// increase line count for newlines

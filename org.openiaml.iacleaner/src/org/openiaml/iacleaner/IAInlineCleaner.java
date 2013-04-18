@@ -12,6 +12,7 @@ import org.openiaml.iacleaner.inline.IACleanerStringWriter;
 import org.openiaml.iacleaner.inline.InlineCleanerException;
 import org.openiaml.iacleaner.inline.InlineStringReader;
 import org.openiaml.iacleaner.inline.InlineStringWriter;
+import org.openiaml.iacleaner.inline.InlineStringWriter.InvalidCharacterException;
 
 
 /**
@@ -116,42 +117,58 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 		extension = extension.toLowerCase();
 		
 		try {
-			if (extension.equals("js")) {
-				// straight to JS mode
-				cleanHtmlJavascript(reader, writer, false);
-			} else if (extension.equals("css")) {
-				// straight to CSS mode
-				cleanHtmlCss(reader, writer, false);
-			} else if (extension.equals("txt") || extension.equals("tex")) {
-				// direct copy: TXT mode
-				
-				// need to first disable wordwrap
-				writer.enableWordwrap(false);
-				directCopy(reader, writer);
-				
-				// once copied, we can re-enable it
-				writer.enableWordwrap(true);
-			} else {
-				// default: PHP (which is also HTML)
-				cleanHtmlBlock(reader, writer);
-			}
-		} catch (IOException e) {
-			throw new CleanerException(e);
-		}
-		
-		// consume any remaining characters
-		{
-			int c;
 			try {
-				while ((c = reader.read()) != -1) {
-					writer.write(c);
+				if (extension.equals("js")) {
+					// straight to JS mode
+					cleanHtmlJavascript(reader, writer, false);
+				} else if (extension.equals("css")) {
+					// straight to CSS mode
+					cleanHtmlCss(reader, writer, false);
+				} else if (extension.equals("txt") || extension.equals("tex")) {
+					// direct copy: TXT mode
+					
+					// need to first disable wordwrap
+					writer.enableWordwrap(false);
+					directCopy(reader, writer);
+					
+					// once copied, we can re-enable it
+					writer.enableWordwrap(true);
+				} else {
+					// default: PHP (which is also HTML)
+					cleanHtmlBlock(reader, writer);
 				}
 			} catch (IOException e) {
 				throw new CleanerException(e);
 			}
+			
+			// consume any remaining characters
+			{
+				int c;
+				try {
+					while ((c = reader.read()) != -1) {
+						writer.write(c);
+					}
+				} catch (IOException e) {
+					throw new CleanerException(e);
+				}
+			}
+		} catch (CleanerException e) {
+			// possibly output the buffer anyway
+			handleCleanerException(e, reader, writer);
+			throw new CleanerException(e);
 		}
 		
 		return writer.getBuffer().toString();
+	}
+
+	/**
+	 * Subclasses can extend this method to access the raw buffer
+	 * in case of a {@link CleanerException}. This can help with
+	 * debugging input. By default, does nothing.
+	 */
+	protected void handleCleanerException(CleanerException e,
+			InlineStringReader reader, InlineStringWriter writer) {
+		// does nothing		
 	}
 
 	/**
@@ -185,7 +202,11 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanHtmlBlock(InlineStringReader reader,
 			InlineStringWriter writer) throws IOException, CleanerException {
-		getHtmlCleaner().cleanHtmlBlock(reader, writer);
+		try {
+			getHtmlCleaner().cleanHtmlBlock(reader, writer);
+		} catch (InvalidCharacterException e) {
+			throw new CleanerException("Could not clean line " + reader.getLine() + ": " + e.getMessage(), e);
+		}
 	}
 	
 	/**
@@ -200,7 +221,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanXmlBlock(InlineStringReader reader,
 			InlineStringWriter writer) throws IOException, CleanerException {
-		getXmlCleaner().cleanXmlBlock(reader, writer);
+		try {
+			getXmlCleaner().cleanXmlBlock(reader, writer);
+		} catch (InvalidCharacterException e) {
+			throw new CleanerException("Could not clean line " + reader.getLine() + ": " + e.getMessage(), e);
+		}
+			
 	}
 
 	/**
@@ -214,7 +240,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 * @throws CleanerException 
 	 */
 	protected void cleanPhpBlock(InlineStringReader reader, InlineStringWriter writer) throws IOException, CleanerException {
-		getPhpCleaner().cleanPhpBlock(reader, writer);
+		try {
+			getPhpCleaner().cleanPhpBlock(reader, writer);
+		} catch (InvalidCharacterException e) {
+			throw new CleanerException("Could not clean line " + reader.getLine() + ": " + e.getMessage(), e);
+		}
+			
 	}
 
 	/**
@@ -262,7 +293,12 @@ public class IAInlineCleaner extends DefaultIACleaner implements IACleaner {
 	 */
 	protected void cleanHtmlCss(InlineStringReader reader,
 			InlineStringWriter writer, boolean withinHtml) throws IOException, CleanerException {
-		getCssCleaner().cleanHtmlCss(reader, writer, withinHtml);
+		try {
+			getCssCleaner().cleanHtmlCss(reader, writer, withinHtml);
+		} catch (InvalidCharacterException e) {
+			throw new CleanerException("Could not clean line " + reader.getLine() + ": " + e.getMessage(), e);
+		}
+
 	}
 
 

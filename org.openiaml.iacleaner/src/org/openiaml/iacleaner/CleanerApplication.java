@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.openiaml.iacleaner.inline.InlineStringReader;
+import org.openiaml.iacleaner.inline.InlineStringWriter;
+
 /**
  * Allows iacleaner to be executed from the command line. 
  * 
@@ -36,6 +39,7 @@ public class CleanerApplication {
 		System.out.println(" --output <file>    Use output file, otherwise stdout");
 		System.out.println(" --extension <file> Use specified extension");
 		System.out.println(" --wordwrap <file>  Attempt to wordwrap at the given column index");
+		System.out.println(" --output-on-fail   If a CleanerException occurs, try to write out the buffer anyway");
 		System.out.println(" --help             Display this help");
 		System.out.println();
 	}
@@ -47,7 +51,8 @@ public class CleanerApplication {
 	 * <li><code>--input filename</code> : input from the given filename, otherwise from stdin
 	 * <li><code>--output filename</code> : output to the given filename, otherwise to stdout
 	 * <li><code>--extension ext</code> : use the given file extension, otherwise this is derived from the input filename
-	 * <li><code>--wordwrap nnn</code> : try and wordwrap at the given position 
+	 * <li><code>--wordwrap nnn</code> : try and wordwrap at the given position
+	 * <li><code>--output-on-fail</code> : if a CleanerException occurs, try to write out the buffer anyway 
 	 * <li><code>--help</code> : displays the list of commands
 	 * </ul>
 	 * 
@@ -80,6 +85,7 @@ public class CleanerApplication {
 		String input = null;
 		String output = null;
 		String extension = null;
+		boolean outputOnFail = false;
 		int wordwrap = -1;
 		
 		// cycle through arguments
@@ -123,6 +129,9 @@ public class CleanerApplication {
 					wordwrap = Integer.parseInt(nextArg);
 					i++;
 				}
+			} else if ("--output-on-fail".equals(arg)) {
+				// boolean toggle
+				outputOnFail = true;
 			} else if ("--help".equals(arg) || "/?".equals(arg)) { 
 				printHelp();
 				System.exit(0);
@@ -132,7 +141,35 @@ public class CleanerApplication {
 		}
 		
 		// create cleaner
-		IACleaner cleaner = new IAInlineCleaner();
+		final String fOutput = output;
+		final boolean fOutputOnFail = outputOnFail;
+		IACleaner cleaner = new IAInlineCleaner() {
+
+			/* (non-Javadoc)
+			 * @see org.openiaml.iacleaner.IAInlineCleaner#handleCleanerException(org.openiaml.iacleaner.CleanerException, org.openiaml.iacleaner.inline.InlineStringReader, org.openiaml.iacleaner.inline.InlineStringWriter)
+			 */
+			@Override
+			protected void handleCleanerException(CleanerException e,
+					InlineStringReader reader, InlineStringWriter writer) {
+				String cleaned = writer.getBuffer().toString();
+				
+				if (fOutputOnFail) {
+					if (fOutput == null) {
+						// output to stdout
+						System.out.println(cleaned);
+					} else {
+						try {
+							FileWriter writer1 = new FileWriter(new File(fOutput));
+							writer1.write(cleaned);
+							writer1.close();
+						} catch (IOException ee) {
+							throw new RuntimeException("Could not write failed buffer: " + ee.getMessage(), ee);
+						}
+					}
+				}
+			}
+			
+		};
 		String cleaned = null;
 		if (wordwrap != -1) {
 			cleaner.setWordWrapLength(wordwrap);

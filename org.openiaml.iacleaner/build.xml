@@ -1,7 +1,7 @@
 <project default="main">
 
 	<property name="ant.project.name" value="iacleaner"/>
-	<property name="ant.project.version" value="0.3.1"/>
+	<property name="ant.project.version" value="0.3.2"/>
 
 	<property name="src.dir"     value="src"/>
 
