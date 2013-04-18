@@ -16,7 +16,7 @@ public class CleanerException extends Exception {
 	public CleanerException(String message) {
 		super(message);
 	}
-	
+
 	public CleanerException(String message, String context) {
 		super(message + " [context=\"" + context + "\"]");
 	}
@@ -40,6 +40,10 @@ public class CleanerException extends Exception {
 		super(e.getMessage(), e);
 	}
 
+	public CleanerException(String message, Throwable cause) {
+		super(message, cause);
+	}
+	
 	/**
 	 * Get the source of the cleaned page, or null if it has
 	 * not been set.
