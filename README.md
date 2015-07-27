@@ -14,7 +14,7 @@ To achieve this, it uses specialised reader/writer implementations and a custom 
 
 *[Version 0.3.1](http://journals.jevon.org/users/jevon-phd/entry/19823)* of iacleaner has been released (April 2010).
 
-==Quick Start==
+## Quick Start
 
 iacleaner can be installed through an Eclipse update site, or you can checkout the source from and build a JAR file yourself.
 
@@ -42,7 +42,7 @@ Usage: java -jar iacleaner.jar [args...]
  --help             Display this help
 ```
 
-==Future Work==
+## Future Work
 
 If a web script cannot be handled properly by iacleaner, please submit it to the issue tracker so this can be resolved.
 
