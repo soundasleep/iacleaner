@@ -8,15 +8,15 @@ This project aims to provide a Java-based code syntax formatter for a diverse ra
 * CSS
 * JSP
 
-It allows you to format [http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/test.php complex, messy web application code] into a [http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/out.php more structured format].
+It allows you to format [complex, messy web application code](http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/test.php) into a [more structured format](http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/out.php).
 
-To achieve this, it uses specialised reader/writer implementations and a custom parser. As a result, this formatter is quite fragile, so _use at your own risk!_ However, it does come with a [http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/ set of automated test cases], to ensure that it generally outputs suitable code. It is also used in the [http://openiaml.org IAML project] extensively as a code cleaner to its generated code.
+To achieve this, it uses specialised reader/writer implementations and a custom parser. As a result, this formatter is quite fragile, so _use at your own risk!_ However, it does come with a [set of automated test cases](http://code.google.com/p/iacleaner/source/browse/trunk/org.openiaml.iacleaner/src/org/openiaml/iacleaner/tests/), to ensure that it generally outputs suitable code. It is also used in the [http://openiaml.org IAML project] extensively as a code cleaner to its generated code.
 
 *[Version 0.3.1](http://journals.jevon.org/users/jevon-phd/entry/19823)* of iacleaner has been released (April 2010).
 
 ==Quick Start==
 
-iacleaner can be installed through [Installation an Eclipse update site], or you can [http://code.google.com/p/iacleaner/source/checkout checkout the source from SVN] and build a JAR file yourself.
+iacleaner can be installed through an Eclipse update site, or you can checkout the source from and build a JAR file yourself.
 
 ```
 File source = new File("script.php");
@@ -29,7 +29,7 @@ fh.write(formatted);
 fh.close();
 ```
 
-As of issue 6, you can also [http://code.google.com/p/iacleaner/downloads/list download a prebuilt JAR] and execute it using the command line:
+As of issue 6, you can also [download a prebuilt JAR](http://code.google.com/p/iacleaner/downloads/list) and execute it using the command line:
 
 ```
 $ java -jar iacleaner-0.3.1.jar --help
@@ -44,9 +44,9 @@ Usage: java -jar iacleaner.jar [args...]
 
 ==Future Work==
 
-If a web script cannot be handled properly by iacleaner, please [http://code.google.com/p/iacleaner/issues/entry submit it] to the issue tracker so this can be resolved.
+If a web script cannot be handled properly by iacleaner, please submit it to the issue tracker so this can be resolved.
 
-It would be nice to use an actual syntax parser (e.g. [https://javacc.dev.java.net JavaCC]) to implement the formatting, but this is easier said than done. Feel free to [http://code.google.com/p/iacleaner/issues/list contribute] ;)
+It would be nice to use an actual syntax parser (e.g. [JavaCC](https://javacc.dev.java.net)) to implement the formatting, but this is easier said than done. Feel free to contribute ;)
 
 Future work may include basic support for code compression.
 
